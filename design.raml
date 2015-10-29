@@ -1,0 +1,91 @@
+#%RAML 0.8
+---
+title: OmicronAPI
+baseUri: http://omicron/api/{version}
+version: v1
+mediaType: application/json
+schemas:
+  - 404: !include schemas/404.json
+    users: !include schemas/users.json
+    users_post: !include schemas/users_post.json
+    users_response: !include schemas/users.json
+    user: !include schemas/user.json
+
+
+/users:
+    displayName: List of users in the system
+    get:
+        description: Get list of users
+        queryParameters:
+            contains:
+                displayName: Contains
+                type: string
+                description: |
+                    Allows searching of user names by a string. Returns
+                    users with name matching the string
+            starts_with:
+                displayName: Starts With
+                type: string
+                description: Search by begins with string
+            ends_with:
+                displayName: Ends with
+                type: string
+                description: Search by end
+            page:
+                displayName: Page
+                type: integer
+                description: page number of list
+            items_per_page:
+                displayName: Items Per Page
+                type: integer
+                description: display required number of users per page
+        responses:
+            200:
+                body:
+                    application/json:
+                        schema: users
+            404:
+                body:
+                    application/json:
+                        schema: 404
+    post:
+        description: Create a new user
+        body:
+            application/json:
+                schema: UserPost
+        responses:
+            200:
+                description: Successful creation of a new user
+                body:
+                    application/json:
+                        schema: users_response
+    /schema:
+        get:
+            description: Get schema used to display users
+            responses:
+                200:
+                    application/json:
+                        schema: users
+    /{userId}:
+        uriParameters:
+            userId:
+                type: integer
+        /schema:
+
+/files:
+    /schema:
+    /{fileId}:
+        uriParameters:
+            fileId:
+                type: integer
+        /schema:
+
+/projects:
+    /schema:
+    /{projectId}:
+        uriParameters:
+            projectId:
+                type: integer
+        /schema:
+        /files:
+        /users:
