@@ -1,4 +1,7 @@
 flask
+flask-restful
+
 sqlalchemy
 jsonschema
+
 sphinx
