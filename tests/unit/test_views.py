@@ -6,7 +6,10 @@ __author__ = 'Michal Kononenko'
 import unittest
 from api_server import app
 import config
-from db_models import metadata, sqlalchemy_engine
+from db_models import metadata
+from sqlalchemy import create_engine
+
+db_engine = create_engine('sqlite://')
 
 
 class TestView(unittest.TestCase):
@@ -19,9 +22,8 @@ class TestView(unittest.TestCase):
         Set up the test client
         :return:
         """
-        config.DATABASE_URI = 'sqlite://'
         cls.client = app.test_client(use_cookies=True)
-        metadata.create_all(bind=sqlalchemy_engine)
+        metadata.create_all(bind=db_engine)
 
 
 class TestRenderWelcomePage(TestView):
