@@ -1,20 +1,25 @@
-__author__ = 'Michal Kononenko'
-from flask import request, abort
+"""
+Contains all views for the API
+"""
+from flask import request, abort, jsonify
 from flask_restful import Resource
 from json_schema_parser import JsonSchemaValidator
 import os
 from config import JSON_SCHEMA_PATH
 from db_models import User, sessionmaker
 
+__author__ = 'Michal Kononenko'
+
+
 def under_construction():
-    return {'status': 'under construction'}
+    return jsonify({'status': 'under construction'}), 200
 
 
 class UserContainer(Resource):
     post_schema_validator = JsonSchemaValidator(
         os.path.join(JSON_SCHEMA_PATH, 'users_post.json')
     )
-    
+
     def __init__(self):
         Resource.__init__(self)
 
@@ -40,3 +45,7 @@ class UserContainer(Resource):
             session.rollback()
             raise
 
+        return jsonify({
+            'user': request.json.get('user'),
+            'email': request.json.get('email')
+        }), 201
