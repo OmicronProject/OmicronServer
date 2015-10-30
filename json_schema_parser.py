@@ -18,7 +18,11 @@ class FileNotFoundError(ValueError):
     pass
 
 
-class JsonSchema(object):
+class BadJsonSchemaError(Exception):
+    pass
+
+
+class JsonSchemaValidator(object):
     """
     Contains utilities for validating JSONSchema from a file
     """
@@ -38,8 +42,8 @@ class JsonSchema(object):
             is_draft_3 = format_checker.conforms(self.json_dict, 'draft3')
             is_draft_4 = format_checker.conforms(self.json_dict, 'draft4')
 
-            if not is_draft_3 or is_draft_4:
-                raise jsonschema.FormatError(
+            if not (is_draft_3 or is_draft_4):
+                raise BadJsonSchemaError(
                     'schema dict %s does not correspond to a draft 3 or draft '
                     '4 JSON Schema', self.json_dict)
 

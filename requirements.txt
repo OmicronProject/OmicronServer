@@ -1,7 +1,15 @@
+# Flask Application
 flask
 flask-restful
 
+# Data management
 sqlalchemy
+sqlalchemy-migrate
 jsonschema
 
+# Password management
+passlib
+
+# Optional, used to build documentation
 sphinx
+sphinxcontrib-httpdomain
