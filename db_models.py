@@ -43,7 +43,7 @@ class User(Base):
     email_address = __columns__.email_address
     password_hash = __columns__.password_hash
 
-    def __init__(self, username, email, password):
+    def __init__(self, username, password, email):
         self.password_hash = self.hash_password(password)
         self.username = username
         self.email = email
@@ -75,9 +75,7 @@ class User(Base):
         s = Serializer(TOKEN_SECRET_KEY)
         try:
             data = s.loads(token)
-        except SignatureExpired:
+        except (SignatureExpired, BadSignature):
             return None
-        except BadSignature:
-            return None
-        user = User.query.get(data['id'])
-        return user
+        else:
+            return data['id']
