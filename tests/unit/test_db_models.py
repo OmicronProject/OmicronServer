@@ -10,33 +10,80 @@ from db_schema import metadata
 __author__ = 'Michal Kononenko'
 
 
+class TestContextManagedSession(unittest.TestCase):
+    def setUp(self):
+        self.engine = models.create_engine('sqlite:///')
+        self.base_session = models.ContextManagedSession(bind=self.engine)
+
+    def test_context_managed_session_enter(self):
+        with self.base_session as session:
+            self.assertNotEqual(self.base_session, session)
+            self.assertEqual(self.base_session.__dict__, session.__dict__)
+
+    def test_exit_no_error(self):
+        commit = mock.MagicMock()
+        rollback = mock.MagicMock()
+        with self.base_session as session:
+            session.commit = commit
+            session.rollback = rollback
+
+        self.assertFalse(rollback.called)
+        self.assertEqual(commit.call_args, mock.call())
+
+    def test_exit_with_error(self):
+        error_to_raise = Exception('test_error')
+        commit = mock.MagicMock()
+        rollback = mock.MagicMock()
+
+        with self.assertRaises(error_to_raise.__class__):
+            with self.base_session as session:
+                session.commit = commit
+                session.rollback = rollback
+                raise Exception('test_error')
+
+        self.assertFalse(commit.called)
+        self.assertEqual(rollback.call_args, mock.call())
+
+    def test_exit_commit_error(self):
+        error_to_raise = Exception('test_error')
+        commit = mock.MagicMock(side_effect=error_to_raise)
+        rollback = mock.MagicMock()
+
+        with self.assertRaises(error_to_raise.__class__):
+            with self.base_session as session:
+                session.commit = commit
+                session.rollback = rollback
+
+        self.assertTrue(commit.called)
+        self.assertTrue(rollback.called)
+
+    def test_repr(self):
+        repr_string = '%s(bind=%s, expire_on_commit=%s)' % \
+                      (self.base_session.__class__.__name__,
+                       self.base_session.bind,
+                       self.base_session.expire_on_commit)
+
+        self.assertEqual(repr_string, self.base_session.__repr__())
+
+
 class TestSessionMaker(unittest.TestCase):
 
-    @mock.patch('db_models.sqlalchemy_sessionmaker')
-    def test_sessionmaker_no_args(self, mock_sessionmaker):
-        mock_session = mock.MagicMock()
-        mock_sessionmaker.return_value = mock_session
+    @mock.patch('db_models.create_engine')
+    def test_sessionmaker_no_args(self, mock_create_engine):
+        engine = mock.MagicMock()
+        mock_create_engine.return_value = engine
 
-        mock_sessionmaker_call = mock.call(bind=models.sqlalchemy_engine)
+        session = models.sessionmaker()
+        self.assertEqual(session.bind, engine)
 
-        self.assertEqual(mock_session, models.sessionmaker())
-        self.assertEqual(mock_sessionmaker.call_args, mock_sessionmaker_call)
-
-    @mock.patch('db_models.sqlalchemy_sessionmaker')
-    def test_sessionmaker_with_engine(self, mock_sessionmaker):
-        mock_session = mock.MagicMock()
-        mock_sessionmaker.return_value = mock_session
-
-        mock_engine = mock.MagicMock()
-        mock_sessionmaker_call = mock.call(bind=mock_engine)
-
-        self.assertEqual(mock_session, models.sessionmaker(mock_engine))
-        self.assertEqual(mock_sessionmaker.call_args, mock_sessionmaker_call)
+    def test_sessionmaker_with_engine(self):
+        engine = mock.MagicMock()
+        session = models.sessionmaker(engine=engine)
+        self.assertEqual(session.bind, engine)
 
 
 class TestUser(unittest.TestCase):
     engine = create_engine('sqlite:///')
-    sessionmaker = models.sessionmaker(engine=engine)
 
     @classmethod
     def setUpClass(cls):
@@ -122,31 +169,21 @@ class TestVerifyAuthToken(TestUser):
         self.user = models.User(self.username, self.password, self.email)
         self.mock_token ='foobarbaz123456'
 
-        session = self.sessionmaker()
-
-        try:
+        with models.sessionmaker(self.engine) as session:
             session.add(self.user)
-            session.commit()
-        except:
-            session.rollback()
-            raise
 
     def tearDown(self):
-        session = self.sessionmaker()
-        user = session.query(models.User).filter_by(id=self.user.id).first()
-        session.delete(user)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-            raise
+        with models.sessionmaker(self.engine) as session:
+            user = session.query(models.User).\
+                filter_by(id=1).first()
+            session.delete(user)
 
     @mock.patch('db_models.Serializer.loads')
     def test_verify_token(self, mock_serializer):
-        mock_serializer.return_value = {'id': self.user.id}
+        mock_serializer.return_value = {'id': 1}
         returned_data = models.User.verify_auth_token(self.mock_token)
 
-        self.assertEqual(self.user.id, returned_data)
+        self.assertEqual(1, returned_data)
 
     @mock.patch('db_models.Serializer.loads')
     def test_verify_token_signature_expired(self, mock_serializer):

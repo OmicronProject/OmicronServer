@@ -7,6 +7,7 @@ from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import create_engine
 from config import DATABASE_URI, TOKEN_SECRET_KEY
 from sqlalchemy.orm import sessionmaker as sqlalchemy_sessionmaker
+from sqlalchemy.orm import Session
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
     BadSignature, SignatureExpired
 
@@ -14,7 +15,33 @@ __author__ = 'Michal Kononenko'
 
 Base = declarative_base(metadata=metadata)
 
-sqlalchemy_engine = create_engine(DATABASE_URI)
+
+class ContextManagedSession(Session):
+    """
+    An extension to :cls:`sqlalchemy.orm.Session` that allows the session
+    to be run using a ``with`` statement, committing all changes on an
+    error-free exit from the context manager
+    """
+
+    def __enter__(self):
+        session = self.__class__()
+        session.__dict__ = self.__dict__
+        return session
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            try:
+                self.commit()
+            except:
+                self.rollback()
+                raise
+        else:
+            self.rollback()
+            raise exc_val
+
+    def __repr__(self):
+        return '%s(bind=%s, expire_on_commit=%s)' % \
+               (self.__class__.__name__, self.bind, self.expire_on_commit)
 
 
 def sessionmaker(engine=None):
@@ -27,8 +54,9 @@ def sessionmaker(engine=None):
         :attr:`config.DATABASE_URI`
     :return:
     """
-    return sqlalchemy_sessionmaker(bind=engine) if engine is not None \
-        else sqlalchemy_sessionmaker(bind=sqlalchemy_engine)
+    if engine is None:
+        engine = create_engine(DATABASE_URI)
+    return ContextManagedSession(bind=engine)
 
 
 class User(Base):
