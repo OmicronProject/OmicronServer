@@ -65,9 +65,12 @@ class JsonSchemaValidator(object):
 
     def validate_dict(self, dict_to_validate):
         """
-        Validates a dictionary against :attr:`self.json_dict`
-        :param dict_to_validate:
-        :return:
+        Validates a dictionary against :attr:`self.json_dict`.
+        :param dict dict_to_validate: The dictionary to check against
+        :attr:`self.json_dict`, representing the base JSON Schema to validate.
+
+        :return: True if the dictionary is allowed by the schema and false if
+            not.
         """
         if dict_to_validate is not None:
             try:

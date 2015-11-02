@@ -44,12 +44,8 @@ schemas:
                 body:
                     application/json:
                         schema: users
-            404:
-                body:
-                    application/json:
-                        schema: 404
     post:
-        description: Create a new user
+        description: Create a new user. Check the schema against the JSON schema for validation.
         body:
             application/json:
                 schema: UserPost
@@ -59,6 +55,11 @@ schemas:
                 body:
                     application/json:
                         schema: users_response
+            400:
+                description: Bad request, user may already exist, or the data supplied is incorrect
+                body:
+                    application/json:
+                        schema: !include schemas/users_400.json
     /schema:
         get:
             description: Get schema used to display users
@@ -81,7 +82,13 @@ schemas:
         /schema:
 
 /projects:
+    get:
+        description: Retrieve a list of projects
+    post:
+        description: Create a new project
     /schema:
+        get:
+            description: Return the JSON schema for this 
     /{projectId}:
         uriParameters:
             projectId:

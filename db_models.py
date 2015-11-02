@@ -1,14 +1,16 @@
 """
 Contains the SQLAlchemy ORM model for the API
 """
-__author__ = 'Michal Kononenko'
-
 from sqlalchemy.ext.declarative import declarative_base
 from db_schema import metadata, user
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import create_engine
-from config import DATABASE_URI
+from config import DATABASE_URI, TOKEN_SECRET_KEY
 from sqlalchemy.orm import sessionmaker as sqlalchemy_sessionmaker
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
+    BadSignature, SignatureExpired
+
+__author__ = 'Michal Kononenko'
 
 Base = declarative_base(metadata=metadata)
 
@@ -17,7 +19,7 @@ sqlalchemy_engine = create_engine(DATABASE_URI)
 
 def sessionmaker(engine=None):
     """
-    Overwrites the factory :func:`sqlalchemy.create_engine` in order
+    Overwrites the factory :func:`sqlalchemy.orm.sessionmaker` in order
     to avoid having to specify ``bind=sqlalchemy_engine`` with every call to
     SQLAlchemy's session factory
     :param engine engine: The SQLAlchemy engine to which this session is to be
@@ -42,17 +44,18 @@ class User(Base):
     password_hash = __columns__.password_hash
 
     def __init__(self, username, email, password):
-        self.hash_password(password)
+        self.password_hash = self.hash_password(password)
         self.username = username
         self.email = email
 
-    def hash_password(self, password):
+    @staticmethod
+    def hash_password(password):
         """
         Hash the user's password
         :param str password: The password to hash
         :return:
         """
-        self.password_hash = pwd_context.encrypt(password)
+        return pwd_context.encrypt(password)
 
     def verify_password(self, password):
         """
@@ -62,3 +65,19 @@ class User(Base):
         :rtype: bool
         """
         return pwd_context.verify(password, self.password_hash)
+
+    def generate_auth_token(self, expiration=600):
+        s = Serializer(TOKEN_SECRET_KEY, expires_in=expiration)
+        return s.dumps({'id': self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(TOKEN_SECRET_KEY)
+        try:
+            data = s.loads(token)
+        except SignatureExpired:
+            return None
+        except BadSignature:
+            return None
+        user = User.query.get(data['id'])
+        return user
