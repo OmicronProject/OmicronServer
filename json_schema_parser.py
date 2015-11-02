@@ -34,10 +34,9 @@ class JsonSchemaValidator(object):
         """
         Initialize the schema
         :param path: the path from which the file should be pulled
-        :param schema_dict:
         """
         if not os.path.isfile(path):
-            raise FileNotFoundError('Unable to find file with path <%s>',
+            raise FileNotFoundError('Unable to find file with path <%s>' %\
                                     path)
         else:
             self.json_dict = self._read_schema_from_file(path)
@@ -59,7 +58,7 @@ class JsonSchemaValidator(object):
         json-loaded dictionary
         :return:
         """
-        with open(path, mode='r') as json_file:
+        with open(path) as json_file:
             file_string = ''.join([line for line in json_file])
         return json.loads(file_string)
 
@@ -70,15 +69,12 @@ class JsonSchemaValidator(object):
         :attr:`self.json_dict`, representing the base JSON Schema to validate.
 
         :return: True if the dictionary is allowed by the schema and false if
-            not.
+            not. The False return also returns a string showing the reason why
+            validation failed.
         """
-        if dict_to_validate is not None:
-            try:
-                jsonschema.validate(dict_to_validate, self.json_dict)
-                return True
-            except jsonschema.ValidationError:
-                return False
-            except jsonschema.SchemaError:
-                log.error('The schema at path %s is not valid', self.path)
-        else:
-            return False
+        try:
+            jsonschema.validate(dict_to_validate, self.json_dict)
+            return True, 'success'
+        except jsonschema.ValidationError as val_error:
+            return False, str(val_error)
+
