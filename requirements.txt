@@ -1,6 +1,7 @@
 # Flask Application
 flask
 flask-restful
+itsdangerous
 
 # Data management
 sqlalchemy

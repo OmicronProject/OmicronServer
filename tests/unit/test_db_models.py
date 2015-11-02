@@ -12,7 +12,7 @@ __author__ = 'Michal Kononenko'
 
 class TestContextManagedSession(unittest.TestCase):
     def setUp(self):
-        self.engine = models.create_engine('sqlite:///')
+        self.engine = create_engine('sqlite:///')
         self.base_session = models.ContextManagedSession(bind=self.engine)
 
     def test_context_managed_session_enter(self):
@@ -67,14 +67,6 @@ class TestContextManagedSession(unittest.TestCase):
 
 
 class TestSessionMaker(unittest.TestCase):
-
-    @mock.patch('db_models.create_engine')
-    def test_sessionmaker_no_args(self, mock_create_engine):
-        engine = mock.MagicMock()
-        mock_create_engine.return_value = engine
-
-        session = models.sessionmaker()
-        self.assertEqual(session.bind, engine)
 
     def test_sessionmaker_with_engine(self):
         engine = mock.MagicMock()
@@ -195,3 +187,16 @@ class TestVerifyAuthToken(TestUser):
     def test_verify_token_bad_signature(self, mock_serializer):
         mock_serializer.side_effect = models.BadSignature('test_error')
         self.assertIsNone(models.User.verify_auth_token(self.mock_token))
+
+
+class TestGet(TestUser):
+    def setUp(self):
+        TestUser.setUp(self)
+        self.user = models.User(self.username, self.password, self.email)
+        self.expected_result = {
+            'username': self.username,
+            'email': self.email
+        }
+
+    def test_get(self):
+        self.assertEqual(self.expected_result, self.user.get)

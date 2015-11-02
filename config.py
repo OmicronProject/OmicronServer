@@ -2,6 +2,7 @@
 Contains global config parameters for the API
 """
 import os
+from sqlalchemy import create_engine
 
 __author__ = 'Michal Kononenko'
 
@@ -23,6 +24,9 @@ DATABASE_MIGRATE_REPO = os.path.join(
 JSON_SCHEMA_PATH = os.path.join(BASE_DIRECTORY, 'schemas')
 
 TOKEN_SECRET_KEY = 'rKrafg2L1HozC7jg1GvaXPZoHa32MiX51'
+
+DATABASE_ENGINE = create_engine(DATABASE_URI)
+
 
 if STATE == 'DEV':
     DEBUG = True

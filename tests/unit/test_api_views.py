@@ -1,20 +1,21 @@
 """
 Contains unit tests for :mod:`views`
 """
-__author__ = 'Michal Kononenko'
-
 import unittest
 from api_server import app
-import config
-from db_models import metadata
-from sqlalchemy import create_engine
+from db_models import metadata, ContextManagedSession
 import logging
 import json
+import api_views as views
+from sqlalchemy import create_engine
+
+__author__ = 'Michal Kononenko'
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-db_engine = create_engine('sqlite://')
+test_engine = create_engine('sqlite:///')
+views.database_session = ContextManagedSession(bind=test_engine)
 
 
 class TestView(unittest.TestCase):
@@ -29,7 +30,11 @@ class TestView(unittest.TestCase):
         """
         cls.client = app.test_client(use_cookies=True)
         cls.headers = {'content-type': 'application/json'}
-        metadata.create_all(bind=db_engine)
+        metadata.create_all(bind=test_engine)
+
+    @classmethod
+    def tearDownClass(cls):
+        metadata.drop_all(bind=test_engine)
 
 
 class TestRenderWelcomePage(TestView):
@@ -43,6 +48,7 @@ class TestRenderWelcomePage(TestView):
 class TestCreateUser(TestView):
     def setUp(self):
         self.request_method = self.client.post
+        self.url = 'api/v1/users'
 
     def test_post(self):
         data_to_post = {
@@ -51,6 +57,16 @@ class TestCreateUser(TestView):
             'email': 'scott@tiger.com'
         }
 
-        r = self.request_method('/api/v1/users', data=json.dumps(data_to_post),
+        r = self.request_method(self.url, data=json.dumps(data_to_post),
                                 headers=self.headers)
         self.assertEqual(r.status_code, 201)
+
+    def test_post_bad_data(self):
+        data_to_post = {
+            'user': 'scott',
+            'password': 'tiger',
+            'email': 'scott@tiger.com'
+        }
+        r = self.request_method(self.url, data=json.dumps(data_to_post),
+                                headers=self.headers)
+        self.assertEqual(r.status_code, 400)

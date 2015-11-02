@@ -4,12 +4,11 @@ Contains the SQLAlchemy ORM model for the API
 from sqlalchemy.ext.declarative import declarative_base
 from db_schema import metadata, user
 from passlib.apps import custom_app_context as pwd_context
-from sqlalchemy import create_engine
-from config import DATABASE_URI, TOKEN_SECRET_KEY
-from sqlalchemy.orm import sessionmaker as sqlalchemy_sessionmaker
+from config import TOKEN_SECRET_KEY
 from sqlalchemy.orm import Session
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
     BadSignature, SignatureExpired
+from functools import wraps
 
 __author__ = 'Michal Kononenko'
 
@@ -23,10 +22,17 @@ class ContextManagedSession(Session):
     error-free exit from the context manager
     """
 
-    def __enter__(self):
+    def copy(self):
+        """
+        Returns a new :cls:`ContextManagedSession` with the same namespace
+        as ``self``
+        """
         session = self.__class__()
         session.__dict__ = self.__dict__
         return session
+
+    def __enter__(self):
+        return self.copy()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
@@ -54,8 +60,6 @@ def sessionmaker(engine=None):
         :attr:`config.DATABASE_URI`
     :return:
     """
-    if engine is None:
-        engine = create_engine(DATABASE_URI)
     return ContextManagedSession(bind=engine)
 
 
@@ -74,7 +78,7 @@ class User(Base):
     def __init__(self, username, password, email):
         self.password_hash = self.hash_password(password)
         self.username = username
-        self.email = email
+        self.email_address = email
 
     @staticmethod
     def hash_password(password):
@@ -107,3 +111,20 @@ class User(Base):
             return None
         else:
             return data['id']
+
+    @property
+    def get(self):
+        return {'username': self.username, 'email': self.email_address}
+
+    @property
+    def get_full(self):
+        return {
+            'username': self.username,
+            'email': self.email_address
+        }
+
+    def __repr__(self):
+        return '%s(%s, %s, %s)' % (
+            self.__class__.__name__, self.username,
+            self.password_hash, self.email_address
+        )
