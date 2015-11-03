@@ -66,6 +66,21 @@ class TestContextManagedSession(unittest.TestCase):
         self.assertEqual(repr_string, self.base_session.__repr__())
 
 
+class TestSessionDecorator(unittest.TestCase):
+    def setUp(self):
+        self.engine = create_engine('sqlite:///')
+        self.base_session = models.ContextManagedSession(bind=self.engine)
+
+    def test_decorator_callable(self):
+        @self.base_session()
+        def _test_decorator(created_session):
+            return created_session
+
+        session = _test_decorator()
+        self.assertIsInstance(session, models.ContextManagedSession)
+        self.assertNotEqual(session, self.base_session)
+
+
 class TestSessionMaker(unittest.TestCase):
 
     def test_sessionmaker_with_engine(self):
@@ -101,7 +116,7 @@ class TestUserConstructor(TestUser):
         user = models.User(self.username, self.password, self.email)
         self.assertIsInstance(user, models.User)
         self.assertEqual(user.username, self.username)
-        self.assertEqual(user.email, self.email)
+        self.assertEqual(user.email_address, self.email)
         self.assertEqual(user.password_hash, mock_hash_function.return_value)
 
         mock_hash_function_call = mock.call(self.password)

@@ -15,6 +15,10 @@ __author__ = 'Michal Kononenko'
 Base = declarative_base(metadata=metadata)
 
 
+class NotDecoratableError(ValueError):
+    pass
+
+
 class ContextManagedSession(Session):
     """
     An extension to :cls:`sqlalchemy.orm.Session` that allows the session
@@ -30,6 +34,18 @@ class ContextManagedSession(Session):
         session = self.__class__()
         session.__dict__ = self.__dict__
         return session
+
+    def __call__(self):
+        def wraps(f):
+            if hasattr(f, '__call__'):
+                def wrapped_function(*args, **kwargs):
+                    with self as session:
+                        response = f(session, *args, **kwargs)
+                    return response
+                return wrapped_function
+            else:
+                raise NotDecoratableError('unable to decorate object %s', f)
+        return wraps
 
     def __enter__(self):
         return self.copy()

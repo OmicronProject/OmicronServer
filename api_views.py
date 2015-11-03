@@ -5,6 +5,7 @@ from flask import request, abort, jsonify
 from flask_restful import Resource
 from json_schema_parser import JsonSchemaValidator
 import os
+from decorators import restful_pagination
 from config import JSON_SCHEMA_PATH, DATABASE_ENGINE
 from db_models import User, sessionmaker
 
@@ -24,6 +25,7 @@ class UserContainer(Resource):
     def __init__(self):
         Resource.__init__(self)
 
+    @restful_pagination()
     def get(self):
         with database_session as session:
             users = session.query(User).all()
