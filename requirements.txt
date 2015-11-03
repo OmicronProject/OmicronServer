@@ -13,6 +13,7 @@ flask-httpauth
 passlib
 
 # Testing
+coverage
 mock
 
 # Optional, used to build documentation
