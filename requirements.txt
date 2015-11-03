@@ -13,7 +13,9 @@ flask-httpauth
 passlib
 
 # Testing
+coverage
 mock
+coveralls
 
 # Optional, used to build documentation
 sphinx
