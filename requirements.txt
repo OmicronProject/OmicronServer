@@ -12,6 +12,9 @@ jsonschema
 flask-httpauth
 passlib
 
+# Testing
+mock
+
 # Optional, used to build documentation
 sphinx
 sphinxcontrib-httpdomain

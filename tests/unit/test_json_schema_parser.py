@@ -2,8 +2,7 @@
 Contains unit tests for :mod:`json_schema_parser`
 """
 import unittest
-import unittest.mock as mock
-import json
+import mock
 import json_schema_parser as parser
 
 __author__ = 'Michal Kononenko'

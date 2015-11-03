@@ -2,7 +2,7 @@
 Contains unit tests for :mod:`db_models`
 """
 import unittest
-import unittest.mock as mock
+import mock
 import db_models as models
 from sqlalchemy import create_engine
 from db_schema import metadata
