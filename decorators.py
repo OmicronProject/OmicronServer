@@ -6,7 +6,9 @@ from flask import request
 from collections import namedtuple
 __author__ = 'Michal Kononenko'
 
-PaginationArgs = namedtuple('PaginationArgs', ['page', 'items_per_page'])
+PaginationArgs = namedtuple(
+    'PaginationArgs', ['page', 'items_per_page', 'offset']
+)
 
 
 class SessionNotFoundError(AttributeError):
@@ -39,9 +41,13 @@ def restful_pagination(default_items_per_page=1000):
                 except ValueError:
                     items_per_page = default_items_per_page
 
-            pag_args = PaginationArgs(page, items_per_page)
+            offset = (page - 1) * items_per_page
 
-            response = f(pag_args, *args, **kwargs)
+            pag_args = PaginationArgs(
+                page, items_per_page, offset
+            )
+
+            response = f(pag_args=pag_args, *args, **kwargs)
 
             response.headers['page'] = page
             response.headers['items_per_page'] = items_per_page

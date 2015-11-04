@@ -26,9 +26,17 @@ class UserContainer(Resource):
         Resource.__init__(self)
 
     @restful_pagination()
-    def get(self):
+    def get(self, pag_args):
         with database_session as session:
-            users = session.query(User).all()
+            users = session.query(
+                User
+            ).order_by(
+                User.id
+            ).limit(
+                pag_args.items_per_page
+            ).offset(
+                pag_args.offset
+            ).all()
 
         response = jsonify({'users': [user.get for user in users]})
         return response
