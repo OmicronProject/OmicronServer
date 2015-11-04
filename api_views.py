@@ -15,7 +15,7 @@ database_session = sessionmaker(DATABASE_ENGINE)
 
 class UserContainer(Resource):
     post_schema_validator = JsonSchemaValidator(
-        os.path.join(JSON_SCHEMA_PATH, 'users_post.json')
+        os.path.join(JSON_SCHEMA_PATH, 'users', 'users_post.json')
     )
 
     def __init__(self):
