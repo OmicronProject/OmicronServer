@@ -1,5 +1,4 @@
 [run]
-source=OmicronAPI
 omit =
     */python?.?/*
     */lib-python/?.?/*.py
