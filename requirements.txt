@@ -7,6 +7,10 @@ itsdangerous
 sqlalchemy
 sqlalchemy-migrate
 jsonschema
+# psycopg2 needed for PostgreSQL
+
+# DB Versioning
+alembic
 
 # Password management
 flask-httpauth

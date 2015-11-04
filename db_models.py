@@ -2,7 +2,7 @@
 Contains the SQLAlchemy ORM model for the API
 """
 from sqlalchemy.ext.declarative import declarative_base
-from db_schema import metadata, user
+from db_schema import metadata, users
 from passlib.apps import custom_app_context as pwd_context
 from config import TOKEN_SECRET_KEY
 from sqlalchemy.orm import Session
@@ -83,7 +83,7 @@ class User(Base):
     """
     Base class for a user
     """
-    __table__ = user
+    __table__ = users
     __columns__ = __table__.c
 
     id = __columns__.user_id
