@@ -4,7 +4,7 @@ Contains the SQLAlchemy ORM model for the API
 from sqlalchemy.ext.declarative import declarative_base
 from db_schema import metadata, users
 from passlib.apps import custom_app_context as pwd_context
-from config import TOKEN_SECRET_KEY
+from config import default_config as conf
 from sqlalchemy.orm import Session
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
     BadSignature, SignatureExpired
@@ -115,12 +115,12 @@ class User(Base):
         return pwd_context.verify(password, self.password_hash)
 
     def generate_auth_token(self, expiration=600):
-        s = Serializer(TOKEN_SECRET_KEY, expires_in=expiration)
+        s = Serializer(conf.TOKEN_SECRET_KEY, expires_in=expiration)
         return s.dumps({'id': self.id})
 
     @staticmethod
     def verify_auth_token(token):
-        s = Serializer(TOKEN_SECRET_KEY)
+        s = Serializer(conf.TOKEN_SECRET_KEY)
         try:
             data = s.loads(token)
         except (SignatureExpired, BadSignature):
