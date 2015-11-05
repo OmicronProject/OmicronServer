@@ -12,12 +12,16 @@ STATE = 'DEV'
 BASE_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 
 try:
-	if os.environ['DATABASE_URL'] is not None:
-		DATABASE_URI = os.environ['DATABASE_URL']
+    if os.environ['DATABASE_URL'] is not None:
+        DATABASE_URI = os.environ['DATABASE_URL']
 except KeyError:
-	DATABASE_URI = 'sqlite:///' + os.path.join(
-		BASE_DIRECTORY, 'test_db.sqlite3'
-	)
+    DATABASE_URI = 'sqlite:///' + os.path.join(
+        BASE_DIRECTORY, 'test_db.sqlite3'
+    )
+else:
+    DATABASE_URI = 'sqlite:///' + os.path.join(
+        BASE_DIRECTORY, 'test_db.sqlite3'
+    )
 
 # DATABASE_URI = 'postgresql://localhost:5432/OmicronAPITestDB' # Postgres database
 
