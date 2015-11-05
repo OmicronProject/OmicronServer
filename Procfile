@@ -1,1 +1,1 @@
-web: gunicorn OmicronAPI:run_server
+web: python run_server.py
