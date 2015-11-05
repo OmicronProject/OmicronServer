@@ -215,3 +215,29 @@ class TestGet(TestUser):
 
     def test_get(self):
         self.assertEqual(self.expected_result, self.user.get)
+
+
+class TestGetFull(TestUser):
+    def setUp(self):
+        TestUser.setUp(self)
+        self.user = models.User(self.username, self.password, self.email)
+        self.expected_result = {
+            'username': self.username,
+            'email': self.email
+        }
+
+    def test_get_full(self):
+        self.assertEqual(self.expected_result, self.user.get_full)
+
+
+class TestUserRepr(TestUser):
+    def setUp(self):
+        TestUser.setUp(self)
+        self.user = models.User(self.username, self.password, self.email)
+        self.expected_result = '%s(%s, %s, %s)' % (
+            self.user.__class__.__name__, self.username,
+            self.user.password_hash, self.email
+        )
+
+    def test_repr(self):
+        self.assertEqual(self.expected_result, self.user.__repr__())
