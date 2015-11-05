@@ -4,6 +4,9 @@ Contains global config parameters for the API
 import os
 from sqlalchemy import create_engine
 import sys
+import logging
+
+log = logging.getLogger(__name__)
 
 if sys.version_info < (3,):
     import ConfigParser as configparser # Python 2 compatibility
@@ -35,6 +38,9 @@ class Config(object):
     PORT = 5000
     TOKEN_SECRET_KEY = 'rKrafg2L1HozC7jg1GvaXPZoHa32MiX51'
 
+    TEMPLATE_ALEMBIC_INI_PATH = os.path.join(
+        BASE_DIRECTORY, 'static', 'alembic.ini'
+    )
     ALEMBIC_CONF_FILE = os.path.join(BASE_DIRECTORY, 'alembic.ini')
 
     ENVIRONMENT_VARIABLES = [
@@ -44,18 +50,32 @@ class Config(object):
     ]
 
     def __init__(self, conf_dict=os.environ):
-        for attribute in self.ENVIRONMENT_VARIABLES:
+        for key in self.ENVIRONMENT_VARIABLES:
             try:
-                self.__dict__[attribute] = conf_dict[attribute]
+                value = conf_dict[key]
             except KeyError:
-                pass
+                value = getattr(self, key)
+                log.info(
+                    'Environment variable %s not supplied, '
+                    'using default value of %s',
+                    key, value
+                )
+            if key == 'PORT':
+                value = int(value)
 
-        self.update_alembic_ini(self.DATABASE_URL, self.ALEMBIC_CONF_FILE)
+            self.__dict__[key] = value
+
+        self.update_alembic_ini(
+            self.DATABASE_URL, self.TEMPLATE_ALEMBIC_INI_PATH,
+            self.ALEMBIC_CONF_FILE
+        )
 
     @staticmethod
-    def update_alembic_ini(database_url, alembic_conf_path):
+    def update_alembic_ini(
+            database_url, static_alembic_conf, alembic_conf_path
+    ):
         config = configparser.ConfigParser()
-        config.read(alembic_conf_path)
+        config.read(static_alembic_conf)
 
         config['alembic']['sqlalchemy.url'] = database_url
 
