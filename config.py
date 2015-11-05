@@ -35,6 +35,7 @@ class Config(object):
     DATABASE_URL = 'sqlite:///'
     DATABASE_ENGINE = create_engine(DATABASE_URL)
 
+    IP_ADDRESS = '127.0.0.1'
     PORT = 5000
     TOKEN_SECRET_KEY = 'rKrafg2L1HozC7jg1GvaXPZoHa32MiX51'
 
@@ -46,7 +47,7 @@ class Config(object):
     ENVIRONMENT_VARIABLES = [
         'BASE_DIRECTORY', 'PORT',
         'DATABASE_URL', 'TOKEN_SECRET_KEY',
-        'DEBUG', 'STATE'
+        'DEBUG', 'STATE', 'IP_ADDRESS'
     ]
 
     def __init__(self, conf_dict=os.environ):
