@@ -7,7 +7,7 @@ itsdangerous
 sqlalchemy
 sqlalchemy-migrate
 jsonschema
-# psycopg2 needed for PostgreSQL
+psycopg2
 
 # DB Versioning
 alembic
