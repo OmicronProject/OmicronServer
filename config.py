@@ -77,9 +77,22 @@ class Config(object):
         config = configparser.ConfigParser()
         config.read(static_alembic_conf)
 
-        config['alembic']['sqlalchemy.url'] = database_url
+        if sys.version_info < (3,): # Using Python2
+            Config._update_python2(config, database_url, alembic_conf_path)
+        else:
+            Config._update_python3(config, database_url, alembic_conf_path)
+
+    @staticmethod
+    def _update_python2(parsed_config, database_url, alembic_conf_path):
+        parsed_config.set('alembic', 'sqlalchemy.url', database_url)
+        with open(alembic_conf_path, 'w') as configfile:
+            parsed_config.write(configfile)
+
+    @staticmethod
+    def _update_python3(parsed_config, database_url, alembic_conf_path):
+        parsed_config['alembic']['sqlalchemy.url'] = database_url
 
         with open(alembic_conf_path, 'w') as configfile:
-            config.write(configfile)
+            parsed_config.write(configfile)
 
 default_config = Config()
