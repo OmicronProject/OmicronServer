@@ -32,7 +32,7 @@ class Config(object):
     BASE_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
     JSON_SCHEMA_PATH = os.path.join(BASE_DIRECTORY, 'schemas')
 
-    DATABASE_URL = 'sqlite:///'
+    DATABASE_URL = 'sqlite:///%s' % ('test_db.sqlite3')
     DATABASE_ENGINE = create_engine(DATABASE_URL)
 
     IP_ADDRESS = '127.0.0.1'
