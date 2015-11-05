@@ -35,6 +35,10 @@ TOKEN_SECRET_KEY = 'rKrafg2L1HozC7jg1GvaXPZoHa32MiX51'
 
 DATABASE_ENGINE = create_engine(DATABASE_URI)
 
+try:
+    PORT = os.environ['PORT']
+except KeyError:
+    PORT = 5000
 
 if STATE == 'DEV':
     DEBUG = True
@@ -45,4 +49,4 @@ elif STATE == 'CI':
 else:
     STATE = 'PROD'
     DEBUG = 'FALSE'
-    PORT = 5000
+    PORT = PORT
