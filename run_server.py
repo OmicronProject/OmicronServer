@@ -11,4 +11,4 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 if __name__ == "__main__":
-    app.run(port=conf.PORT, debug=conf.DEBUG)
+    app.run(host=conf.IP_ADDRESS, port=conf.PORT, debug=conf.DEBUG)
