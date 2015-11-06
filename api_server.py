@@ -23,7 +23,8 @@ def hello_world():
     Base URL to confirm that the API actually works
     :return:
     """
-    return 'Hello World!'
+    return '<p>Hello World!</p>' \
+           '<img src="https://i.imgur.com/L4dbbYU.jpg" alt="Dank Memes">'
 
 
 @app.route('/api/v1/token')
