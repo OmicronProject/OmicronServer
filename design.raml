@@ -4,13 +4,55 @@ title: OmicronAPI
 baseUri: http://omicron/api/{version}
 version: v1
 mediaType: application/json
-schemas:
-  - 404: !include schemas/404.json
-    users: !include schemas/users.json
-    users_post: !include schemas/users_post.json
-    users_response: !include schemas/users.json
-    user: !include schemas/user.json
+protocols: [HTTP, HTTPS]
 
+/token:
+  displayName: Authentication
+  description: Request a token for user authentication
+  post:
+    description: Authenticate a user
+    queryParameters:
+      expiration:
+        displayName: Expiration
+        description: The number of seconds for which this token will be active. Defaults to 7200s (2 hours). Reauthentication will be needed after this.
+        type: integer
+    body:
+      application/json:
+        schema: !include schemas/token/post_body.json
+    responses:
+      201:
+        description: User has authenticated, token given in body
+        body:
+          application/json:
+            example: |
+              {
+              "username": "scott",
+              "token": "914891248912481928491204"
+              }
+            schema: !include schemas/token/post_body.json
+      403:
+        description: Bad login credentials, user has not authenticated
+      400:
+        description: Bad request
+  /schema:
+    description: Display the JSON Schema for this endpoint
+
+  /{token}:
+    description: Endpoint for manipulation on an individual user's token. Tokens can be revoked here
+    uriParameters:
+      token:
+        description: The authentication token
+        type: integer
+
+    delete:
+      description: Delete a token. User will require re-authentication after this.
+      responses:
+        200:
+          description: User has successfully deleted his token
+        403:
+          description: User does not have permission to delete token
+        404:
+          description: Token does not exist
 
 /users:
     displayName: List of users in the system
@@ -20,9 +62,7 @@ schemas:
             contains:
                 displayName: Contains
                 type: string
-                description: |
-                    Allows searching of user names by a string. Returns
-                    users with name matching the string
+                description: Allows searching of user names by a string. Returns users with name matching the string
             starts_with:
                 displayName: Starts With
                 type: string
@@ -43,56 +83,128 @@ schemas:
             200:
                 body:
                     application/json:
-                        schema: users
+                        schema: !include schemas/users/get.json
+                        example: !include schemas/users/examples/get.json
+            403:
+                body:
+                    application/json:
+                        schema: !include schemas/403.json
     post:
         description: Create a new user. Check the schema against the JSON schema for validation.
         body:
             application/json:
-                schema: UserPost
+                schema: !include schemas/users/users_post.json
         responses:
-            200:
+            201:
                 description: Successful creation of a new user
                 body:
                     application/json:
-                        schema: users_response
+                        schema: !include schemas/users/users_response.json
             400:
                 description: Bad request, user may already exist, or the data supplied is incorrect
                 body:
                     application/json:
                         schema: !include schemas/users_400.json
     /schema:
+      /get:
         get:
             description: Get schema used to display users
             responses:
                 200:
+                  body:
                     application/json:
-                        schema: users
-    /{userId}:
+                        example: !include schemas/users/get.json
+      /post:
+        get:
+          description: Get schema used to display users
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include schemas/users/users_post.json
+    /{username}:
         uriParameters:
-            userId:
-                type: integer
+            username:
+                description: The name of the user to find
+                type: string
+        description:
+          Retrieve Data associated with a user
+        get:
+          description: Get all details for a particular user. Returns user as well as project info
+          responses:
+            200:
+              body:
+                application/json:
+                  schema: !include schemas/users-user_id/user.json
+            404:
+              body:
+                application/json:
+                  schema: !include schemas/404.json
+        patch:
+          description: Alter a user's data. Add user to projects, or request a password reset
+          body:
+            application/json:
+              schema: !include schemas/users-user_id/user.json
+          responses:
+            200:
+              body:
+                application/json:
+                  schema: !include schemas/users-user_id/user.json
+            404:
+              body:
+                application/json:
+                  schema: !include schemas/404.json
         /schema:
-        /token:
-/files:
-    /schema:
-    /{fileId}:
-        uriParameters:
-            fileId:
-                type: integer
-        /schema:
-
+          get:
+            description: Get Schema for User ID
+            responses:
+              200:
+                body:
+                  application/json:
+                    example: !include schemas/users-user_id/user.json
 /projects:
     get:
         description: Retrieve a list of projects
+        queryParameters:
+          page:
+            description: The current page of results
+            type: integer
+          items_per_page:
+            description: The number of results to be displayed per page
+            type: integer
+          begins_with:
+            description: A string with which the result should begin
+        responses:
+          200:
+            description: Successful return of all projects
+            body:
+              application/json:
+                schema: !include schemas/projects/get.json
+          403:
+            description: User is not authenticated
     post:
         description: Create a new project
     /schema:
         get:
-            description: Return the JSON schema for this 
+            description: Return the JSON schema for this endpoint
     /{projectId}:
         uriParameters:
             projectId:
                 type: integer
         /schema:
         /files:
+          description: The files associated with each project
+          displayName: Files
+          get:
+            description: Return the list of all files in a project
+            responses:
+              200:
+                description: List retrieved
+              403:
+                description: User not authorized for this project
+          post:
+            description: Upload a file to this project
+            body:
+              application/json:
+                example: !include schemas/projects-project_id-files/post_example.json
         /users:

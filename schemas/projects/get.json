@@ -1,0 +1,11 @@
+{
+  "projects": [
+    {
+      "id": 1,
+      "name": "Molecular Beam Epitaxy",
+      "url": "http://omicronserver.com/projects/1",
+      "owner_name": "scott",
+      "owner_url" : "http:/omicronserver.com/users/scott"
+    }
+  ]
+}
