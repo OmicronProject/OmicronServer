@@ -1,10 +1,18 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Generic 403 error",
-    "type": "object",
-    "properties": {
-        "message": {
-            "type": "string"
-        }
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "The POST request to be sent to the API to authenticate a user",
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
     }
+  },
+  "additionalProperties": false,
+  "required": [
+    "username",
+    "password"
+  ]
 }

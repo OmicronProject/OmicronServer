@@ -27,11 +27,11 @@
             "name": "username"
           },
           "email": {
-            "id": "email",
+            "id": "0",
             "type": "string",
-            "title": "Email schema.",
+            "title": "Email",
             "description": "An explanation about the puropose of this instance described by this schema.",
-            "name": "email"
+            "format": "email"
           },
           "projects": {
             "id": "projects",
@@ -39,7 +39,7 @@
             "title": "Projects schema.",
             "description": "An explanation about the puropose of this instance described by this schema.",
             "name": "projects",
-            "items": {}
+            "$ref": "/schemas/projects/get.json"
           }
         },
         "required": [

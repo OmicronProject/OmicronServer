@@ -1,5 +1,7 @@
 """
-Runs the API
+Defines the flask app which will run our HTTP application. This also creates
+a flask-restful API object, which will serve as the router to the objects in
+:mod:`api_views`.
 """
 from flask import Flask, g, jsonify
 from flask_restful import Api

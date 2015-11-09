@@ -7,7 +7,7 @@ mediaType: application/json
 protocols: [HTTP, HTTPS]
 
 /token:
-  displayName: Authentication
+  displayName: Token
   description: Request a token for user authentication
   post:
     description: Authenticate a user
@@ -19,6 +19,11 @@ protocols: [HTTP, HTTPS]
     body:
       application/json:
         schema: !include schemas/token/post_body.json
+        example: |
+          {
+          "username": "scott",
+          "password": "tiger"
+          }
     responses:
       201:
         description: User has authenticated, token given in body
@@ -26,10 +31,9 @@ protocols: [HTTP, HTTPS]
           application/json:
             example: |
               {
-              "username": "scott",
               "token": "914891248912481928491204"
               }
-            schema: !include schemas/token/post_body.json
+            schema: !include schemas/token/post_response.json
       403:
         description: Bad login credentials, user has not authenticated
       400:
@@ -208,3 +212,23 @@ protocols: [HTTP, HTTPS]
               application/json:
                 example: !include schemas/projects-project_id-files/post_example.json
         /users:
+          description: Returns the users for a particular project
+          get:
+            description: Get users for a given project
+          post:
+            description: add a user to a project
+          /{userId}:
+            uriParameters:
+              userId:
+                type: integer
+            description: Get user data for a user in a project
+            get:
+              description: redirect to /users/{userId}
+              responses:
+                303:
+                  description: Redirect the user to the /users/{userId} endpoint
+            delete:
+              description: Delete the user from the project
+              responses:
+                200:
+                  description: Resource deleted
