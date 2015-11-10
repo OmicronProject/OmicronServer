@@ -6,8 +6,11 @@ a flask-restful API object, which will serve as the router to the objects in
 from flask import Flask, g, jsonify
 from flask_restful import Api
 from flask.ext.httpauth import HTTPBasicAuth
-import api_views
+from api_views.users import UserContainer
 from db_models import User
+import logging
+
+log = logging.getLogger(__name__)
 
 __author__ = 'Michal Kononenko'
 
@@ -15,7 +18,7 @@ app = Flask(__name__)
 api = Api(app, prefix='/api/v1')
 auth = HTTPBasicAuth()
 
-api.add_resource(api_views.UserContainer, '/users', endpoint='users')
+api.add_resource(UserContainer, '/users', endpoint='users')
 
 
 @app.route('/')

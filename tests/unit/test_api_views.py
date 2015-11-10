@@ -6,7 +6,7 @@ from api_server import app
 from db_models import metadata, ContextManagedSession, User
 import logging
 import json
-import api_views as views
+import api_views.users as users
 from sqlalchemy import create_engine
 
 __author__ = 'Michal Kononenko'
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 test_engine = create_engine('sqlite:///')
-views.database_session = ContextManagedSession(bind=test_engine)
+users.database_session = ContextManagedSession(bind=test_engine)
 
 
 class TestView(unittest.TestCase):
@@ -63,7 +63,7 @@ class TestParseSearchQueryParams(TestUserContainer):
 
         user = User(self.username, self.password, self.email)
 
-        with views.database_session as session:
+        with users.database_session as session:
             session.add(user)
 
         self.top_level_json_key = 'users'
@@ -71,7 +71,7 @@ class TestParseSearchQueryParams(TestUserContainer):
 
     def tearDown(self):
 
-        with views.database_session as session:
+        with users.database_session as session:
             user = session.query(User).filter_by(
                 username=self.username
             ).first()
