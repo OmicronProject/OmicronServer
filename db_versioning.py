@@ -11,6 +11,10 @@ __author__ = 'Michal Kononenko'
 log = logging.getLogger(__name__)
 
 
+class FileExistsError(Exception):
+    pass
+
+
 class DatabaseManager(object):
     """
     Contains methods for upgrading, downgrading, and migrating databases on
@@ -50,22 +54,26 @@ class DatabaseManager(object):
 
         self.metadata.create_all(bind=engine)
 
-        if not os.path.exists(self.migrate_repo):
-            self.api.create(self.migrate_repo)
-        else:
+        if os.path.exists(self.migrate_repo):
             self.api.version_control(
                 self.database_url, self.migrate_repo, self.version
             )
+        else:
+            self.api.create(self.migrate_repo)
 
-    def migrate_db(self):
-        log.info('Upgrading database at URL %s from version %d to %d',
-                 self.database_url, self.version, (self.version + 1)
+    def create_migration_script(self):
+        """
+        :param migration_script_path:
+        :return:
+        """
+        log.info(
+            'Upgrading database at URL %s from version %d to %d',
+            self.database_url, self.version, (self.version + 1)
         )
 
         migration_script_path = os.path.join(
             self.migrate_repo, '%03d_migration.py' % (self.version + 1)
         )
-
         temp_module = types.ModuleType('old_model')
 
         old_module = self.api.create_model(
@@ -81,11 +89,6 @@ class DatabaseManager(object):
         with open(migration_script_path, 'wt') as migration_script:
             migration_script.write(script)
 
-        self.api.upgrade(self.database_url, self.migrate_repo)
-
-        log.info('Database at URL %s upgraded to version %d',
-                 self.database_url, self.version
-                 )
 
     def upgrade_db(self):
         self.api.upgrade(self.database_url, self.migrate_repo)
