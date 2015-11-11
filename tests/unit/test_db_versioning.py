@@ -3,11 +3,17 @@ import mock
 import logging
 from db_schema import metadata as meta
 import db_versioning as dbv
+import sys
 
 __author__ = 'Michal Kononenko'
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+if sys.version_info < (3,):
+    builtin_string = '__builtin__'
+else:
+    builtin_string = 'builtins'
 
 
 class MockMigrateAPI(mock.MagicMock):
@@ -130,8 +136,8 @@ class TestCreateMigrationScript(TestDatabaseManager):
         TestDatabaseManager.setUp(self)
         self.manager.api.db_version = mock.MagicMock(new=1)
 
-    @mock.patch('builtins.exec')
-    @mock.patch('builtins.open')
+    @mock.patch('%s.exec' % builtin_string)
+    @mock.patch('%s.open' % builtin_string)
     @mock.patch('db_versioning.types.ModuleType', return_value=MockModule())
     def test_migrate_db(self, mock_module, mock_open, mock_exec):
         self.manager.create_migration_script()
