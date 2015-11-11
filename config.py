@@ -3,15 +3,9 @@ Contains global config parameters for the API
 """
 import os
 from sqlalchemy import create_engine
-import sys
 import logging
 
 log = logging.getLogger(__name__)
-
-if sys.version_info < (3,):
-    import ConfigParser as configparser # Python 2 compatibility
-else:
-    import configparser
 
 __author__ = 'Michal Kononenko'
 
