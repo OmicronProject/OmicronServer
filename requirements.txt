@@ -9,9 +9,6 @@ sqlalchemy-migrate
 jsonschema
 psycopg2
 
-# DB Versioning
-alembic
-
 # Password management
 flask-httpauth
 passlib

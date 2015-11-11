@@ -8,9 +8,10 @@ from config import default_config as conf
 from sqlalchemy.orm import Session
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
     BadSignature, SignatureExpired
-from functools import wraps
+import logging
 
 __author__ = 'Michal Kononenko'
+log = logging.getLogger(__name__)
 
 Base = declarative_base(metadata=metadata)
 
@@ -54,9 +55,10 @@ class ContextManagedSession(Session):
         if exc_type is None:
             try:
                 self.commit()
-            except:
+            except BaseException as exc:
+                log.error('Session commit raised error %s', exc)
                 self.rollback()
-                raise
+                raise exc
         else:
             self.rollback()
             raise exc_val

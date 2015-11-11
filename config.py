@@ -35,14 +35,11 @@ class Config(object):
     DATABASE_URL = 'sqlite:///%s' % ('test_db.sqlite3')
     DATABASE_ENGINE = create_engine(DATABASE_URL)
 
+    SQLALCHEMY_MIGRATE_REPO = os.path.join(BASE_DIRECTORY, 'db_versioning_repo')
+
     IP_ADDRESS = '127.0.0.1'
     PORT = 5000
     TOKEN_SECRET_KEY = 'rKrafg2L1HozC7jg1GvaXPZoHa32MiX51'
-
-    TEMPLATE_ALEMBIC_INI_PATH = os.path.join(
-        BASE_DIRECTORY, 'static', 'alembic.ini'
-    )
-    ALEMBIC_CONF_FILE = os.path.join(BASE_DIRECTORY, 'alembic.ini')
 
     ENVIRONMENT_VARIABLES = [
         'BASE_DIRECTORY', 'PORT',
@@ -65,22 +62,5 @@ class Config(object):
                 value = int(value)
 
             self.__dict__[key] = value
-
-        self.update_alembic_ini(
-            self.DATABASE_URL, self.TEMPLATE_ALEMBIC_INI_PATH,
-            self.ALEMBIC_CONF_FILE
-        )
-
-    @staticmethod
-    def update_alembic_ini(
-            database_url, static_alembic_conf, alembic_conf_path
-    ):
-        config = configparser.ConfigParser()
-        config.read(static_alembic_conf)
-
-        config.set('alembic', 'sqlalchemy.url', database_url)
-
-        with open(alembic_conf_path, 'w') as configfile:
-            config.write(configfile)
 
 default_config = Config()
