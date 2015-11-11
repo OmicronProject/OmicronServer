@@ -80,7 +80,7 @@ class DatabaseManager(object):
             self.database_url, self.migrate_repo
         )
 
-        exec(old_module, temp_module.__dict__)
+        eval(old_module, temp_module.__dict__)
 
         script = self.api.make_update_script_for_model(
             self.database_url, self.migrate_repo, temp_module.meta
@@ -88,7 +88,6 @@ class DatabaseManager(object):
 
         with open(migration_script_path, 'wt') as migration_script:
             migration_script.write(script)
-
 
     def upgrade_db(self):
         self.api.upgrade(self.database_url, self.migrate_repo)

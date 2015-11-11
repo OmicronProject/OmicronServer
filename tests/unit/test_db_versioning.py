@@ -136,7 +136,7 @@ class TestCreateMigrationScript(TestDatabaseManager):
         TestDatabaseManager.setUp(self)
         self.manager.api.db_version = mock.MagicMock(new=1)
 
-    @mock.patch('%s.exec' % builtin_string)
+    @mock.patch('%s.eval' % builtin_string)
     @mock.patch('%s.open' % builtin_string)
     @mock.patch('db_versioning.types.ModuleType', return_value=MockModule())
     def test_migrate_db(self, mock_module, mock_open, mock_exec):
