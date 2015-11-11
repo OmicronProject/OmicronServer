@@ -144,6 +144,8 @@ class TestCreateMigrationScript(TestDatabaseManager):
 class TestUpgradeDB(TestDatabaseManager):
     def setUp(self):
         TestDatabaseManager.setUp(self)
+        self.manager.api.db_version = \
+            mock.MagicMock(return_value=1)
 
         self.mock_upgrade_call = mock.call(
             self.manager.database_url, self.manager.migrate_repo
