@@ -20,7 +20,7 @@ import shlex
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- General configuration ------------------------------------------------
 
@@ -36,6 +36,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.httpdomain',
+    'sphinxcontrib.autohttp.flask'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -53,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Omicron API'
+project = 'Omicron Server'
 copyright = '2015, Shahab Akmal, Chris Yoo, Michal Kononenko'
 author = 'Shahab Akmal, Chris Yoo, Michal Kononenko'
 
@@ -229,7 +231,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'OmicronAPI.tex', 'Omicron API Documentation',
+  (master_doc, 'OmicronServer.tex', 'Omicron Server Documentation',
    'Shahab Akmal, Chris Yoo, Michal Kononenko', 'manual'),
 ]
 
@@ -259,7 +261,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'omicronapi', 'Omicron API Documentation',
+    (master_doc, 'omicronserver', 'Omicron Server Documentation',
      [author], 1)
 ]
 

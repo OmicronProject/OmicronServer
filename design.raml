@@ -53,7 +53,7 @@ protocols: [HTTP, HTTPS]
       responses:
         200:
           description: User has successfully deleted his token
-        403:
+        401:
           description: User does not have permission to delete token
         404:
           description: Token does not exist
@@ -89,7 +89,7 @@ protocols: [HTTP, HTTPS]
                     application/json:
                         schema: !include schemas/users/get.json
                         example: !include schemas/users/examples/get.json
-            403:
+            401:
                 body:
                     application/json:
                         schema: !include schemas/403.json
