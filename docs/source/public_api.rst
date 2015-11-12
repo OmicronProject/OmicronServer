@@ -21,6 +21,4 @@ by this API (application programming interface).
 URL Endpoints
 -------------
 
-.. autoclass:: api_views.users.UserContainer
-    :members:
-    :show-inheritance:
+.. autoflask:: api_server:app

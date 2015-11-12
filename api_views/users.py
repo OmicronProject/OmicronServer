@@ -60,7 +60,7 @@ class UserContainer(Resource):
         """
         Process a GET request for the /users endpoint
 
-        ** Example request **
+        **Example request**
 
         .. sourcecode:: http
 
@@ -68,7 +68,7 @@ class UserContainer(Resource):
             Host: example.com
             Content-Type: application/json
 
-        ** Example response **
+        **Example response**
 
         .. sourcecode:: http
 
