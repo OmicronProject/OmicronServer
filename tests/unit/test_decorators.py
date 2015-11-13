@@ -94,3 +94,40 @@ class TestRestfulPagination(unittest.TestCase):
         response_dict = json.loads(r.data.decode('utf-8'))
 
         self.assertEqual(response_dict['items_per_page'], 1000)
+
+    def test_function_name_preservation(self):
+        """
+        Result of a bug that occurred with the decorator, in that the wrapped
+        function was not passing the name and docstring of ``f``. This resulted
+        in Sphinx being unable to write the docstring of the wrapped function
+        """
+        def _function_to_decorate():
+            """
+            Function that will be decorated, all it does is return its name
+            """
+            return _function_to_decorate.__name__
+
+        function_name = _function_to_decorate.__name__
+        function_doc = _function_to_decorate.__doc__
+
+        decorated_function = \
+            decorators.restful_pagination()(_function_to_decorate)
+
+        self.assertEqual(decorated_function.__name__, function_name)
+        self.assertEqual(decorated_function.__doc__, function_doc)
+
+    def test_function_name_carrying_with_decorator(self):
+        function_docstring = 'foo'
+
+        @decorators.restful_pagination()
+        def _function_to_decorate():
+            pass
+
+        _function_to_decorate.__doc__ = function_docstring
+
+        self.assertNotEqual(
+            decorators.restful_pagination().__name__,
+            _function_to_decorate.__name__
+        )
+
+        self.assertEqual(function_docstring, _function_to_decorate.__doc__)

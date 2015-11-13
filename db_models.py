@@ -22,14 +22,14 @@ class NotDecoratableError(ValueError):
 
 class ContextManagedSession(Session):
     """
-    An extension to :cls:`sqlalchemy.orm.Session` that allows the session
+    An extension to :class:`sqlalchemy.orm.Session` that allows the session
     to be run using a ``with`` statement, committing all changes on an
     error-free exit from the context manager
     """
 
     def copy(self):
         """
-        Returns a new :cls:`ContextManagedSession` with the same namespace
+        Returns a new :class:`ContextManagedSession` with the same namespace
         as ``self``
         """
         session = self.__class__()
@@ -73,10 +73,12 @@ def sessionmaker(engine=None):
     Overwrites the factory :func:`sqlalchemy.orm.sessionmaker` in order
     to avoid having to specify ``bind=sqlalchemy_engine`` with every call to
     SQLAlchemy's session factory
+
     :param engine engine: The SQLAlchemy engine to which this session is to be
         bound. If not specified, will bind to the default engine given by
         :attr:`config.DATABASE_URI`
-    :return:
+    :return: A new database session
+    :rtype: :class:`db_models.ContextManagedSession`
     """
     return ContextManagedSession(bind=engine)
 

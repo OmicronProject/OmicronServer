@@ -20,7 +20,7 @@ import shlex
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- General configuration ------------------------------------------------
 
@@ -36,6 +36,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinxcontrib.httpdomain',
+    'sphinxcontrib.autohttp.flask'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -53,9 +55,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Omicron API'
-copyright = '2015, Shahab Akmal, Chris Yoo, Michal Kononenko'
-author = 'Shahab Akmal, Chris Yoo, Michal Kononenko'
+project = 'Omicron Server'
+copyright = '2015, Michal Kononenko, Chris Yoo, and Shahab Akmal'
+author = 'Michal Kononenko, Chris Yoo, Shahab Akmal'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -115,7 +117,7 @@ todo_include_todos = False
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'classic'
+html_theme = 'alabaster'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -229,7 +231,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'OmicronAPI.tex', 'Omicron API Documentation',
+  (master_doc, 'OmicronServer.tex', 'Omicron Server Documentation',
    'Shahab Akmal, Chris Yoo, Michal Kononenko', 'manual'),
 ]
 
@@ -259,7 +261,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'omicronapi', 'Omicron API Documentation',
+    (master_doc, 'omicronserver', 'Omicron Server Documentation',
      [author], 1)
 ]
 

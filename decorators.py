@@ -21,8 +21,11 @@ def restful_pagination(default_items_per_page=1000):
 
     :return:
     """
-    def wraps(f):
-        def wrapped_function(*args, **kwargs):
+    def _wraps(f):
+        _wraps.__name__ = f.__name__
+        _wraps.__doc__ = f.__doc__
+
+        def _wrapped_function(*args, **kwargs):
             page = request.args.get('page')
             if page is None:
                 page = 1
@@ -53,5 +56,7 @@ def restful_pagination(default_items_per_page=1000):
             response.headers['items_per_page'] = items_per_page
 
             return response
-        return wrapped_function
-    return wraps
+        _wrapped_function.__name__ = f.__name__
+        _wrapped_function.__doc__ = f.__doc__
+        return _wrapped_function
+    return _wraps

@@ -18,6 +18,7 @@ coverage
 mock
 coveralls
 
-# Optional, used to build documentation
+# Documentation Building
 sphinx
 sphinxcontrib-httpdomain
+sphinx-autobuild
