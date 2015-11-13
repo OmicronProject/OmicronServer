@@ -7,7 +7,7 @@ from flask import Flask, g, jsonify
 from flask_restful import Api
 from flask.ext.httpauth import HTTPBasicAuth
 from api_views.users import UserContainer
-from db_models import User
+from db_models import User, sessionmaker
 import logging
 
 log = logging.getLogger(__name__)
@@ -39,7 +39,8 @@ def hello_world():
 
     .. _OmicronClient: https://github.com/MichalKononenko/OmicronClient
 
-    :return:
+    :return: Hello, world!
+    :rtype: str
     """
     return 'Hello World!'
 
@@ -119,9 +120,20 @@ def verify_password(username_or_token, password):
     .. _HMAC-SHA256 https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
     """
     user = User.verify_auth_token(username_or_token)
+    if user:
+        g.user = user
+        return True
+
+    with sessionmaker() as session:
+        user = session.query(
+            User
+        ).filter_by(
+            username=username_or_token
+        ).first()
+
     if not user:
-        user = User.query.filter_by(username=username_or_token).first()
-        if not user or not user.verify_password(password):
-            return False
-    g.user = user
-    return True
+        return False
+    elif user.verify_password(password):
+        return True
+    else:
+        return False
