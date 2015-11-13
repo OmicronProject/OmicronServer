@@ -114,10 +114,9 @@ def verify_password(username_or_token, password):
     :return: True if the password or token is correct, False if otherwise
     :rtype bool:
 
-    .. _Authorization http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#
-        sec14.8
-    .. _SSL https://en.wikipedia.org/wiki/Transport_Layer_Security
-    .. _HMAC-SHA256 https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
+    .. _Authorization: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.8
+    .. _SSL: https://en.wikipedia.org/wiki/Transport_Layer_Security
+    .. _HMAC-SHA256: https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
     """
     user = User.verify_auth_token(username_or_token)
     if user:
