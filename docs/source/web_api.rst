@@ -1,7 +1,7 @@
 .. Contains documentation for the server's web API
 
-Public API
-==========
+Web API
+=======
 
 Contents
 --------

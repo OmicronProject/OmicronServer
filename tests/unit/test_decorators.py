@@ -122,6 +122,7 @@ class TestRestfulPagination(unittest.TestCase):
         @decorators.restful_pagination()
         def _function_to_decorate():
             pass
+
         _function_to_decorate.__doc__ = function_docstring
 
         self.assertNotEqual(

@@ -13,7 +13,8 @@ Contents:
    :maxdepth: 2
 
    installation
-   public_api
+   web_api
+   python_api
 
 
 
