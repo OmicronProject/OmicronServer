@@ -12,12 +12,12 @@ __author__ = 'Michal Kononenko'
 
 class Config(object):
     """
-    Contains configuration parameters and methods for broadcasting config
-    changes to ``alembic.ini`` and receiving changes from environment variables.
+    Contains configuration parameters and methods for receiving values from
+    environment variables.
 
     For global configuration, system environment variables have priority,
     followed by values in this object, then followed by the value
-    in a component's configuration file
+    in a component's configuration file.
     """
     STATE = 'DEV'
     VERSION = '0.1.1'
@@ -42,6 +42,13 @@ class Config(object):
     ]
 
     def __init__(self, conf_dict=os.environ):
+        """
+        Instantiate config parameters from environment variables
+
+        :param conf_dict: The dictionary or dictionary-like object from which
+            configuration parameters should be pulled, defaults to
+            ``os.environ``. This is overwritten for testing
+        """
         for key in self.ENVIRONMENT_VARIABLES:
             try:
                 value = conf_dict[key]
