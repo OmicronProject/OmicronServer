@@ -125,36 +125,7 @@ DjangoRESTFramework_
 SQLAlchemy
 ~~~~~~~~~~
 
-REST is stateless, meaning that after a request is processed, the application
-must return to the same state that it was in before the request started.
-We can't, for example, open up a session for a user when they authenticate,
-store the fact that the session was opened, and close the session when the user
-logs out. It also means that, at least in production, we can't store our data
-in our app. So where can we put this data if not in the app? The answer:
-a database.
-
-    Cuz you know I'm all about that 'base, database, no treble!
-        - Meghan Trainor if she was a web developer
-
-In production, the API will be pulling its data from PostgreSQL_. This is a
-relational database, meaning that it stores data as a bunch of cross-indexed
-tables. This gives us the following benefits
-
-    - Relations do not set either of their partners as first-class citizens.
-        Do projects belong to users or do users belong to projects? Relational
-        databases don't care.
-    - Relational databases can enforce constraints on our data by mandating
-        that a value in a column must match one of the values in another table,
-        or that a value in a column must be unique. This prevents us from, for
-        example, creating a project without a user as its owner.
-    - Relational databases are transactional_, meaning any update or delete
-        operations can be done in such a way that the database always moves
-        from one allowed state to another allowed state.
-    - Relational databases have been around since the 1970s and are some of the
-        most mature technology you can find
-
-.. _PostgreSQL: http://www.postgresql.org/
-.. _transactional: https://en.wikipedia.org/wiki/Database_transaction
+R
 
 Git and GitHub
 --------------
@@ -167,15 +138,15 @@ commands that you may need to use. For a more comprehensive tutorial, check
 out the official documentation for git `here <https://git-scm.com/doc>`_.
 
     - ``git clone <url>`` will take a repository located at ``<url>``, create
-    a new folder to hold your code, and will download the ``master`` branch
-    of the repository into this new folder.
+        a new folder to hold your code, and will download the ``master`` branch
+        of the repository into this new folder.
 
     - ``git branch <name>`` will create a new branch named ``<name>`` in your
-    local repository. Git branches are a series of snapshots of your code
-    repository that show some linear development of code. For example, I could
-    create a branch called "Issue14BugFix", and I would develop in this branch
-    anything that I needed to fix whatever "Issue 14" is. Then, when I felt the
-    issue was fixed, I would merge this branch with the "master" branch.
+        local repository. Git branches are a series of snapshots of your code
+        repository that show some linear development of code. For example, I could
+        create a branch called "Issue14BugFix", and I would develop in this branch
+        anything that I needed to fix whatever "Issue 14" is. Then, when I felt the
+        issue was fixed, I would merge this branch with the "master" branch.
 
     Calling just ``git branch`` will give you a list of local git branches, and
     will highlight the branch you are currently in.
@@ -190,37 +161,115 @@ out the official documentation for git `here <https://git-scm.com/doc>`_.
 
 
     - ``git checkout <branch>`` is how you switch between git branches. Any
-    file tracked by git will be changed to the version stored in that branch.
-    Any file not tracked by git will stay the way it is.
+        file tracked by git will be changed to the version stored in that branch.
+        Any file not tracked by git will stay the way it is.
 
     - ``git add <file>`` is how you add files to git to be tracked. If you
-    specify a directory, ``git add`` will be run recursively over every file
-    and subdirectory in the directory. ``git add .`` is a common command, and
-    will add every file to git in your current directory, provided you are in
-    a git repository (there is a ``.git`` folder somewhere between your current
-    directory and your system root directory). Git will not add any file whose
-    name matches a string in the ``.gitignore`` file. This is by design. I will
-    have more to say about this later, but ``.gitignore``'s job is to tell git
-    what files are not source code so that they aren't tracked.
+        specify a directory, ``git add`` will be run recursively over every file
+        and subdirectory in the directory. ``git add .`` is a common command, and
+        will add every file to git in your current directory, provided you are in
+        a git repository (there is a ``.git`` folder somewhere between your current
+        directory and your system root directory). Git will not add any file whose
+        name matches a string in the ``.gitignore`` file. This is by design. I will
+        have more to say about this later, but ``.gitignore``'s job is to tell git
+        what files are not source code so that they aren't tracked.
 
     - ``git commit`` is the most important command. When you hit the save
-    button on a file, you write it to disk, but git can overwrite saved files
-    if you ``git checkout`` to another branch. ``git commit`` writes your code
-    changes to a branch. Branches are nothing more than sets of
-    ``git commit``s. ``git commit`` is atomic, meaning that either all the
-    changed files are committed, or none of the changed files are committed.
-    adding an ``-a`` to ``git commit`` will make git run ``git add .`` before
-    committing, and adding an ``-m <message>`` flag will allow you to insert a
-    brief (up to 80 characters) message stating what you did in the commit.
-    (`Relevant XKCD <https://xkcd.com/1296/>`_). If you don't add a message in
-    the command, you will be prompted for a message.
+        button on a file, you write it to disk, but git can overwrite saved files
+        if you ``git checkout`` to another branch. ``git commit`` writes your code
+        changes to a branch. Branches are nothing more than sets of
+        ``git commit``s. ``git commit`` is atomic, meaning that either all the
+        changed files are committed, or none of the changed files are committed.
+        adding an ``-a`` to ``git commit`` will make git run ``git add .`` before
+        committing, and adding an ``-m <message>`` flag will allow you to insert a
+        brief (up to 80 characters) message stating what you did in the commit.
+        (`Relevant XKCD <https://xkcd.com/1296/>`_). If you don't add a message in
+        the command, you will be prompted for a message.
 
     The following is a list of other useful git commands, expect documentation
     for them soon
 
     - ``git diff``
+
     - ``git rm``
+
     - ``git remote add``
+
     - ``git push``
+
     - ``git pull``
+
     - ``git merge``
+
+Travis CI
+---------
+
+Travis CI, short for Continuous Integration, is a hosted web service that has
+only one job, take any code changes from GitHub, build the changes, run the
+tests, and report on whether the tests passed or not. The advantage of this
+is that since tests are run remotely on a "clean" server, we can get some
+confidence that the server will run in any environment. Furthermore, the server
+builds all pull requests, and so it lets us catch any test failures during the
+pull request.
+
+The build parameters for Travis are described in the ``.travis.yml`` file.
+
+More information about Travis can be found here_.
+
+.. _here: https://travis-ci.org/
+
+Coveralls
+---------
+
+Coveralls, like Travis CI, is a free service for open source projects, except
+instead of running tests to see if they pass, this service measures code
+coverage. This is the percentage of lines of code in the project that are
+actually hit during testing. This should be as high as possible.
+
+Heroku
+------
+
+Heroku will serve as the development machine for this project. The server is
+hosted at omicronserver.herokuapp.com. This machine will pull the master branch
+from GitHub and deploy it using instructions given to it in ``Procfile``. For
+more information, check out `Heroku's Documentation`_.
+
+.. warning::
+    The dev machine on Heroku will shut down after 30 minutes of inactivity,
+    and can only be up for a combined total of 18 hours per day, as part of the
+    free usage tier for Heroku hosting. This machine should not be used for
+    production, or any serious performance testing.
+
+.. _Heroku's Documentation: https://devcenter.heroku.com/
+
+SQLAlchemy
+----------
+
+As awesome as relational databases are, there is a problem. There are cases
+where relations and objects simply don't get along as data structures. To quote
+`SQLAlchemy's Documentation`_
+
+    SQL databases behave less like object collections the more size and
+    performance start to matter; object collections behave less like tables
+    and rows the more abstraction starts to matter.
+
+SQLAlchemy is not the solution to the object-relational `impedance_mismatch`_,
+but it tries to alleviate some problems associated with working with relational
+databases in object-oriented programming languages. Namely
+
+    - For small queries (i.e. queries returning little data
+        ), SQLAlchemy can take the data returned from executing SQL
+        code against the database (a blob of tables and columns), and map those
+        return values to a list of objects of the type specified by the
+        SQLAlchemy query. For instance
+
+        .. code-block:: python
+
+            with sessionmaker() as session:
+                session.query(User).all()
+
+        will return a list of objects of type ``User``, and allow further
+        processing.
+
+.. _SQLAlchemy's Documentation: http://www.sqlalchemy.org/
+.. _impedance_mismatch: https://en.wikipedia.org/wiki/Object-relational_impedance_mismatch

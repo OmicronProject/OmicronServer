@@ -64,12 +64,12 @@ and, well you get the point.
 
 I recommend reading these articles, and listening to `this talk`_ by Miguel
 Grinberg from PyCon 2015 where he discusses his take on REST, and also by
-joining the discussion on GitHub_ to make our API more RESTFul.
+joining the discussion on the `GitHub Repository`_ to make our API more RESTFul.
 
 .. _REST: https://en.wikipedia.org/wiki/Representational_state_transfer
 .. _Application Programming Interface (API): https://en.wikipedia.org/wiki/Application_programming_interface
 .. _this talk: https://www.youtube.com/watch?v=pZYRC8IbCwk
-.. _GitHub: https://github.com/MichalKononenko/OmicronServer
+.. _GitHub Repository: https://github.com/MichalKononenko/OmicronServer
 
 HTTP and REST: Why They Go So Well Together
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,29 +167,61 @@ to providing all the utilities of git in a nice GUI, it also offers some nice
 features including
 
     - **Pull Requests**: When you feel your branch is ready to be merged into
-    ``master`` (let's say you fixed the bug you were trying to fix), you can
-    open up a pull request, which is a way for you to ask the owner of a repo
-    to pull one of your branches (hence the name) and merge it into their
-    ``master`` branch. This opens up a lovely window where you can see
-    line-for-line exactly what they intend to change, offers an opportunity
-    for TravisCI to check your code, and lets contributors comment on your
-    code. They can even reference the lines they think can be improved. Pull
-    requests, therefore, serve an important role as the place where code review
-    occurs.
+        ``master`` (let's say you fixed the bug you were trying to fix), you can
+        open up a pull request, which is a way for you to ask the owner of a repo
+        to pull one of your branches (hence the name) and merge it into their
+        ``master`` branch. This opens up a lovely window where you can see
+        line-for-line exactly what they intend to change, offers an opportunity
+        for TravisCI to check your code, and lets contributors comment on your
+        code. They can even reference the lines they think can be improved. Pull
+        requests, therefore, serve an important role as the place where code review
+        occurs.
 
     - **Issues**: GitHub also lets you track issues with code. These aren't
-    just bug reports, but can also be enhancements, questions to ask the
-    contributors, or any discussion thread that you feel is relevant to
-    the code in this repository. Issues can be opened, closed
-    (indicating that they are solved), assigned to people, and referenced in
-    other issues and pull requests, making them powerful tools for project
-    management and request specifications. If you want to see a particular
-    feature in this code, or if you would like to report a bug, please open an
-    issue `here <https://github.com/MichalKononenko/OmicronServer/issues?q=is%3Aopen+is%3Aissue>`_.
+        just bug reports, but can also be enhancements, questions to ask the
+        contributors, or any discussion thread that you feel is relevant to
+        the code in this repository. Issues can be opened, closed
+        (indicating that they are solved), assigned to people, and referenced in
+        other issues and pull requests, making them powerful tools for project
+        management and request specifications. If you want to see a particular
+        feature in this code, or if you would like to report a bug, please open an
+        issue `here <https://github.com/MichalKononenko/OmicronServer/issues?q=is%3Aopen+is%3Aissue>`_.
 
     - **Milestones**: Milestones are nothing more than collections of issues
-    that may be attached to a particular due date. This lets us set project
-    deadlines, and establish project scope for releases. Milestones also come
-    with a nifty percentage bar that lets contributors know how far along work
-    has progressed towards meeting a particular milestone. This is how project
-    scope will be tracked, at least for now.
+        that may be attached to a particular due date. This lets us set project
+        deadlines, and establish project scope for releases. Milestones also come
+        with a nifty percentage bar that lets contributors know how far along work
+        has progressed towards meeting a particular milestone. This is how project
+        scope will be tracked, at least for now.
+
+Relational Databases and You
+----------------------------
+
+REST APIs need to be stateless, meaning that after a request is processed, the
+application must return to the same state that it was in before the request
+started. We can't, for example, open up a session for a user when they
+authenticate, store the fact that the session was opened, and close the session
+when the user logs out. It also means that, at least in production, we can't
+store our data in our app. So where can we put this data if not in the app?
+The answer: a database.
+
+    Cuz you know I'm all about that 'base, database, no treble!
+        - Meghan Trainor if she was a web developer
+
+In production, the API will be pulling its data from PostgreSQL_. This is a
+relational database, meaning that it stores data as a bunch of cross-indexed
+tables. This gives us the following benefits
+
+    - Relations do not set either of their partners as first-class citizens.
+        Do projects belong to users or do users belong to projects? Relational
+        databases don't care.
+    - Relational databases can enforce constraints on our data by mandating
+        that a value in a column must match one of the values in another table,
+        or that a value in a column must be unique. This prevents us from, for
+        example, creating a project without a user as its owner.
+    - Relational databases are transactional_, meaning any update or delete
+        operations can be done in such a way that the database always moves
+        from one allowed state to another allowed state.
+
+.. _PostgreSQL: http://www.postgresql.org/
+.. _transactional: https://en.wikipedia.org/wiki/Database_transaction
