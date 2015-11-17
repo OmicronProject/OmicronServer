@@ -35,12 +35,10 @@ functionality to the software.
 In addition, this document is intended for reading by potential consumers of
 this API, in order to understand what each HTTP request in this API does.
 
-License
--------
+Readme
+======
 
-All code here is licensed under the
-`GNU General Public License (GPL) v3 <https://www.gnu.org/licenses/gpl-3.0.en.html>`_.
-A copy of this license can be found in this project's ``LICENSE`` folder.
+    .. include:: ../../readme.rst
 
 
 Indices and tables

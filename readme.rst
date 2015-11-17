@@ -1,16 +1,27 @@
-# Welcome to OmicronServer #
+Welcome to OmicronServer
+========================
 
 **OmicronServer** is the back end for Omicron Web Services, a project that aims
  to automate much of the process engineering and experimentation
 
-## Badges ##
+Badges
+------
 
-[![Build Status](https://travis-ci.org/MichalKononenko/OmicronServer.svg?branch=ReadmeTravisC)](https://travis-ci.org/MichalKononenko/OmicronServer)
-[![Coverage Status](https://coveralls.io/repos/MichalKononenko/OmicronServer/badge.svg?branch=master&service=github)](https://coveralls.io/github/MichalKononenko/OmicronServer?branch=master)
-[![GitHub license](https://img.shields.io/badge/License-GNU%20GPL%20v3-blue.svg)]()
-[![Documentation Status](https://readthedocs.org/projects/omicron-server/badge/?version=latest)](http://omicron-server.readthedocs.org/en/latest/?badge=latest)
+.. image:: https://travis-ci.org/MichalKononenko/OmicronServer.svg?branch=master
+    :target: https://travis-ci.org/MichalKononenko/OmicronServer
 
-## Installation ##
+.. image:: https://coveralls.io/repos/MichalKononenko/OmicronServer/badge.svg?branch=master&service=github
+  :target: https://coveralls.io/github/MichalKononenko/OmicronServer?branch=master
+
+.. image:: https://img.shields.io/badge/License-GNU%20GPL%20v3-blue.svg
+
+.. image:: https://readthedocs.org/projects/omicron-server/badge/?version=latest
+    :target: http://omicron-server.readthedocs.org/en/latest/?badge=latest
+    :alt: Documentation Status
+
+Installation
+------------
+
 A stable version of **OmicronServer** has not yet been released. TravisCI builds
 are run on all branches and pull requests with every commit, but features may be
 lacking in these builds. See the issues and project milestones for a timeline
@@ -19,7 +30,9 @@ of future releases.
 ``$ git clone https://github.com/MichalKononenko/OmicronServer.git``
  
 
-## Packages and Dependencies ##
+Packages and Dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 Dependencies are outlined in ``requirements.txt``. In order to install dependencies, run 
 
 ``pip install -r requirements.txt``
@@ -32,26 +45,33 @@ some of the packages listed here. your machine may not have this luxury, and so
 you may have to find binaries for the [``psycopg2``](http://initd.org/psycopg/)
 package, in order to connect to PostgreSQL
 
-### Supported Versions ###
+Supported Versions
+~~~~~~~~~~~~~~~~~~
+
 This project is currently supported for Python versions
 - 2.7
 - 3.4
 - 3.5
 
-### Supported Databases ###
+Supported Databases
+~~~~~~~~~~~~~~~~~~~
 OmicronServer currently supports PostgreSQL and SQLite.
 
-## Running the Program ##
+Running the Program
+-------------------
 
 To run the server, run
 
-`` python run_server.py ``
+    .. code-block:: bash
+        
+        $ python run_server.py
 
 from the command line. 
 By default, the server will run on ``localhost:5000``. The address can be specified by
 setting the ``IP_ADDRESS`` and ``PORT`` environment variables in your command line.
 
-### Environment Variables ###
+Environment Variables
+~~~~~~~~~~~~~~~~~~~~~
 
 The file ``config.py`` will adjust its settings depending on the value of several
 environment variables. These are
@@ -66,10 +86,15 @@ token will no longer work.
 - ``DEBUG``: If ``TRUE``, then stack traces will be displayed when **in the browser** if the server throws a 500 error
 - ``STATE``: A generic flag for specifying between ``DEV``, ``CI``, and ``PROD`` machines. Currently not wired to anything
 
-### Command Line Parsing ###
+Command Line Parsing
+~~~~~~~~~~~~~~~~~~~~
+
 Unfortunately, the values above must be set as environment variables as OmicronServer does not currently support parsing
 these arguments in the command line
 
-## License ##
-This project and all files in this repository are licensed under the GNU General Public License (GPL) version 2.
+License
+-------
+
+
+This project and all files in this repository are licensed under the GNU General Public License (GPL) version 3.
 A copy of this license can be found in the ``LICENSE`` file
