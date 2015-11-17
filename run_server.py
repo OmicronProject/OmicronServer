@@ -3,8 +3,7 @@ Script to run the server
 """
 from api_server import app
 from config import default_config as conf
-from db_models import metadata
-import subprocess
+from db_models import metadata, User, sessionmaker
 import logging
 import os
 
@@ -18,6 +17,11 @@ if __name__ == "__main__":
 
     os.environ['PYTHONPATH'] = \
         '%s;%s' % (conf.BASE_DIRECTORY, os.environ['PYTHONPATH'])
-    subprocess.call(['alembic', 'upgrade', 'head'])
+
+    with sessionmaker(engine=conf.DATABASE_ENGINE) as session:
+        user = session.query(User).filter_by(username=conf.ROOT_USER).first()
+        if not user:
+            user = User(conf.ROOT_USER, conf.ROOT_PASSWORD, conf.ROOT_EMAIL)
+            session.add(user)
 
     app.run(host=conf.IP_ADDRESS, port=conf.PORT, debug=conf.DEBUG)

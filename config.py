@@ -38,8 +38,12 @@ class Config(object):
     ENVIRONMENT_VARIABLES = [
         'BASE_DIRECTORY', 'PORT',
         'DATABASE_URL', 'TOKEN_SECRET_KEY',
-        'DEBUG', 'STATE', 'IP_ADDRESS'
+        'DEBUG', 'STATE', 'IP_ADDRESS', 'ROOT_USER', 'ROOT_PASSWORD'
     ]
+
+    ROOT_USER = 'root'
+    ROOT_PASSWORD = 'deler'
+    ROOT_EMAIL = 'scott@tiger.com'
 
     def __init__(self, conf_dict=os.environ):
         """

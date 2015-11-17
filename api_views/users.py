@@ -53,6 +53,9 @@ class UserContainer(Resource):
         if ends_with is not None:
             search_string = '%s%s' % (search_string, '%%%s' % ends_with)
 
+        if starts_with is None and ends_with is None:
+            search_string = '%%%%'
+
         return search_string
 
     @restful_pagination()
