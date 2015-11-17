@@ -143,6 +143,11 @@ class TestParseSearchQueryParams(TestUserContainer):
 
         self.assertFalse(json_dict[self.top_level_json_key])
 
+    def test_empty_search_string(self):
+        request_url = self.template_url
+
+        self._get_request(request_url, 1)
+
     def _get_request(self, request_url, expected_count):
         r = self.request_method(request_url, headers=self.headers)
         self.assertEqual(r.status_code, 200)
