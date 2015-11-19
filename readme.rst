@@ -38,20 +38,21 @@ Dependencies are outlined in ``requirements.txt``. In order to install dependenc
 ``pip install -r requirements.txt``
 
 TravisCI uses this file to install all its dependencies, and Heroku uses this
-to identify **OmicronServer** as a [Python](https://docs.python.org/3.5/) project.
+to identify **OmicronServer** as a `Python <https://docs.python.org/3.5/>`_ project.
 
 Since Travis runs on Linux, it has the advantage of using ``gcc`` to compile
 some of the packages listed here. your machine may not have this luxury, and so
-you may have to find binaries for the [``psycopg2``](http://initd.org/psycopg/)
+you may have to find binaries for the `psycopg2 <http://initd.org/psycopg/>`_
 package, in order to connect to PostgreSQL
 
 Supported Versions
 ~~~~~~~~~~~~~~~~~~
 
 This project is currently supported for Python versions
-- 2.7
-- 3.4
-- 3.5
+    - 2.7
+    - 3.4
+    - 3.5
+
 
 Supported Databases
 ~~~~~~~~~~~~~~~~~~~
@@ -80,8 +81,8 @@ environment variables. These are
 - ``PORT``: The port number at which the server is to be hosted
 - ``BASE_DIRECTORY``: The base directory where ``run_server.py`` is kept. By default, this is the current directory of the ``config.py`` file
 - ``TOKEN_SECRET_KEY``: The secret key used as a salt to generate authentication tokens for the user. Tokens are not stored on
-the back end, but are generated from user data, and the value of ``TOKEN_SECRET_KEY``. If this value is changed, the user's
-token will no longer work.
+    the back end, but are generated from user data, and the value of ``TOKEN_SECRET_KEY``. If this value is changed, the user's
+    token will no longer work.
 - ``DATABASE_URL``: The URL at which the database sits. This is the database to be used by the server
 - ``DEBUG``: If ``TRUE``, then stack traces will be displayed when **in the browser** if the server throws a 500 error
 - ``STATE``: A generic flag for specifying between ``DEV``, ``CI``, and ``PROD`` machines. Currently not wired to anything

@@ -38,7 +38,7 @@ this API, in order to understand what each HTTP request in this API does.
 Readme
 ======
 
-    .. include:: ../../readme.rst
+.. include:: ../../readme.rst
 
 
 Indices and tables
