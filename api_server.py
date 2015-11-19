@@ -9,6 +9,7 @@ from flask.ext.httpauth import HTTPBasicAuth
 from api_views.users import UserContainer
 from db_models import User, sessionmaker
 import logging
+from config import default_config as conf
 
 log = logging.getLogger(__name__)
 
@@ -123,7 +124,7 @@ def verify_password(username_or_token, password):
         g.user = user
         return True
 
-    with sessionmaker() as session:
+    with sessionmaker(engine=conf.DATABASE_ENGINE) as session:
         user = session.query(
             User
         ).filter_by(
@@ -133,6 +134,7 @@ def verify_password(username_or_token, password):
     if not user:
         return False
     elif user.verify_password(password):
+        g.user = user
         return True
     else:
         return False
