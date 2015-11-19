@@ -19,6 +19,10 @@ Badges
     :target: http://omicron-server.readthedocs.org/en/latest/?badge=latest
     :alt: Documentation Status
 
+.. image:: https://requires.io/github/MichalKononenko/OmicronServer/requirements.svg?branch=master
+     :target: https://requires.io/github/MichalKononenko/OmicronServer/requirements/?branch=master
+     :alt: Requirements Status
+
 Installation
 ------------
 
