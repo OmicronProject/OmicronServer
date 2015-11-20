@@ -153,3 +153,40 @@ class TestVerifyPassword(TestAPIServer):
         ))
 
         self.assertTrue(mock_verify.called)
+
+    @mock.patch('api_server.User.verify_auth_token')
+    def test_user_query_token_adds_to_g(self, mock_verify_auth_token):
+
+        mock_verify_auth_token.return_value = self.user
+
+        self.assertTrue(api_server.verify_password(
+            self.username, self.password
+        ))
+
+        self.assertEqual(api_server.g.user, self.user)
+
+        self.assertEqual(mock_verify_auth_token.call_args,
+                         mock.call(self.username))
+
+    @mock.patch('api_server.User.verify_auth_token', return_value=False)
+    @mock.patch('sqlalchemy.orm.query.Query.first')
+    @mock.patch('api_server.User.verify_password', return_value=True)
+    def test_user_password_verify_adds_to_g(
+            self, mock_verify_password, mock_query, mock_verify_token
+    ):
+        mock_query.return_value = self.user
+
+        self.assertTrue(api_server.verify_password(
+            self.username, self.password
+        ))
+
+        self.assertEqual(api_server.g.user, self.user)
+
+        self.assertEqual(mock_query.call_args, mock.call())
+        self.assertEqual(mock_verify_password.call_args,
+                         mock.call(self.password))
+        self.assertEqual(mock_verify_token.call_args,
+                         mock.call(self.username))
+
+
+
