@@ -10,6 +10,7 @@ from api_views.users import UserContainer
 from db_models import User, sessionmaker
 import logging
 from config import default_config as conf
+from auth import auth
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +18,6 @@ __author__ = 'Michal Kononenko'
 
 app = Flask(__name__)
 api = Api(app, prefix='/api/v1')
-auth = HTTPBasicAuth()
 
 api.add_resource(UserContainer, '/users', endpoint='users')
 

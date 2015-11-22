@@ -2,13 +2,14 @@
 Contains the SQLAlchemy ORM model for the API
 """
 from sqlalchemy.ext.declarative import declarative_base
-from db_schema import metadata, users
+from db_schema import metadata, users, users_projects_asoc_tables, projects
 from passlib.apps import custom_app_context as pwd_context
 from config import default_config as conf
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, relationship
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
     BadSignature, SignatureExpired
 import logging
+from datetime import datetime
 
 __author__ = 'Michal Kononenko'
 log = logging.getLogger(__name__)
@@ -94,6 +95,11 @@ class User(Base):
     username = __columns__.username
     email_address = __columns__.email_address
     password_hash = __columns__.password_hash
+    date_created = __columns__.date_created
+
+    projects = relationship('Project', backref='members',
+                            secondary=users_projects_asoc_tables,
+                            lazy='dynamic')
 
     def __init__(self, username, password, email):
         self.password_hash = self.hash_password(password)
@@ -134,7 +140,8 @@ class User(Base):
 
     @property
     def get(self):
-        return {'username': self.username, 'email': self.email_address}
+        return {'username': self.username, 'email': self.email_address,
+                'date_created': self.date_created.isoformat()}
 
     @property
     def get_full(self):
@@ -148,3 +155,31 @@ class User(Base):
             self.__class__.__name__, self.username,
             self.password_hash, self.email_address
         )
+
+
+class Project(Base):
+    """
+    Models a project for a given user. The project constructor requires
+    the following
+
+    :var str project_name: The name of the project
+    :var str description: A description of the project
+
+    """
+    __table__ = projects
+
+    id = __table__.c.project_id
+    name = __table__.c.name
+    date_created = __table__.c.date_created
+
+
+    def __init__(
+        self, project_name, description,
+        date_created=datetime.utcnow().isoformat(),
+        owner=None
+    ):
+        self.name = project_name
+        self.date_created = date_created
+        self.owner = owner
+        self.description = description
+
