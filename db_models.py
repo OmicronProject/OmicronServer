@@ -86,7 +86,7 @@ def sessionmaker(engine=None):
 
 class User(Base):
     """
-    Base class for a user
+    Base class for a user.
     """
     __table__ = users
     __columns__ = __table__.c
@@ -101,10 +101,14 @@ class User(Base):
                             secondary=users_projects_asoc_tables,
                             lazy='dynamic')
 
-    def __init__(self, username, password, email):
+    def __init__(
+            self, username, password, email,
+            date_created=datetime.now()
+    ):
         self.password_hash = self.hash_password(password)
         self.username = username
         self.email_address = email
+        self.date_created = date_created
 
     @staticmethod
     def hash_password(password):
