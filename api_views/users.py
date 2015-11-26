@@ -8,6 +8,7 @@ import os
 from decorators import restful_pagination
 from config import default_config as conf
 from db_models import User, sessionmaker
+from auth import auth
 
 __author__ = 'Michal Kononenko'
 database_session = sessionmaker(conf.DATABASE_ENGINE)
@@ -58,6 +59,7 @@ class UserContainer(Resource):
 
         return search_string
 
+    @auth.login_required
     @restful_pagination()
     def get(self, pag_args):
         """
