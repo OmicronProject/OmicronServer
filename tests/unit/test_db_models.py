@@ -224,7 +224,8 @@ class TestGetFull(TestUser):
         self.user = models.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
-            'email': self.email
+            'email': self.email,
+            'date_created': self.user.date_created.isoformat()
         }
 
     def test_get_full(self):

@@ -151,7 +151,8 @@ class User(Base):
     def get_full(self):
         return {
             'username': self.username,
-            'email': self.email_address
+            'email': self.email_address,
+            'date_created': self.date_created.isoformat()
         }
 
     def __repr__(self):
@@ -175,7 +176,6 @@ class Project(Base):
     id = __table__.c.project_id
     name = __table__.c.name
     date_created = __table__.c.date_created
-
 
     def __init__(
         self, project_name, description,

@@ -59,8 +59,8 @@ class UserContainer(Resource):
 
         return search_string
 
-    @restful_pagination()
     @auth.login_required
+    @restful_pagination()
     def get(self, pag_args):
         """
         Process a GET request for the /users endpoint
