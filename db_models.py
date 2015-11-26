@@ -175,11 +175,12 @@ class Project(Base):
 
     id = __table__.c.project_id
     name = __table__.c.name
+    description = __table__.c.description
     date_created = __table__.c.date_created
 
     def __init__(
         self, project_name, description,
-        date_created=datetime.utcnow().isoformat(),
+        date_created=datetime.utcnow(),
         owner=None
     ):
         self.name = project_name
@@ -187,3 +188,6 @@ class Project(Base):
         self.owner = owner
         self.description = description
 
+    @property
+    def date_created_isoformat(self):
+        return self.date_created.isoformat()

@@ -32,7 +32,7 @@ projects = Table(
     Column('project_id', Integer, primary_key=True),
     Column('name', String(128), nullable=False),
     Column('date_created', DateTime, nullable=False, default=datetime.now()),
-    Column('owner_id', Integer, ForeignKey('users.user_id')),
+    Column('owner_id', Integer, ForeignKey('users.user_id'), nullable=True),
     Column('description', String(1000), nullable=True)
 )
 
