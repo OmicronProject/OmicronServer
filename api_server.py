@@ -5,11 +5,8 @@ a flask-restful API object, which will serve as the router to the objects in
 """
 from flask import Flask, g, jsonify
 from flask_restful import Api
-from flask.ext.httpauth import HTTPBasicAuth
 from api_views.users import UserContainer
-from db_models import User, sessionmaker
 import logging
-from config import default_config as conf
 from auth import auth
 
 log = logging.getLogger(__name__)
