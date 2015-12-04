@@ -32,7 +32,7 @@ before_script:
   - sh -c "if [ '$DB' = "mysql" ] ; then mysql -e 'CREATE DATABASE IF NOT EXISTS test_database;' ; fi"
   - sh -c "if [ '$DB' = "mysql" ] ; then DATABASE_URL=mysql://root:@localhost:3306/test_database ; fi"
   - sh -c "if [ '$DB' = "sqlite" ] ; then DATABASE_URL=sqlite:/// ; fi"
-  - sh -c "ECHO $DATABASE_URL"
+  - sh -c "echo $DATABASE_URL"
 
 script:
   - sh -c "if [ '${TRAVIS_PULL_REQUEST}' = "false" ] ; then nosetests ./tests/unit --with-coverage ; else nosetests --with-coverage; fi"
