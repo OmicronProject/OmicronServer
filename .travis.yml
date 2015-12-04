@@ -4,6 +4,10 @@ services:
   - mysql
   - postgresql
 
+addons:
+    code_climate:
+        repo_token: 41c19e20da39887c90e4534b37bd345eeb6b698efd2bb94fba3b64b2d1b9f497
+
 env:
   - DB=sqlite
   - DB=mysql
