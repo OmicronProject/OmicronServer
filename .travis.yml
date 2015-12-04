@@ -32,7 +32,7 @@ before_script:
   - sh -c "echo $DATABASE_URL"
 
 script:
-  - sh -c "if [ '${TRAVIS_PULL_REQUEST}' = "false" ] ; then nosetests ./tests/unit --with-coverage ; else nosetests --with-coverage; fi"
+  - sh -c "if [ '${TRAVIS_PULL_REQUEST}' = "false" && '$TRAVIS_BRANCH' != "master" ] ; then nosetests ./tests/unit --with-coverage ; else nosetests --with-coverage; fi"
 
 after_success:
   - coveralls
