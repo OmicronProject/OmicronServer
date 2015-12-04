@@ -8,10 +8,12 @@ declared in :mod:`api_server`
 from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
 from config import default_config as conf
-from db_models import sessionmaker, User
+from db_models.db_sessions import ContextManagedSession
+from db_models.users import User
 
 __author__ = 'Michal Kononenko'
 auth = HTTPBasicAuth()
+database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 @auth.verify_password
@@ -57,7 +59,7 @@ def verify_password(username_or_token, password):
         g.user = user
         return True
 
-    with sessionmaker(engine=conf.DATABASE_ENGINE) as session:
+    with database_session() as session:
         user = session.query(
             User
         ).filter_by(

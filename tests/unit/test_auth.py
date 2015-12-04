@@ -4,16 +4,17 @@ Contains unit tests for :mod:`auth`
 import unittest
 import auth
 import mock
-from db_models import User, metadata
+from db_schema import metadata
+from db_models.users import User
 from sqlalchemy import create_engine
+from db_models.db_sessions import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 
 
 class TestAuth(unittest.TestCase):
     engine = create_engine('sqlite:///')
-
-    auth.conf.DATABASE_ENGINE = engine
+    auth.database_session = ContextManagedSession(bind=engine)
 
     @classmethod
     def setUpClass(cls):
@@ -35,7 +36,7 @@ class TestVerifyPassword(TestAuth):
 
         auth.g = mock.MagicMock()
 
-        with auth.sessionmaker(self.engine) as session:
+        with auth.database_session() as session:
             session.add(self.user)
 
         self.user = self.user.__class__(
@@ -43,7 +44,7 @@ class TestVerifyPassword(TestAuth):
         )
 
     def tearDown(self):
-        with auth.sessionmaker(self.engine) as session:
+        with auth.database_session() as session:
             user = session.query(self.user.__class__).filter_by(
                 username=self.username
             ).first()
@@ -85,7 +86,7 @@ class TestVerifyPassword(TestAuth):
 
     @mock.patch('auth.User.verify_password', return_value=True)
     def test_user_query_no_user_found(self, mock_verify):
-        with auth.sessionmaker(self.engine) as session:
+        with auth.database_session() as session:
             user = session.query(self.user.__class__).filter_by(
                 username=self.username
             ).first()

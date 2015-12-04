@@ -7,11 +7,12 @@ from json_schema_parser import JsonSchemaValidator
 import os
 from decorators import restful_pagination
 from config import default_config as conf
-from db_models import User, sessionmaker
+from db_models.users import User
 from auth import auth
+from db_models.db_sessions import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
-database_session = sessionmaker(conf.DATABASE_ENGINE)
+database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 class UserContainer(Resource):
@@ -99,7 +100,7 @@ class UserContainer(Resource):
         """
         like_string = self.parse_search_query_params(request)
 
-        with database_session as session:
+        with database_session() as session:
             user_query = session.query(
                 User
             ).filter(
@@ -128,7 +129,7 @@ class UserContainer(Resource):
         email = request.json.get('email')
 
         user = User(username, password, email)
-        with database_session as session:
+        with database_session() as session:
             session.add(user)
 
         response = jsonify({'user': username, 'email': email})

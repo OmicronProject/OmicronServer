@@ -3,7 +3,9 @@ Contains unit tests for :mod:`views`
 """
 import unittest
 from api_server import app
-from db_models import metadata, ContextManagedSession, User
+from db_schema import metadata
+from db_models.db_sessions import ContextManagedSession
+from db_models.users import User
 import logging
 import json
 import api_views.users as users
