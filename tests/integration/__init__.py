@@ -4,7 +4,8 @@ Contains integration tests for the Omicron Server
 import unittest
 import db_schema
 from config import default_config as conf
-from db_models import User, ContextManagedSession
+from db_models.db_sessions import ContextManagedSession
+from db_models.users import User
 
 __author__ = 'Michal Kononenko'
 

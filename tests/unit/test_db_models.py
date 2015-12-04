@@ -3,7 +3,9 @@ Contains unit tests for :mod:`db_models`
 """
 import unittest
 import mock
-import db_models as models
+from db_models.projects import Project
+import db_models.db_sessions
+import db_models.users
 from sqlalchemy import create_engine
 from db_schema import metadata
 from datetime import datetime
@@ -14,7 +16,7 @@ __author__ = 'Michal Kononenko'
 class TestContextManagedSession(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///')
-        self.base_session = models.ContextManagedSession(bind=self.engine)
+        self.base_session = db_models.db_sessions.ContextManagedSession(bind=self.engine)
 
     def test_context_managed_session_enter(self):
         with self.base_session as session:
@@ -70,7 +72,7 @@ class TestContextManagedSession(unittest.TestCase):
 class TestSessionDecorator(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///')
-        self.base_session = models.ContextManagedSession(bind=self.engine)
+        self.base_session = db_models.db_sessions.ContextManagedSession(bind=self.engine)
 
     def test_decorator_callable(self):
         @self.base_session()
@@ -78,23 +80,17 @@ class TestSessionDecorator(unittest.TestCase):
             return created_session
 
         session = _test_decorator()
-        self.assertIsInstance(session, models.ContextManagedSession)
+        self.assertIsInstance(session,
+                              db_models.db_sessions.ContextManagedSession)
         self.assertNotEqual(session, self.base_session)
 
     def test_context_manager(self):
         with self.base_session() as session:
             pass
 
-        self.assertIsInstance(session, models.ContextManagedSession)
+        self.assertIsInstance(session,
+                              db_models.db_sessions.ContextManagedSession)
         self.assertNotEqual(session, self.base_session)
-
-
-class TestSessionMaker(unittest.TestCase):
-
-    def test_sessionmaker_with_engine(self):
-        engine = mock.MagicMock()
-        session = models.sessionmaker(engine=engine)
-        self.assertEqual(session.bind, engine)
 
 
 class TestUser(unittest.TestCase):
@@ -108,6 +104,10 @@ class TestUser(unittest.TestCase):
         self.username = 'scott'
         self.password = 'tiger'
         self.email = 'scott@tiger.com'
+        self.base_session = \
+            db_models.db_sessions.ContextManagedSession(
+                bind=self.engine
+            )
 
     @classmethod
     def tearDownClass(cls):
@@ -116,13 +116,13 @@ class TestUser(unittest.TestCase):
 
 class TestUserConstructor(TestUser):
 
-    @mock.patch('db_models.User.hash_password')
+    @mock.patch('db_models.users.User.hash_password')
     def test_constructor(self, mock_hash_function):
 
         mock_hash_function.return_value = 'hashed_password'
 
-        user = models.User(self.username, self.password, self.email)
-        self.assertIsInstance(user, models.User)
+        user = db_models.users.User(self.username, self.password, self.email)
+        self.assertIsInstance(user, db_models.users.User)
         self.assertEqual(user.username, self.username)
         self.assertEqual(user.email_address, self.email)
         self.assertEqual(user.password_hash, mock_hash_function.return_value)
@@ -134,12 +134,12 @@ class TestUserConstructor(TestUser):
 class TestHashPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
 
-    @mock.patch('db_models.pwd_context.encrypt')
+    @mock.patch('db_models.users.pwd_context.encrypt')
     def test_hash_password(self, mock_encrypt):
         self.assertEqual(
-            mock_encrypt.return_value, models.User.hash_password(self.password)
+            mock_encrypt.return_value, db_models.users.User.hash_password(self.password)
         )
 
         mock_encrypt_call = mock.call(self.password)
@@ -151,7 +151,7 @@ class TestHashPassword(TestUser):
 class TestVerifyPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
         self.bad_password = 'invalid'
 
         self.assertNotEqual(self.password, self.bad_password)
@@ -166,10 +166,10 @@ class TestVerifyPassword(TestUser):
 class TestGenerateAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
         self.mock_token = 'foobarbaz123456'
 
-    @mock.patch('db_models.Serializer.dumps')
+    @mock.patch('db_models.users.Serializer.dumps')
     def test_generate_auth_token(self, mock_serializer):
         mock_serializer.return_value = self.mock_token
         mock_dumps_call = mock.call({'id': self.user.id})
@@ -181,41 +181,45 @@ class TestGenerateAuthToken(TestUser):
 class TestVerifyAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
         self.mock_token ='foobarbaz123456'
 
-        with models.sessionmaker(self.engine) as session:
+        with self.base_session() as session:
             session.add(self.user)
 
     def tearDown(self):
-        with models.sessionmaker(self.engine) as session:
-            user = session.query(models.User).\
+        with self.base_session() as session:
+            user = session.query(db_models.users.User).\
                 filter_by(id=1).first()
             session.delete(user)
 
-    @mock.patch('db_models.Serializer.loads')
+    @mock.patch('db_models.users.Serializer.loads')
     def test_verify_token(self, mock_serializer):
         mock_serializer.return_value = {'id': 1}
-        returned_data = models.User.verify_auth_token(self.mock_token)
+        returned_data = db_models.users.User.verify_auth_token(self.mock_token)
 
         self.assertEqual(1, returned_data)
 
-    @mock.patch('db_models.Serializer.loads')
+    @mock.patch('db_models.users.Serializer.loads')
     def test_verify_token_signature_expired(self, mock_serializer):
-        mock_serializer.side_effect = models.SignatureExpired('test_error')
+        mock_serializer.side_effect = \
+            db_models.users.SignatureExpired('test_error')
 
-        self.assertIsNone(models.User.verify_auth_token(self.mock_token))
+        self.assertIsNone(
+            db_models.users.User.verify_auth_token(self.mock_token))
 
-    @mock.patch('db_models.Serializer.loads')
+    @mock.patch('db_models.users.Serializer.loads')
     def test_verify_token_bad_signature(self, mock_serializer):
-        mock_serializer.side_effect = models.BadSignature('test_error')
-        self.assertIsNone(models.User.verify_auth_token(self.mock_token))
+        mock_serializer.side_effect = \
+            db_models.users.BadSignature('test_error')
+        self.assertIsNone(
+            db_models.users.User.verify_auth_token(self.mock_token))
 
 
 class TestGet(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
             'email': self.email,
@@ -229,7 +233,7 @@ class TestGet(TestUser):
 class TestGetFull(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
             'email': self.email,
@@ -243,7 +247,7 @@ class TestGetFull(TestUser):
 class TestUserRepr(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = models.User(self.username, self.password, self.email)
+        self.user = db_models.users.User(self.username, self.password, self.email)
         self.expected_result = '%s(%s, %s, %s)' % (
             self.user.__class__.__name__, self.username,
             self.user.password_hash, self.email
@@ -274,12 +278,12 @@ class TestProject(unittest.TestCase):
 class TestProjectConstructor(TestProject):
 
     def test_constructor(self):
-        project = models.Project(
+        project = Project(
             self.project_name, self.project_description,
             self.date_created
         )
 
-        self.assertIsInstance(project, models.Project)
+        self.assertIsInstance(project, Project)
         self.assertEqual(project.name, self.project_name)
         self.assertEqual(project.description, self.project_description)
         self.assertEqual(project.date_created_isoformat,

@@ -3,7 +3,9 @@ Contains unit tests for :mod:`api_server`
 """
 import unittest
 import mock
-from db_models import User, metadata, ContextManagedSession
+from db_schema import metadata
+from db_models.db_sessions import ContextManagedSession
+from db_models.users import User
 import api_server
 import json
 from sqlalchemy import create_engine
