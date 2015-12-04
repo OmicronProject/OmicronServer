@@ -23,6 +23,11 @@ Badges
      :target: https://requires.io/github/MichalKononenko/OmicronServer/requirements/?branch=master
      :alt: Requirements Status
 
+.. image:: https://codeclimate.com/github/MichalKononenko/OmicronServer/badges/gpa.svg
+   :target: https://codeclimate.com/github/MichalKononenko/OmicronServer
+   :alt: Code Climate
+
+
 Installation
 ------------
 

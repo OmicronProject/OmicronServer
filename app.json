@@ -1,0 +1,19 @@
+{
+  "name": "Omicron Server",
+  "description": "The back end for the Omicron Project",
+  "repository": "https://github.com/MichalKononenko/OmicronServer",
+  "success_url": "/",
+  "addons": [
+    "heroku-postgresql:hobby-dev"
+  ],
+  "env": {
+    "TOKEN_SECRET_KEY": {
+      "description": "A unique secret key used to generate crypto signatures",
+      "generator": "secret"
+    },
+    "IP_ADDRESS": {
+      "description": "The address to host the app. Heroku requires 0.0.0.0",
+      "value": "0.0.0.0"
+    }
+  }
+}
