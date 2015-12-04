@@ -2,7 +2,7 @@
 raml_build/
 
 # Test Databases using SQLite
-test_db.sqlite3
+*.sqlite3
 
 # Pycharm files
 .idea/

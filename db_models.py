@@ -11,6 +11,7 @@ from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
 import logging
 from datetime import datetime
 
+
 __author__ = 'Michal Kononenko'
 log = logging.getLogger(__name__)
 
@@ -37,17 +38,21 @@ class ContextManagedSession(Session):
         session.__dict__ = self.__dict__
         return session
 
-    def __call__(self):
-        def wraps(f):
-            if hasattr(f, '__call__'):
-                def wrapped_function(*args, **kwargs):
-                    with self as session:
-                        response = f(session, *args, **kwargs)
-                    return response
-                return wrapped_function
-            else:
-                raise NotDecoratableError('unable to decorate object %s', f)
-        return wraps
+    def __call__(self, f=None):
+        if hasattr(f, '__call__'):
+            return self._decorator(f)
+        else:
+            return self
+
+    def _decorator(self, f):
+        def _wrapped_function(*args, **kwargs):
+            with self as session:
+                response = f(session, *args, **kwargs)
+            return response
+
+        _wrapped_function.__name__ = f.__name__
+        _wrapped_function.__doc__ = f.__doc__
+        return _wrapped_function
 
     def __enter__(self):
         return self.copy()

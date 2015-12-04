@@ -81,6 +81,13 @@ class TestSessionDecorator(unittest.TestCase):
         self.assertIsInstance(session, models.ContextManagedSession)
         self.assertNotEqual(session, self.base_session)
 
+    def test_context_manager(self):
+        with self.base_session() as session:
+            pass
+
+        self.assertIsInstance(session, models.ContextManagedSession)
+        self.assertNotEqual(session, self.base_session)
+
 
 class TestSessionMaker(unittest.TestCase):
 
