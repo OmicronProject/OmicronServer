@@ -42,7 +42,7 @@ class Config(object):
     ]
 
     ROOT_USER = 'root'
-    ROOT_PASSWORD = 'deler'
+    ROOT_PASSWORD = 'toor'
     ROOT_EMAIL = 'scott@tiger.com'
 
     def __init__(self, conf_dict=os.environ):
