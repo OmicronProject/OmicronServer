@@ -9,9 +9,9 @@ addons:
         repo_token: 41c19e20da39887c90e4534b37bd345eeb6b698efd2bb94fba3b64b2d1b9f497
 
 env:
-  - DB=sqlite
-  - DB=mysql
-  - DB=postgres
+  - DATABASE_URL=postgres://postgres:@localhost:5432/test_database
+  - DATABASE_URL=mysql://root:@localhost:3306/test_database
+  - DATABASE_URL=sqlite://
 
 language: python
 python:
@@ -26,12 +26,9 @@ install:
   - pip install -r requirements.txt
 
 before_script:
-  - sh -c "if [ '$DB' = "postgres" ] ; then psql -c 'DROP DATABASE IF EXISTS test_database;' -U postgres ; fi"
-  - sh -c "if [ '$DB' = "postgres" ] ; then psql -c 'CREATE DATABASE test_database;' -U postgres ; fi"
-  - sh -c "if [ '$DB' = "postgres$" ] ; then DATABASE_URL=postgres://postgres:@localhost:5432/test_database ; fi"
-  - sh -c "if [ '$DB' = "mysql" ] ; then mysql -e 'CREATE DATABASE IF NOT EXISTS test_database;' ; fi"
-  - sh -c "if [ '$DB' = "mysql" ] ; then DATABASE_URL=mysql://root:@localhost:3306/test_database ; fi"
-  - sh -c "if [ '$DB' = "sqlite" ] ; then DATABASE_URL=sqlite:/// ; fi"
+  - sh -c "if [ '$DATABASE_URL' = "postgres://postgres:@localhost:5432/test_database" ] ; then psql -c 'DROP DATABASE IF EXISTS test_database;' -U postgres ; fi"
+  - sh -c "if [ '$DATABASE_URL' = "postgres://postgres:@localhost:5432/test_database" ] ; then psql -c 'CREATE DATABASE test_database;' -U postgres ; fi"
+  - sh -c "if [ '$DATABASE_URL' = "mysql://root:@localhost:3306/test_database" ] ; then mysql -e 'CREATE DATABASE IF NOT EXISTS test_database;' ; fi"
   - sh -c "echo $DATABASE_URL"
 
 script:
