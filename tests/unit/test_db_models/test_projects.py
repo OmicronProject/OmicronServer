@@ -1,27 +1,16 @@
 import unittest
-from sqlalchemy import create_engine
-from db_schema import metadata
 from datetime import datetime
 from db_models.projects import Project
 
 __author__ = 'Michal Kononenko'
 
+
 class TestProject(unittest.TestCase):
-
-    engine = create_engine('sqlite:///')
-
-    @classmethod
-    def setUpClass(cls):
-        metadata.create_all(bind=cls.engine)
 
     def setUp(self):
         self.project_name = 'test_project'
         self.project_description = 'This is a description'
         self.date_created = datetime.utcnow()
-
-    @classmethod
-    def tearDownClass(cls):
-        metadata.drop_all(bind=cls.engine)
 
 
 class TestProjectConstructor(TestProject):
