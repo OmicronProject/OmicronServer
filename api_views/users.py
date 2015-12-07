@@ -1,7 +1,7 @@
 """
 Contains views for the ``/users`` endpoint.
 """
-from flask import request, abort, jsonify
+from flask import request, abort, jsonify, g
 from flask_restful import Resource
 from json_schema_parser import JsonSchemaValidator
 import os
@@ -136,3 +136,18 @@ class UserContainer(Resource):
         response.status_code = 201
 
         return response
+
+
+class UserView(Resource):
+    """
+    Maps the ``/users/<username>`` endpoint
+    """
+    @auth.login_required
+    def get(self, username):
+        with database_session() as session:
+            user = session.query(User).filter_by(username=username).first()
+            if user != g.user:
+                abort(401)
+
+            response = jsonify(user.get_full)
+            return response
