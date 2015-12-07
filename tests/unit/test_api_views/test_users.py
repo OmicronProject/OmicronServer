@@ -10,6 +10,8 @@ import logging
 import json
 import api_views.users as users
 from sqlalchemy import create_engine
+import mock
+from base64 import b64encode
 
 __author__ = 'Michal Kononenko'
 
@@ -185,3 +187,52 @@ class TestCreateUser(TestUserContainer):
         r = self.request_method(self.url, data=json.dumps(data_to_post),
                                 headers=self.headers)
         self.assertEqual(r.status_code, 400)
+
+
+class TestUserView(TestView):
+
+    def setUp(self):
+        self.username = 'scott'
+        self.password = 'tiger'
+        self.email = 'scott@tiger.com'
+        self.user = User(self.username, self.password, self.email)
+
+
+class TestGet(TestUserView):
+
+    def setUp(self):
+        TestUserView.setUp(self)
+        self.request_method = self.client.get
+        self.url = 'api/v1/users/%s' % self.username
+        self.headers['Authorization'] = 'Basic %s' % \
+            b64encode(('%s:%s' % (self.username, self.password)).encode('ascii')).decode('ascii')
+
+        self.bad_user = User('foo', 'bar', 'foo@bar.com')
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    @mock.patch('api_views.users.auth.login_required')
+    @mock.patch('api_views.users.g')
+    def test_get_correct(self, mock_g, mock_auth, mock_first):
+        mock_auth.return_value = lambda f: f
+        mock_first.return_value = self.user
+
+        mock_g.user = self.user
+
+        r = self.request_method(self.url, headers=self.headers)
+        self.assertEqual(r.status_code, 200)
+
+        self.assertTrue(mock_first.called)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    @mock.patch('api_views.users.auth.login_required')
+    @mock.patch('api_views.users.g')
+    def test_get_fake_user(self, mock_g, mock_auth, mock_first):
+        mock_auth.return_value = lambda f: f
+        mock_first.return_value = self.user
+
+        mock_g.user = self.bad_user
+
+        r = self.request_method(self.url, headers=self.headers)
+        self.assertEqual(r.status_code, 401)
+
+        self.assertTrue(mock_first.called)

@@ -17,7 +17,7 @@ app = Flask(__name__)
 api = Api(app, prefix='/api/v1')
 
 api.add_resource(UserContainer, '/users')
-api.add_resource(UserView, 'users/<username>')
+api.add_resource(UserView, '/users/<username>')
 
 
 @app.route('/')
