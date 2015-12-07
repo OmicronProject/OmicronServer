@@ -11,11 +11,7 @@ __author__ = 'Michal Kononenko'
 
 
 class TestUser(unittest.TestCase):
-    engine = create_engine('sqlite:///')
-
-    @classmethod
-    def setUpClass(cls):
-        metadata.create_all(bind=cls.engine)
+    engine = create_engine('sqlite://')
 
     def setUp(self):
         self.username = 'scott'
@@ -100,15 +96,6 @@ class TestVerifyAuthToken(TestUser):
         TestUser.setUp(self)
         self.user = db_models.users.User(self.username, self.password, self.email)
         self.mock_token ='foobarbaz123456'
-
-        with self.base_session() as session:
-            session.add(self.user)
-
-    def tearDown(self):
-        with self.base_session() as session:
-            user = session.query(db_models.users.User).\
-                filter_by(id=1).first()
-            session.delete(user)
 
     @mock.patch('db_models.users.Serializer.loads')
     def test_verify_token(self, mock_serializer):

@@ -14,14 +14,14 @@ class TestContextManagedSession(unittest.TestCase):
         self.base_session = db_models.db_sessions.ContextManagedSession(bind=self.engine)
 
     def test_context_managed_session_enter(self):
-        with self.base_session as session:
+        with self.base_session() as session:
             self.assertNotEqual(self.base_session, session)
             self.assertEqual(self.base_session.__dict__, session.__dict__)
 
     def test_exit_no_error(self):
         commit = mock.MagicMock()
         rollback = mock.MagicMock()
-        with self.base_session as session:
+        with self.base_session() as session:
             session.commit = commit
             session.rollback = rollback
 
@@ -34,7 +34,7 @@ class TestContextManagedSession(unittest.TestCase):
         rollback = mock.MagicMock()
 
         with self.assertRaises(error_to_raise.__class__):
-            with self.base_session as session:
+            with self.base_session() as session:
                 session.commit = commit
                 session.rollback = rollback
                 raise Exception('test_error')
@@ -48,7 +48,7 @@ class TestContextManagedSession(unittest.TestCase):
         rollback = mock.MagicMock()
 
         with self.assertRaises(error_to_raise.__class__):
-            with self.base_session as session:
+            with self.base_session() as session:
                 session.commit = commit
                 session.rollback = rollback
 
