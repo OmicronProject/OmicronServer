@@ -24,14 +24,25 @@ users_projects_asoc_tables = Table(
     Column('user_id', Integer, ForeignKey('users.user_id'), primary_key=True),
     Column('project_id', Integer, ForeignKey('projects.project_id'),
            primary_key=True),
-    Column('date_joined', DateTime, nullable=False, default=datetime.now())
+    Column('date_joined', DateTime, nullable=False, default=datetime.utcnow())
+)
+
+tokens = Table(
+    'tokens', metadata,
+    Column('user_id', Integer, ForeignKey('users.user_id'), primary_key=True),
+    Column('token_hash', String(128), primary_key=True),
+    Column('date_created', DateTime, nullable=False,
+           default=datetime.utcnow()),
+    Column('expiration_date', DateTime, nullable=False,
+           default=datetime.utcnow()),
+    Column('token_salt', String(36), nullable=False)
 )
 
 projects = Table(
     'projects', metadata,
     Column('project_id', Integer, primary_key=True),
     Column('name', String(128), nullable=False),
-    Column('date_created', DateTime, nullable=False, default=datetime.now()),
+    Column('date_created', DateTime, nullable=False, default=datetime.utcnow()),
     Column('owner_id', Integer, ForeignKey('users.user_id'), nullable=True),
     Column('description', String(1000), nullable=True)
 )

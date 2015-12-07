@@ -1,17 +1,78 @@
 """
 Contains model classes relevant to User management.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 from db_models import Base
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
     SignatureExpired, BadSignature
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy.orm import relationship
 from config import default_config as conf
-from db_schema import users, users_projects_asoc_tables
+from db_schema import users, users_projects_asoc_tables, tokens
 from db_models.projects import Project
+from uuid import uuid1
+from hashlib import sha256
 
 __author__ = 'Michal Kononenko'
+
+
+class Token(Base):
+    """
+    Contains methods for manipulating user tokens.
+    """
+    __table__ = tokens
+
+    token_hash = __table__.c.token_hash
+    date_created = __table__.c.date_created
+    expiration_date = __table__.c.expiration_date
+    salt = __table__.c.token_salt
+
+    def __init__(
+            self, token_string, expiration_date=None
+    ):
+        self.date_created = datetime.utcnow()
+        self.salt = str(uuid1())
+
+        self.token_hash = self._hash_token(token_string)
+
+        if expiration_date is None:
+            expiration_date = self.date_created + timedelta(
+                seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME)
+
+        self.expiration_date = expiration_date
+
+    def _hash_token(self, token_string):
+        """
+        Takes a token string and hashes it using a salted SHA256 algorithm.
+        The hash is of the form hash(token + hash(token_salt))
+
+        :param str token_string: The string to hash
+        :return: A hex digest of the hash
+        """
+        salt_hash = sha256(self.salt.encode('ascii')).hexdigest()
+
+        string_to_hash = '%s%s' % (salt_hash, token_string)
+
+        return sha256(string_to_hash.encode('ascii')).hexdigest()
+
+    def verify_token(self, token):
+        """
+        Checks if the provided token string matches the token hash in the DB,
+        and that the token is not expired
+        :param str token: The token to verify
+        :return: True if the token is valid, False if not
+        """
+        if datetime.utcnow() > self.expiration_date:
+            return False
+
+        return self._hash_token(token) == self.token_hash
+
+    def revoke(self):
+        """
+        Expire the token by setting the expiration date equal to the current
+        date
+        """
+        self.expiration_date = datetime.utcnow()
 
 
 class User(Base):
@@ -27,9 +88,16 @@ class User(Base):
     password_hash = __columns__.password_hash
     date_created = __columns__.date_created
 
+    __mapper_args__ = {
+        'polymorphic_identity': False,
+        'polymorphic_on': __table__.c.is_superuser
+    }
+
     projects = relationship(Project, backref='members',
                             secondary=users_projects_asoc_tables,
                             lazy='dynamic')
+
+    tokens = relationship(Token, backref='owner', lazy='dynamic')
 
     def __init__(
             self, username, password, email,
@@ -90,3 +158,9 @@ class User(Base):
             self.__class__.__name__, self.username,
             self.password_hash, self.email_address
         )
+
+
+class Administrator(User):
+    __mapper_args__ = {
+        'polymorphic_identity': True
+    }

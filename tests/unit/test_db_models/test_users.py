@@ -1,13 +1,126 @@
 import unittest
-
+from freezegun import freeze_time
 import mock
 from sqlalchemy import create_engine
-
+from datetime import datetime, timedelta
 import db_models.db_sessions
 import db_models.users
 from db_schema import metadata
+from uuid import uuid1
+from config import default_config as conf
+from hashlib import sha256
 
 __author__ = 'Michal Kononenko'
+
+
+class TestToken(unittest.TestCase):
+    engine = create_engine('sqlite://')
+    time_to_freeze = datetime.utcnow()
+
+    def setUp(self):
+        self.token_string = str(uuid1())
+        self.expiration_date = self.time_to_freeze + timedelta(seconds=1800)
+
+
+class TestTokenConstructor(TestToken):
+
+    def setUp(self):
+        TestToken.setUp(self)
+        self.guid_salt = uuid1()
+        self.token_string = 'foobarbaz123456'
+
+    @freeze_time(TestToken.time_to_freeze)
+    @mock.patch('db_models.users.uuid1')
+    @mock.patch('db_models.users.Token._hash_token')
+    def test_constructor_with_expiration_date(
+            self, mock_hash_token, mock_uuid1
+    ):
+        mock_uuid1.return_value = self.guid_salt
+
+        token = db_models.users.Token(self.token_string, self.expiration_date)
+        self.assertIsInstance(token, db_models.users.Token)
+
+        self.assertEqual(token.salt, str(self.guid_salt))
+        self.assertEqual(mock.call(), mock_uuid1.call_args)
+
+        self.assertEqual(self.expiration_date, token.expiration_date)
+        self.assertEqual(self.time_to_freeze, token.date_created)
+
+        self.assertEqual(
+            mock.call(self.token_string), mock_hash_token.call_args
+        )
+
+    @freeze_time(TestToken.time_to_freeze)
+    @mock.patch('db_models.users.uuid1')
+    @mock.patch('db_models.users.Token._hash_token')
+    def test_constructor_no_expiration_date(self, mock_hash, mock_guid):
+        mock_guid.return_value = self.guid_salt
+
+        token = db_models.users.Token(self.token_string)
+        expiration_date = self.time_to_freeze + timedelta(seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME)
+
+        self.assertEqual(expiration_date, token.expiration_date)
+        self.assertTrue(mock_hash.called)
+        self.assertTrue(mock_guid.called)
+
+
+class TestHashToken(TestToken):
+    def setUp(self):
+        TestToken.setUp(self)
+        self.salt = str(uuid1())
+        self.token = db_models.users.Token(self.token_string)
+        self.token.salt = self.salt
+
+    @mock.patch('db_models.users.sha256')
+    def test_hash_token(self, mock_sha256):
+        mock_sha256.return_value = sha256('foobarbaz123456'.encode('ascii'))
+        self.token._hash_token(self.token_string)
+
+        self.assertEqual(
+            mock.call(self.salt.encode('ascii')),
+            mock_sha256.call_args_list[0]
+        )
+
+        second_hash_call = mock.call(
+            ("%s%s" % (mock_sha256.return_value.hexdigest(),
+                        self.token_string)
+             ).encode('ascii')
+        )
+
+        self.assertEqual(
+            second_hash_call, mock_sha256.call_args_list[1]
+        )
+
+
+class TestVerifyToken(TestToken):
+    def setUp(self):
+        TestToken.setUp(self)
+        self.token = db_models.users.Token(self.token_string)
+
+    @freeze_time(TestToken.time_to_freeze)
+    @mock.patch('db_models.users.Token._hash_token')
+    def test_verify_token(self, mock_hash):
+        mock_hash.return_value = self.token.token_hash
+
+        self.token.expiration_date = self.time_to_freeze - timedelta(seconds=1)
+        self.assertGreater(self.time_to_freeze, self.token.expiration_date)
+
+        self.assertFalse(self.token.verify_token(self.token_string))
+
+        self.assertFalse(mock_hash.called)
+
+        self.token.expiration_date = self.time_to_freeze + timedelta(seconds=1)
+        self.assertLess(self.time_to_freeze, self.token.expiration_date)
+
+        self.assertTrue(self.token.verify_token(self.token_string))
+
+        self.assertTrue(mock_hash.called)
+
+    @freeze_time(TestToken.time_to_freeze)
+    def test_revoke_token(self):
+        self.token.revoke()
+        self.assertEqual(self.token.expiration_date, self.time_to_freeze)
+
 
 
 class TestUser(unittest.TestCase):
