@@ -1,3 +1,6 @@
+"""
+Contains model classes relevant to User management.
+"""
 from datetime import datetime
 from db_models import Base
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
@@ -13,7 +16,7 @@ __author__ = 'Michal Kononenko'
 
 class User(Base):
     """
-    Base class for a user.
+    Base class for a User.
     """
     __table__ = users
     __columns__ = __table__.c

@@ -24,7 +24,26 @@ config
 db_models
 ---------
 
-    .. automodule:: db_models
+db_sessions
+~~~~~~~~~~~
+
+    .. automodule:: db_models.db_sessions
+        :members:
+        :private-members:
+        :special-members:
+
+projects
+~~~~~~~~
+
+    .. automodule:: db_models.projects
+        :members:
+        :private-members:
+        :special-members:
+
+users
+~~~~~
+
+    .. automodule:: db_models.users
         :members:
         :private-members:
         :special-members:
