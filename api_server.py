@@ -3,11 +3,14 @@ Defines the flask app which will run our HTTP application. This also creates
 a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
-from flask import Flask, g, jsonify
+from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
 from api_views.users import UserContainer, UserView
 import logging
 from auth import auth
+from db_models.users import Administrator, User
+from db_models.db_sessions import ContextManagedSession
+from config import default_config as conf
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +22,7 @@ api = Api(app, prefix='/api/v1')
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username>')
 
+database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 @app.route('/')
 @app.route('/index')
@@ -76,4 +80,38 @@ def create_token():
     token = g.user.generate_auth_token()
     response = jsonify({'token': token.decode('ascii')})
     response.status_code = 201
+    return response
+
+
+@app.route('/api/v1/token', methods=['DELETE'])
+@auth.login_required
+def revoke_token():
+    """
+    Revoke the current token for the user that has just authenticated,
+    or the user with username given by a query parameter, allowed only if the
+    user is an Administrator
+    """
+    username_to_delete = request.args.get('username')
+    if username_to_delete is None:
+        username_to_delete = g.user.username
+    else:
+        username_to_delete = str(username_to_delete)
+
+    if isinstance(g.user, Administrator):
+        with database_session() as session:
+            user = session.query(
+                User
+            ).filter_by(
+                username=username_to_delete
+            ).first()
+            if user is None:
+                abort(404)
+            user.current_token.first().revoke()
+    else:
+        with database_session() as session:
+            session.query(g.user.__class__).filter_by(
+                id=g.user.id
+            ).first().current_token.first().revoke()
+
+    response = jsonify({'token_status': 'deleted'})
     return response

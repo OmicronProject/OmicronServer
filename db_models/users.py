@@ -147,7 +147,7 @@ class User(Base):
 
     @property
     def current_token(self):
-        return self.tokens.order_by(desc(Token.date_created)).first()
+        return self.tokens.order_by(desc(Token.date_created))
 
     @property
     def get(self):

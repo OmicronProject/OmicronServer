@@ -9,7 +9,7 @@ from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
 from config import default_config as conf
 from db_models.db_sessions import ContextManagedSession
-from db_models.users import User, Token
+from db_models.users import User
 
 __author__ = 'Michal Kononenko'
 auth = HTTPBasicAuth()
