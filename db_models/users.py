@@ -3,15 +3,15 @@ Contains model classes relevant to User management.
 """
 from datetime import datetime, timedelta
 from db_models import Base
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
-    SignatureExpired, BadSignature
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy.orm import relationship
 from config import default_config as conf
 from db_schema import users, users_projects_asoc_tables, tokens
 from db_models.projects import Project
+from db_models.db_sessions import ContextManagedSession
 from uuid import uuid1
 from hashlib import sha256
+from sqlalchemy import desc
 
 __author__ = 'Michal Kononenko'
 
@@ -126,19 +126,28 @@ class User(Base):
         """
         return pwd_context.verify(password, self.password_hash)
 
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(conf.TOKEN_SECRET_KEY, expires_in=expiration)
-        return s.dumps({'id': self.id})
-
     @staticmethod
-    def verify_auth_token(token):
-        s = Serializer(conf.TOKEN_SECRET_KEY)
-        try:
-            data = s.loads(token)
-        except (SignatureExpired, BadSignature):
-            return None
-        else:
-            return data['id']
+    def generate_auth_token(
+            expiration=600,
+            session=ContextManagedSession(bind=conf.DATABASE_ENGINE)):
+        expiration_date = datetime.utcnow() + timedelta(seconds=expiration)
+
+        token_string = str(uuid1())
+        token = Token(token_string, expiration_date)
+
+        with session() as session:
+            session.add(token)
+
+        return token_string
+
+    def verify_auth_token(self, token_string):
+        token = self.current_token
+
+        return token.verify_token(token_string)
+
+    @property
+    def current_token(self):
+        return self.tokens.order_by(desc(Token.date_created)).first()
 
     @property
     def get(self):

@@ -122,7 +122,6 @@ class TestVerifyToken(TestToken):
         self.assertEqual(self.token.expiration_date, self.time_to_freeze)
 
 
-
 class TestUser(unittest.TestCase):
     engine = create_engine('sqlite://')
 
@@ -193,15 +192,17 @@ class TestGenerateAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
         self.user = db_models.users.User(self.username, self.password, self.email)
-        self.mock_token = 'foobarbaz123456'
+        self.mock_token = uuid1()
 
-    @mock.patch('db_models.users.Serializer.dumps')
-    def test_generate_auth_token(self, mock_serializer):
-        mock_serializer.return_value = self.mock_token
-        mock_dumps_call = mock.call({'id': self.user.id})
+    @mock.patch('sqlalchemy.orm.Session.add')
+    @mock.patch('db_models.users.uuid1')
+    def test_generate_auth_token(self, mock_guid, mock_add):
+        mock_guid.return_value = self.mock_token
+        token = self.user.generate_auth_token()
+        self.assertEqual(str(self.mock_token), token)
 
-        self.assertEqual(self.mock_token, self.user.generate_auth_token())
-        self.assertEqual(mock_dumps_call, mock_serializer.call_args)
+        self.assertTrue(mock_guid.called)
+        self.assertTrue(mock_add.called)
 
 
 class TestVerifyAuthToken(TestUser):
@@ -210,27 +211,26 @@ class TestVerifyAuthToken(TestUser):
         self.user = db_models.users.User(self.username, self.password, self.email)
         self.mock_token ='foobarbaz123456'
 
-    @mock.patch('db_models.users.Serializer.loads')
-    def test_verify_token(self, mock_serializer):
-        mock_serializer.return_value = {'id': 1}
-        returned_data = db_models.users.User.verify_auth_token(self.mock_token)
+    @mock.patch('db_models.users.User.current_token')
+    def test_verify_token(self, mock_token):
+        self.user.verify_auth_token(self.mock_token)
+        self.assertEqual(
+            mock.call(self.mock_token),
+            mock_token.verify_token.call_args
+        )
 
-        self.assertEqual(1, returned_data)
 
-    @mock.patch('db_models.users.Serializer.loads')
-    def test_verify_token_signature_expired(self, mock_serializer):
-        mock_serializer.side_effect = \
-            db_models.users.SignatureExpired('test_error')
+class TestCurrentToken(TestUser):
+    def setUp(self):
+        TestUser.setUp(self)
+        self.token_string = 'foobarbaz123456'
+        self.user = db_models.users.User(self.username, self.password, self.email)
+        self.mock_token = db_models.users.Token(self.token_string)
 
-        self.assertIsNone(
-            db_models.users.User.verify_auth_token(self.mock_token))
-
-    @mock.patch('db_models.users.Serializer.loads')
-    def test_verify_token_bad_signature(self, mock_serializer):
-        mock_serializer.side_effect = \
-            db_models.users.BadSignature('test_error')
-        self.assertIsNone(
-            db_models.users.User.verify_auth_token(self.mock_token))
+    @mock.patch('sqlalchemy.orm.Query.order_by')
+    def test_current_token(self, mock_order):
+        self.assertIsNotNone(self.user.current_token)
+        self.assertTrue(mock_order.called)
 
 
 class TestGet(TestUser):

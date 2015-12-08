@@ -54,7 +54,7 @@ class TestVerifyPassword(TestAuth):
     def test_auth_token_correct(self):
 
         with mock.patch(
-                'auth.User.verify_auth_token', return_value=self.user
+                'sqlalchemy.orm.Query.first', return_value=self.user
         ) as mock_verify_auth:
 
             self.assertTrue(auth.verify_password(
@@ -63,12 +63,11 @@ class TestVerifyPassword(TestAuth):
             )
             self.assertEqual(
                 mock_verify_auth.call_args,
-                mock.call(self.username)
+                mock.call()
              )
 
     @mock.patch('auth.User.verify_password', return_value=True)
-    @mock.patch('auth.User.verify_auth_token', return_value=False)
-    def test_user_query(self, mock_check_auth_token, mock_verify_pwd):
+    def test_user_query(self, mock_verify_pwd):
 
         self.assertTrue(auth.verify_password(
             self.username, self.password
@@ -77,11 +76,6 @@ class TestVerifyPassword(TestAuth):
         self.assertEqual(
             mock_verify_pwd.call_args,
             mock.call(self.password)
-        )
-
-        self.assertEqual(
-            mock_check_auth_token.call_args,
-            mock.call(self.username)
         )
 
     @mock.patch('auth.User.verify_password', return_value=True)
@@ -98,26 +92,22 @@ class TestVerifyPassword(TestAuth):
         self.assertFalse(mock_verify.called)
 
     @mock.patch('auth.User.verify_password', return_value=False)
-    def test_user_query_bad_password(self, mock_verify):
+    @mock.patch('auth.User.verify_auth_token', return_value=False)
+    def test_user_query_bad_password(self, mock_check_token, mock_verify):
         self.assertFalse(auth.verify_password(
             self.username, self.password
         ))
 
         self.assertTrue(mock_verify.called)
+        self.assertTrue(mock_check_token.called)
 
-    @mock.patch('auth.User.verify_auth_token')
-    def test_user_query_token_adds_to_g(self, mock_verify_auth_token):
-
-        mock_verify_auth_token.return_value = self.user
+    def test_user_query_token_adds_to_g(self):
 
         self.assertTrue(auth.verify_password(
             self.username, self.password
         ))
 
-        self.assertEqual(auth.g.user, self.user)
-
-        self.assertEqual(mock_verify_auth_token.call_args,
-                         mock.call(self.username))
+        self.assertIsInstance(auth.g.user, self.user.__class__)
 
     @mock.patch('auth.User.verify_auth_token', return_value=False)
     @mock.patch('sqlalchemy.orm.query.Query.first')
@@ -136,5 +126,3 @@ class TestVerifyPassword(TestAuth):
         self.assertEqual(mock_query.call_args, mock.call())
         self.assertEqual(mock_verify_password.call_args,
                          mock.call(self.password))
-        self.assertEqual(mock_verify_token.call_args,
-                         mock.call(self.username))

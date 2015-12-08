@@ -9,7 +9,7 @@ from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
 from config import default_config as conf
 from db_models.db_sessions import ContextManagedSession
-from db_models.users import User
+from db_models.users import User, Token
 
 __author__ = 'Michal Kononenko'
 auth = HTTPBasicAuth()
@@ -17,7 +17,7 @@ database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 @auth.verify_password
-def verify_password(username_or_token, password):
+def verify_password(username, password_or_token):
     """
     Callback function for
     :func:`flask.ext.httpauth.HTTPBasicAuth.verify_password`, used
@@ -43,10 +43,10 @@ def verify_password(username_or_token, password):
         - HMAC-SHA256_. authentication will be supported, although this is
             currently out of scope for the Christmas Release of this API
 
-    :param str username_or_token: The username or the token of the user
+    :param str username: The username of the user
         attempting to authenticate into the API
-    :param str password: The password supplied by the user in his attempt to
-        authenticate
+    :param str password_or_token: The password or token to be used
+        to authenticate into the API.
     :return: True if the password or token is correct, False if otherwise
     :rtype bool:
 
@@ -54,21 +54,18 @@ def verify_password(username_or_token, password):
     .. _SSL: https://en.wikipedia.org/wiki/Transport_Layer_Security
     .. _HMAC-SHA256: https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
     """
-    user = User.verify_auth_token(username_or_token)
-    if user:
-        g.user = user
-        return True
-
     with database_session() as session:
         user = session.query(
             User
         ).filter_by(
-            username=username_or_token
+            username=username
         ).first()
 
     if not user:
         return False
-    elif user.verify_password(password):
+
+    if (user.verify_password(password_or_token) or
+            user.verify_auth_token(password_or_token)):
         g.user = user
         return True
     else:
