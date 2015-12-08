@@ -9,7 +9,7 @@ from config import default_config as conf
 from db_schema import users, users_projects_asoc_tables, tokens
 from db_models.projects import Project
 from db_models.db_sessions import ContextManagedSession
-from uuid import uuid1
+from uuid import uuid1, UUID
 from hashlib import sha256
 from sqlalchemy import desc
 
@@ -25,35 +25,29 @@ class Token(Base):
     token_hash = __table__.c.token_hash
     date_created = __table__.c.date_created
     expiration_date = __table__.c.expiration_date
-    salt = __table__.c.token_salt
 
     def __init__(
-            self, token_string, expiration_date=None
+            self, token_string, expiration_date=None, owner=None
     ):
-        self.date_created = datetime.utcnow()
-        self.salt = str(uuid1())
+        if isinstance(token_string, UUID):
+            token_string = str(token_string)
 
-        self.token_hash = self._hash_token(token_string)
+        self.date_created = datetime.utcnow()
+        self.token_hash = self.hash_token(token_string)
 
         if expiration_date is None:
             expiration_date = self.date_created + timedelta(
                 seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME)
 
         self.expiration_date = expiration_date
+        self.owner = owner
 
-    def _hash_token(self, token_string):
+    @staticmethod
+    def hash_token(token_string):
         """
-        Takes a token string and hashes it using a salted SHA256 algorithm.
-        The hash is of the form hash(token + hash(token_salt))
-
-        :param str token_string: The string to hash
-        :return: A hex digest of the hash
+        Takes a token string and hashes it using SHA256.
         """
-        salt_hash = sha256(self.salt.encode('ascii')).hexdigest()
-
-        string_to_hash = '%s%s' % (salt_hash, token_string)
-
-        return sha256(string_to_hash.encode('ascii')).hexdigest()
+        return sha256(token_string.encode('ascii')).hexdigest()
 
     def verify_token(self, token):
         """
@@ -65,7 +59,7 @@ class Token(Base):
         if datetime.utcnow() > self.expiration_date:
             return False
 
-        return self._hash_token(token) == self.token_hash
+        return self.hash_token(token) == self.token_hash
 
     def revoke(self):
         """

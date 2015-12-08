@@ -34,8 +34,7 @@ tokens = Table(
     Column('date_created', DateTime, nullable=False,
            default=datetime.utcnow()),
     Column('expiration_date', DateTime, nullable=False,
-           default=datetime.utcnow()),
-    Column('token_salt', String(36), nullable=False)
+           default=datetime.utcnow())
 )
 
 projects = Table(

@@ -26,22 +26,14 @@ class TestTokenConstructor(TestToken):
 
     def setUp(self):
         TestToken.setUp(self)
-        self.guid_salt = uuid1()
         self.token_string = 'foobarbaz123456'
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('db_models.users.uuid1')
-    @mock.patch('db_models.users.Token._hash_token')
-    def test_constructor_with_expiration_date(
-            self, mock_hash_token, mock_uuid1
-    ):
-        mock_uuid1.return_value = self.guid_salt
+    @mock.patch('db_models.users.Token.hash_token')
+    def test_constructor_with_expiration_date(self, mock_hash_token):
 
         token = db_models.users.Token(self.token_string, self.expiration_date)
         self.assertIsInstance(token, db_models.users.Token)
-
-        self.assertEqual(token.salt, str(self.guid_salt))
-        self.assertEqual(mock.call(), mock_uuid1.call_args)
 
         self.assertEqual(self.expiration_date, token.expiration_date)
         self.assertEqual(self.time_to_freeze, token.date_created)
@@ -51,44 +43,51 @@ class TestTokenConstructor(TestToken):
         )
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('db_models.users.uuid1')
-    @mock.patch('db_models.users.Token._hash_token')
-    def test_constructor_no_expiration_date(self, mock_hash, mock_guid):
-        mock_guid.return_value = self.guid_salt
+    @mock.patch('db_models.users.Token.hash_token')
+    def test_constructor_no_expiration_date(self, mock_hash):
 
         token = db_models.users.Token(self.token_string)
         expiration_date = self.time_to_freeze + timedelta(seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME)
 
         self.assertEqual(expiration_date, token.expiration_date)
         self.assertTrue(mock_hash.called)
-        self.assertTrue(mock_guid.called)
+
+    @freeze_time(TestToken.time_to_freeze)
+    @mock.patch('db_models.users.Token.hash_token')
+    @mock.patch('uuid.UUID.__str__', return_value=str(uuid1()))
+    def test_construtor_uuid_token(self, mock_uuid_str, mock_hash):
+        """
+        Tests that the constructor converts tokens of :class:``uuid.UUID``
+        into strings by using the ``str()`` function
+
+        :param mock.MagicMock mock_uuid_str: A mock call to the uuid string
+            function
+        :param mock.MagicMock mock_hash: A mock object representing a call to
+            the token hasher. Injected dynamically with the ``mock.patch``
+            decorator
+        """
+
+        token = db_models.users.Token(uuid1())
+
+        self.assertIsInstance(token, db_models.users.Token)
+        self.assertTrue(mock_uuid_str.called)
+        self.assertTrue(mock_hash.called)
 
 
 class TestHashToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.salt = str(uuid1())
         self.token = db_models.users.Token(self.token_string)
-        self.token.salt = self.salt
 
     @mock.patch('db_models.users.sha256')
     def test_hash_token(self, mock_sha256):
         mock_sha256.return_value = sha256('foobarbaz123456'.encode('ascii'))
-        self.token._hash_token(self.token_string)
+        self.token.hash_token(self.token_string)
+
+        hash_call = mock.call(self.token_string.encode('ascii'))
 
         self.assertEqual(
-            mock.call(self.salt.encode('ascii')),
-            mock_sha256.call_args_list[0]
-        )
-
-        second_hash_call = mock.call(
-            ("%s%s" % (mock_sha256.return_value.hexdigest(),
-                        self.token_string)
-             ).encode('ascii')
-        )
-
-        self.assertEqual(
-            second_hash_call, mock_sha256.call_args_list[1]
+            hash_call, mock_sha256.call_args
         )
 
 
@@ -98,7 +97,7 @@ class TestVerifyToken(TestToken):
         self.token = db_models.users.Token(self.token_string)
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('db_models.users.Token._hash_token')
+    @mock.patch('db_models.users.Token.hash_token')
     def test_verify_token(self, mock_hash):
         mock_hash.return_value = self.token.token_hash
 
