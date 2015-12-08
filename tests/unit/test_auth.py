@@ -5,9 +5,10 @@ import unittest
 import auth
 import mock
 from db_schema import metadata
-from db_models.users import User
+from db_models.users import User, Token
 from sqlalchemy import create_engine
 from db_models.db_sessions import ContextManagedSession
+from uuid import uuid1
 
 __author__ = 'Michal Kononenko'
 
@@ -28,7 +29,7 @@ class TestAuth(unittest.TestCase):
         metadata.drop_all(bind=cls.engine)
 
 
-class TestVerifyPassword(TestAuth):
+class TestVerifyUser(TestAuth):
 
     def setUp(self):
 
@@ -54,7 +55,7 @@ class TestVerifyPassword(TestAuth):
     def test_auth_token_correct(self):
 
         with mock.patch(
-                'auth.User.verify_auth_token', return_value=self.user
+                'sqlalchemy.orm.Query.first', return_value=self.user
         ) as mock_verify_auth:
 
             self.assertTrue(auth.verify_password(
@@ -63,12 +64,11 @@ class TestVerifyPassword(TestAuth):
             )
             self.assertEqual(
                 mock_verify_auth.call_args,
-                mock.call(self.username)
+                mock.call()
              )
 
     @mock.patch('auth.User.verify_password', return_value=True)
-    @mock.patch('auth.User.verify_auth_token', return_value=False)
-    def test_user_query(self, mock_check_auth_token, mock_verify_pwd):
+    def test_user_query(self, mock_verify_pwd):
 
         self.assertTrue(auth.verify_password(
             self.username, self.password
@@ -77,11 +77,6 @@ class TestVerifyPassword(TestAuth):
         self.assertEqual(
             mock_verify_pwd.call_args,
             mock.call(self.password)
-        )
-
-        self.assertEqual(
-            mock_check_auth_token.call_args,
-            mock.call(self.username)
         )
 
     @mock.patch('auth.User.verify_password', return_value=True)
@@ -105,19 +100,13 @@ class TestVerifyPassword(TestAuth):
 
         self.assertTrue(mock_verify.called)
 
-    @mock.patch('auth.User.verify_auth_token')
-    def test_user_query_token_adds_to_g(self, mock_verify_auth_token):
-
-        mock_verify_auth_token.return_value = self.user
+    def test_user_query_token_adds_to_g(self):
 
         self.assertTrue(auth.verify_password(
             self.username, self.password
         ))
 
-        self.assertEqual(auth.g.user, self.user)
-
-        self.assertEqual(mock_verify_auth_token.call_args,
-                         mock.call(self.username))
+        self.assertIsInstance(auth.g.user, self.user.__class__)
 
     @mock.patch('auth.User.verify_auth_token', return_value=False)
     @mock.patch('sqlalchemy.orm.query.Query.first')
@@ -136,5 +125,48 @@ class TestVerifyPassword(TestAuth):
         self.assertEqual(mock_query.call_args, mock.call())
         self.assertEqual(mock_verify_password.call_args,
                          mock.call(self.password))
-        self.assertEqual(mock_verify_token.call_args,
-                         mock.call(self.username))
+
+
+class TestVerifyPassword(TestAuth):
+    def setUp(self):
+        TestAuth.setUp(self)
+        self.user = User(self.username, self.password, self.email)
+        self.token_string = str(uuid1())
+
+        self.token = Token(self.token_string, owner=self.user)
+
+        with auth.database_session() as session:
+            session.add(self.user)
+            session.add(self.token)
+
+        auth.g = mock.MagicMock()
+
+    def tearDown(self):
+        with auth.database_session() as session:
+            user = session.query(self.user.__class__).filter_by(
+                username=self.username
+            ).first()
+
+            token = session.query(self.token.__class__).filter_by(
+                user_id=user.id
+            ).first()
+
+            if user is not None:
+                session.delete(user)
+
+            if token is not None:
+                session.delete(token)
+
+    def test_verify_token(self):
+        self.assertTrue(auth.verify_password(self.token_string))
+        self.assertEqual(auth.g.user, self.user)
+
+    @mock.patch('sqlalchemy.orm.Query.first', return_value=None)
+    def test_verify_token_no_token_found(self, mock_first):
+        self.assertFalse(auth.verify_password(self.token_string))
+        self.assertTrue(mock_first.called)
+
+    @mock.patch('db_models.users.Token.verify_token', return_value=False)
+    def test_verify_token_bad_token(self, mock_check_token):
+        self.assertFalse(auth.verify_password(self.token_string))
+        self.assertTrue(mock_check_token.called)

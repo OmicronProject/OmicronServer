@@ -5,7 +5,7 @@ import unittest
 import mock
 from db_schema import metadata
 from db_models.db_sessions import ContextManagedSession
-from db_models.users import User
+from db_models.users import User, Administrator
 import api_server
 import json
 from sqlalchemy import create_engine
@@ -79,3 +79,47 @@ class TestGetAuthToken(TestAPIServer):
         self.assertEqual(self.token, json_dict['token'])
 
 
+class TestRevokeToken(TestAPIServer):
+    token = mock.MagicMock()
+
+    def setUp(self):
+        self.url = 'api/v1/token'
+        self.request_method = self.client.delete
+        self.admin = Administrator(self.username, self.password, self.email)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    @mock.patch('api_server.auth.login_required', new=lambda t: t)
+    @mock.patch('db_models.users.User.current_token')
+    def test_revoke_token(self, mock_cur_token, mock_query):
+        mock_query.return_value = self.user
+        response = self.request_method(self.url, headers=self.headers)
+        self.assertEqual(response.status_code, 200)
+
+        self.assertTrue(mock_cur_token.first().revoke.called)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    @mock.patch('api_server.auth.login_required', new=lambda t: t)
+    @mock.patch('api_server.g')
+    @mock.patch('db_models.users.User.current_token')
+    def test_administrator_revoke(self, mock_cur_token, mock_g, mock_query):
+        mock_g.user = self.admin
+        mock_query.return_value = self.admin
+
+        response = self.request_method(self.url, headers=self.headers)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertTrue(mock_cur_token.first().revoke.called)
+
+    @mock.patch('sqlalchemy.orm.Query.first', return_value=None)
+    @mock.patch('api_server.auth.login_required', new=lambda t: t)
+    @mock.patch('api_server.g')
+    @mock.patch('db_models.users.User.current_token')
+    def test_administrator_revoke_user_not_found(self, mock_cur_token, mock_g,
+                                                 mock_query):
+        url = '%s?username=%s' % (self.url, self.username)
+        mock_g.user = self.admin
+
+        response = self.request_method(url, headers=self.headers)
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(mock_cur_token.first().revoke.called)

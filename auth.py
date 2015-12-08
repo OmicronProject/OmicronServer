@@ -9,7 +9,8 @@ from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
 from config import default_config as conf
 from db_models.db_sessions import ContextManagedSession
-from db_models.users import User
+from db_models.users import User, Token
+from uuid import UUID
 
 __author__ = 'Michal Kononenko'
 auth = HTTPBasicAuth()
@@ -17,7 +18,7 @@ database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 @auth.verify_password
-def verify_password(username_or_token, password):
+def verify_password(username_or_token, password=None):
     """
     Callback function for
     :func:`flask.ext.httpauth.HTTPBasicAuth.verify_password`, used
@@ -43,33 +44,60 @@ def verify_password(username_or_token, password):
         - HMAC-SHA256_. authentication will be supported, although this is
             currently out of scope for the Christmas Release of this API
 
-    :param str username_or_token: The username or the token of the user
+    :param str username_or_token: The username or token of the user
         attempting to authenticate into the API
-    :param str password: The password supplied by the user in his attempt to
-        authenticate
+    :param str password: The password or token to be used
+        to authenticate into the API. If no password is supplied, this value
+        will be ``None``.
     :return: True if the password or token is correct, False if otherwise
     :rtype bool:
 
-    .. _Authorization: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.8
+    .. _Authorization:
+            http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.8
     .. _SSL: https://en.wikipedia.org/wiki/Transport_Layer_Security
-    .. _HMAC-SHA256: https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
+    .. _HMAC-SHA256:
+            https://en.wikipedia.org/wiki/Hash-based_message_authentication_code
     """
-    user = User.verify_auth_token(username_or_token)
-    if user:
-        g.user = user
-        return True
+    try:
+        UUID(hex=username_or_token)
+    except (TypeError, ValueError):
+        return _verify_user(username_or_token, password)
 
+    with database_session() as session:
+        token = session.query(
+            Token
+        ).filter_by(
+            token_hash=Token.hash_token(username_or_token)
+        ).first()
+
+        if token is None:
+            return _verify_user(username_or_token, password)
+
+        if token.verify_token(username_or_token):
+            g.user = token.owner
+            return True
+        else:
+            return False
+
+
+def _verify_user(username, password):
+    """
+    Check if the username matches the user. If it does, write the user
+    to :meth:`Flask.g` and return ``True``, else return ``False``
+    :param str username: The name of the user to validate
+    :param str password: The password to validate
+    :return: ``True`` if the user authenticated and ``False`` if not
+    """
     with database_session() as session:
         user = session.query(
             User
         ).filter_by(
-            username=username_or_token
+            username=username
         ).first()
 
-    if not user:
+    if user is None:
         return False
-    elif user.verify_password(password):
+
+    if user.verify_password(password):
         g.user = user
         return True
-    else:
-        return False
