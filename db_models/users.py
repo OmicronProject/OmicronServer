@@ -120,16 +120,18 @@ class User(Base):
         """
         return pwd_context.verify(password, self.password_hash)
 
-    @staticmethod
-    def generate_auth_token(
+    def generate_auth_token(self,
             expiration=600,
             session=ContextManagedSession(bind=conf.DATABASE_ENGINE)):
         expiration_date = datetime.utcnow() + timedelta(seconds=expiration)
 
         token_string = str(uuid1())
-        token = Token(token_string, expiration_date)
 
         with session() as session:
+            user = session.query(self.__class__).filter_by(
+                id=self.id
+            ).first()
+            token = Token(token_string, expiration_date, owner=user)
             session.add(token)
 
         return token_string
