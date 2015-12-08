@@ -164,6 +164,21 @@ class User(Base):
             self.password_hash, self.email_address
         )
 
+    def __eq__(self, other):
+        """
+        :param User other: The user against which to compare
+        :return:
+        """
+        return self.username == other.username
+
+    def __ne__(self, other):
+        """
+        Check if two users are not equal
+        :param other:
+        :return:
+        """
+        return self.username != other.username
+
 
 class Administrator(User):
     __mapper_args__ = {

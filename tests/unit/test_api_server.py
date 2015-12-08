@@ -67,7 +67,7 @@ class TestGetAuthToken(TestAPIServer):
         self.token = 'mock_token'
         self.request_method = self.client.post
         self.user.generate_auth_token = mock.MagicMock(
-            return_value=self.token.encode('ascii')
+            return_value=self.token
         )
 
     def test_create_auth_token(self):
