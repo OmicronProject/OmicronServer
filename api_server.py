@@ -24,6 +24,7 @@ api.add_resource(UserView, '/users/<username>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
+
 @app.route('/')
 @app.route('/index')
 def hello_world():
@@ -78,7 +79,7 @@ def create_token():
     :return: A Flask response object with the token jsonified into ASCII
     """
     token = g.user.generate_auth_token()
-    response = jsonify({'token': token.decode('ascii')})
+    response = jsonify({'token': token})
     response.status_code = 201
     return response
 

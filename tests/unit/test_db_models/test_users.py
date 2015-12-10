@@ -275,3 +275,26 @@ class TestUserRepr(TestUser):
 
     def test_repr(self):
         self.assertEqual(self.expected_result, self.user.__repr__())
+
+
+class TestEqandNe(TestUser):
+    def setUp(self):
+        TestUser.setUp(self)
+        self.user = db_models.users.User(
+            self.username, self.password, self.email
+        )
+        self.other_user = db_models.users.User(
+            'foo', 'bar', 'foo@bar.com'
+        )
+
+        self.identical_user = db_models.users.User(
+            self.username, self.password, self.email
+        )
+
+    def test_eq(self):
+        self.assertTrue(self.user == self.identical_user)
+        self.assertFalse(self.user == self.other_user)
+
+    def test_ne(self):
+        self.assertTrue(self.user != self.other_user)
+        self.assertFalse(self.user != self.identical_user)
