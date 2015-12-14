@@ -66,6 +66,8 @@ class TestParseQueryString(TestAPIViewWithSchema):
         self.assertEqual(mock_abort_call, mock_abort.call_args)
 
 
+@mock.patch('api_views.schema_defined_resource.'
+            'SchemaDefinedResource._parse_schema_request_params')
 class TestShowSchema(TestAPIViewWithSchema):
 
     @staticmethod
@@ -75,9 +77,47 @@ class TestShowSchema(TestAPIViewWithSchema):
     def setUp(self):
         self.view._parse_schema_request_params = mock.MagicMock()
 
-    @mock.patch('api_views.schema_defined_resource.SchemaDefinedResource._parse_schema_request_params')
     def test_show_schema_no_q_params(self, mock_parse):
         mock_parse.return_value = self.view.__request_params__(False, False)
         func = self.view.show_schema(self._method_to_decorate)
 
         self.assertTrue(func())
+        self.assertTrue(mock_parse.called)
+
+    def test_show_schema_show_data_true(self, mock_parse):
+        mock_parse.return_value = self.view.__request_params__(False, True)
+
+        func = self.view.show_schema(self._method_to_decorate)
+        self.assertTrue(func())
+
+        self.assertTrue(mock_parse.called)
+
+    @mock.patch('api_views.schema_defined_resource.jsonify')
+    def test_return_jsonified_schema(self, mock_jsonify, mock_parse):
+        mock_parse.return_value = self.view.__request_params__(True, False)
+
+        func = self.view.show_schema(self._method_to_decorate)
+        self.assertTrue(func())
+
+        self.assertEqual(
+            mock.call(self.view.schema),
+            mock_jsonify.call_args
+        )
+
+    @staticmethod
+    def _echo_chamber(object_to_return):
+        return object_to_return
+
+    @mock.patch('api_views.schema_defined_resource.jsonify')
+    def test_return_jsonified_schema_with_data(self, mock_jsonify, mock_parse):
+        object_to_return = mock.MagicMock()
+        object_to_return.data = '{"data": "foo"}'
+
+        mock_parse.return_value = self.view.__request_params__(True, True)
+
+        func = self.view.show_schema(self._echo_chamber)
+
+        func(object_to_return)
+
+        self.assertTrue(mock_jsonify.called)
+        self.assertTrue(mock_parse.called)

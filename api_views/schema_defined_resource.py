@@ -81,17 +81,3 @@ class SchemaDefinedResource(Resource):
         Return the JSON schema of the view as a dictionary
         """
         pass
-
-    def validate_schema(self, json_to_validate):
-        """
-        Validate a dictionary representing  schema against :attr:`self.schema`.
-        :param dict json_to_validate: The dis
-        :return:
-        """
-        if isinstance(json_to_validate, str):
-            json.loads(json_to_validate)
-        try:
-            jsonschema.validate(json_to_validate, self.schema)
-            return True, 'success'
-        except jsonschema.ValidationError as val_error:
-            return False, str(val_error)
