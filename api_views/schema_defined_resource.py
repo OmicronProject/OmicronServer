@@ -2,11 +2,8 @@ import abc
 import json
 from collections import namedtuple
 from functools import wraps
-
-import jsonschema
-from flask import request, jsonify
+from flask import request, jsonify, abort
 from flask.ext.restful import Resource
-from werkzeug.exceptions import abort
 
 __author__ = 'Michal Kononenko'
 
@@ -17,7 +14,6 @@ class SchemaDefinedResource(Resource):
     built into it. This class is capable of serving its schema
     and
     """
-    __metaclass__ = abc.ABCMeta
 
     __request_params__ = namedtuple(
             'RequestParams', ['show_schema', 'show_data']
