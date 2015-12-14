@@ -147,6 +147,7 @@ class TestIsDraft4(TestAPIViewWithSchema):
             mock_conforms.call_args
         )
 
+
 class TestValidateSchema(TestAPIViewWithSchema):
     def setUp(self):
         self.valid_dict = {'entry': 'this is a string'}
