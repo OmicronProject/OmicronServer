@@ -77,7 +77,7 @@ class SchemaDefinedResource(Resource):
         """
         Return the JSON schema of the view as a dictionary
         """
-        pass
+        raise NotImplementedError
 
     @property
     def is_schema_draft3(self):
