@@ -1,7 +1,7 @@
 import unittest
 import mock
 import jsonschema
-from api_views.schema_defined_resource import SchemaDefinedResource
+from views.schema_defined_resource import SchemaDefinedResource
 from flask import request
 
 __author__ = 'Michal Kononenko'
@@ -36,7 +36,7 @@ class TestParseSchemaRequestParams(TestAPIViewWithSchema):
         self.flask_request = mock.MagicMock(spec=request)
         self.flask_request.args = mock.MagicMock()
 
-    @mock.patch('api_views.schema_defined_resource.SchemaDefinedResource._parse_query_string',
+    @mock.patch('views.schema_defined_resource.SchemaDefinedResource._parse_query_string',
                 return_value=True)
     def test_parse_schema_request_params(self, mock_parse_q_string):
 
@@ -58,7 +58,7 @@ class TestParseQueryString(TestAPIViewWithSchema):
         self.assertFalse(self.view._parse_query_string('false'))
         self.assertFalse(self.view._parse_query_string('False'))
 
-    @mock.patch('api_views.schema_defined_resource.abort')
+    @mock.patch('views.schema_defined_resource.abort')
     def test_parse_query_string_404_abort(self, mock_abort):
         mock_abort_call = mock.call(404)
 
@@ -67,7 +67,7 @@ class TestParseQueryString(TestAPIViewWithSchema):
         self.assertEqual(mock_abort_call, mock_abort.call_args)
 
 
-@mock.patch('api_views.schema_defined_resource.'
+@mock.patch('views.schema_defined_resource.'
             'SchemaDefinedResource._parse_schema_request_params')
 class TestShowSchema(TestAPIViewWithSchema):
 
@@ -93,7 +93,7 @@ class TestShowSchema(TestAPIViewWithSchema):
 
         self.assertTrue(mock_parse.called)
 
-    @mock.patch('api_views.schema_defined_resource.jsonify')
+    @mock.patch('views.schema_defined_resource.jsonify')
     def test_return_jsonified_schema(self, mock_jsonify, mock_parse):
         mock_parse.return_value = self.view.__request_params__(True, False)
 
@@ -109,7 +109,7 @@ class TestShowSchema(TestAPIViewWithSchema):
     def _echo_chamber(object_to_return):
         return object_to_return
 
-    @mock.patch('api_views.schema_defined_resource.jsonify')
+    @mock.patch('views.schema_defined_resource.jsonify')
     def test_return_jsonified_schema_with_data(self, mock_jsonify, mock_parse):
         object_to_return = mock.MagicMock()
         object_to_return.data = '{"data": "foo"}'
@@ -126,7 +126,7 @@ class TestShowSchema(TestAPIViewWithSchema):
 
 class TestIsDraft3(TestAPIViewWithSchema):
 
-    @mock.patch('api_views.schema_defined_resource.jsonschema.'
+    @mock.patch('views.schema_defined_resource.jsonschema.'
                 'FormatChecker.conforms', return_value=True)
     def test_is_draft3(self, mock_conforms):
         self.assertTrue(self.view.is_schema_draft3)
@@ -138,7 +138,7 @@ class TestIsDraft3(TestAPIViewWithSchema):
 
 class TestIsDraft4(TestAPIViewWithSchema):
 
-    @mock.patch('api_views.schema_defined_resource.jsonschema.'
+    @mock.patch('views.schema_defined_resource.jsonschema.'
                 'FormatChecker.conforms', return_value=True)
     def test_is_draft4(self, mock_conforms):
         self.assertTrue(self.view.is_schema_draft4)
@@ -156,7 +156,7 @@ class TestValidateSchema(TestAPIViewWithSchema):
                 {'type': 'string', 'pattern': '/entry/'}
         }
 
-    @mock.patch('api_views.schema_defined_resource.jsonschema.validate')
+    @mock.patch('views.schema_defined_resource.jsonschema.validate')
     def test_validate_dict_true(self, mock_validate):
 
         self.assertTrue(self.view.validate(self.valid_dict))
@@ -165,14 +165,14 @@ class TestValidateSchema(TestAPIViewWithSchema):
             mock_validate.call_args
         )
 
-    @mock.patch('api_views.schema_defined_resource.jsonschema.validate',
+    @mock.patch('views.schema_defined_resource.jsonschema.validate',
                 side_effect=jsonschema.ValidationError('test error'))
     def test_validate_dict_false(self, mock_validate):
 
         self.assertFalse(self.view.validate(self.valid_dict)[0])
         self.assertTrue(mock_validate.called)
 
-    @mock.patch('api_views.schema_defined_resource.jsonschema.validate')
+    @mock.patch('views.schema_defined_resource.jsonschema.validate')
     def test_validate_dict_custom_schema(self, mock_validate):
 
         self.assertTrue(

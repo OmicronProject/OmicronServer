@@ -1,10 +1,10 @@
-from migrate.versioning import api as sqlalchemy_migrate_api
-from config import default_config as conf
-import os.path
 import logging
-from db_schema import metadata as meta
-from sqlalchemy import create_engine
+import os.path
 import types
+from migrate.versioning import api as sqlalchemy_migrate_api
+from sqlalchemy import create_engine
+from config import default_config as conf
+from database.schema import metadata as meta
 
 __author__ = 'Michal Kononenko'
 
@@ -93,11 +93,11 @@ class DatabaseManager(object):
         self.api.upgrade(self.database_url, self.migrate_repo)
         log.info('Upgraded Database %s to version %d',
                  self.database_url, self.version
-        )
+                 )
 
     def downgrade_db(self):
         old_version = self.version
 
         self.api.downgrade(self.database_url, self.migrate_repo,
                            (old_version - 1)
-        )
+                           )

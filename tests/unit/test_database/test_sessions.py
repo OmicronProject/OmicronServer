@@ -3,7 +3,7 @@ import unittest
 import mock
 from sqlalchemy import create_engine
 
-import db_models.db_sessions
+import database.sessions
 
 __author__ = 'Michal Kononenko'
 
@@ -11,7 +11,7 @@ __author__ = 'Michal Kononenko'
 class TestContextManagedSession(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///')
-        self.base_session = db_models.db_sessions.ContextManagedSession(bind=self.engine)
+        self.base_session = database.sessions.ContextManagedSession(bind=self.engine)
 
     def test_context_managed_session_enter(self):
         with self.base_session() as session:
@@ -67,7 +67,7 @@ class TestContextManagedSession(unittest.TestCase):
 class TestSessionDecorator(unittest.TestCase):
     def setUp(self):
         self.engine = create_engine('sqlite:///')
-        self.base_session = db_models.db_sessions.ContextManagedSession(bind=self.engine)
+        self.base_session = database.sessions.ContextManagedSession(bind=self.engine)
 
     def test_decorator_callable(self):
         @self.base_session()
@@ -76,7 +76,7 @@ class TestSessionDecorator(unittest.TestCase):
 
         session = _test_decorator()
         self.assertIsInstance(session,
-                              db_models.db_sessions.ContextManagedSession)
+                              database.sessions.ContextManagedSession)
         self.assertNotEqual(session, self.base_session)
 
     def test_context_manager(self):
@@ -84,5 +84,5 @@ class TestSessionDecorator(unittest.TestCase):
             pass
 
         self.assertIsInstance(session,
-                              db_models.db_sessions.ContextManagedSession)
+                              database.sessions.ContextManagedSession)
         self.assertNotEqual(session, self.base_session)

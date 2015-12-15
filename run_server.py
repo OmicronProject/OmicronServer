@@ -1,13 +1,14 @@
 """
 Script to run the server
 """
-from api_server import app
-from config import default_config as conf
-from db_schema import metadata
-from db_models.users import User
-from db_models.db_sessions import ContextManagedSession
 import logging
 import os
+
+from api_server import app
+from config import default_config as conf
+from database.schema import metadata
+from database.models.users import User
+from database.sessions import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 

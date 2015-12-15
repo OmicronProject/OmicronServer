@@ -1,6 +1,9 @@
-from db_models import Base
-import db_schema
+"""
+Contains all model
+"""
 from datetime import datetime
+from database.models import Base
+from database import schema
 
 __author__ = 'Michal Kononenko'
 
@@ -14,7 +17,7 @@ class Project(Base):
     :var str description: A description of the project
 
     """
-    __table__ = db_schema.projects
+    __table__ = schema.projects
 
     id = __table__.c.project_id
     name = __table__.c.name

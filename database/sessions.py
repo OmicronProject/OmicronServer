@@ -1,3 +1,6 @@
+"""
+Contains classes related to database session management
+"""
 from sqlalchemy.orm import Session
 import logging
 

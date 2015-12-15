@@ -2,10 +2,10 @@
 Tests that the server can successfully write and read from the database
 in a "Round Trip"
 """
-from tests.integration import TestWithDatabase
-from db_models.db_sessions import ContextManagedSession
-from db_models.users import User
 from config import default_config as conf
+from database.models.users import User
+from database.sessions import ContextManagedSession
+from tests.integration import TestWithDatabase
 
 __author__ = 'Michal Kononenko'
 

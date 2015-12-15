@@ -1,25 +1,87 @@
 """
 Contains views for the ``/users`` endpoint.
 """
+import os
 from flask import request, abort, jsonify, g
 from flask_restful import Resource
-from json_schema_parser import JsonSchemaValidator
-import os
-from decorators import restful_pagination
-from config import default_config as conf
-from db_models.users import User
 from auth import auth
-from db_models.db_sessions import ContextManagedSession
+from config import default_config as conf
+from database import User, ContextManagedSession
+from decorators import restful_pagination
+from views import SchemaDefinedResource
+from json_schema_parser import JsonSchemaValidator
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
-class UserContainer(Resource):
+class UserContainer(SchemaDefinedResource):
     """
     Maps the /users endpoint's ``GET`` and ``POST`` requests, allowing API
     consumers to create new users
     """
+
+    schema = {
+        "$schema": "http://json-schema.org/draft-04/hyper-schema",
+        "title": "List of Users",
+        "description": "Contains methods for listing and creating users",
+        "type": ["object"],
+        "definitions": {
+            "username": {
+                "description": "The name of the user",
+                "example": "root",
+                "readOnly": True,
+                "type": ["string"]
+            },
+            "password": {
+                "description": "The user's password",
+                "example": "toor",
+                "readOnly": True,
+                "type": ["string"]
+            },
+            "date_created": {
+                "description": "The date when the user was last created",
+                "example": "2014-01-01T12:00:00Z",
+                "readOnly": True,
+                "format": "date-time",
+                "type": ["string"]
+            },
+            "projects": {
+                "description": "The projects run by the user",
+                "type": ["array"]
+            },
+            "email": {
+                "description": "The email adress of the user",
+                "example": "scott@tiger.com",
+                "readOnly": True,
+                "format": "email",
+                "type": ["string"]
+            }
+        },
+        "links": [
+            {
+                "title": "List of Projects",
+                "description": "Return a list of users",
+                "href": "/users",
+                "method": "GET",
+                "rel": "self",
+                "targetSchema": {
+                    "$ref": "#/definitions/user"
+                }
+            }
+        ],
+        "properties": {
+            "date_created": {
+                "$ref": "#/definitions/date_created"
+            },
+            "username": {
+                "$ref": "#/definitions/username"
+            },
+            "projects": {
+                "$ref": "#/definitions/projects"
+            }
+        }
+    }
     post_schema_validator = JsonSchemaValidator(
         os.path.join(conf.JSON_SCHEMA_PATH, 'users', 'users_post.json')
     )

@@ -19,6 +19,9 @@ class SchemaDefinedResource(Resource):
     __request_params__ = namedtuple(
             'RequestParams', ['show_schema', 'show_data']
     )
+    _http_method_list = [
+        'get', 'post', 'put', 'patch', 'delete', 'options', 'head'
+    ]
 
     @classmethod
     def _parse_schema_request_params(cls, flask_request):
