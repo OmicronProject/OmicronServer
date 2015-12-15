@@ -145,7 +145,7 @@ class UserView(Resource):
     @auth.login_required
     def get(self, username):
         with database_session() as session:
-            user = session.query(User).filter_by(username=username).first()
+            user = User.from_session(username, session)
             if user != g.user:
                 abort(401)
 

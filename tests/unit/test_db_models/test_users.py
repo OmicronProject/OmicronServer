@@ -155,6 +155,35 @@ class TestUserConstructor(TestUser):
         self.assertEqual(mock_hash_function.call_args, mock_hash_function_call)
 
 
+class TestFromSession(TestUser):
+
+    def setUp(self):
+        TestUser.setUp(self)
+        self.user = db_models.users.User(self.username, self.password,
+                                         self.email)
+
+        self.bad_user = [self.user, 'another list']
+
+        self.assertFalse(isinstance(self.bad_user, self.user.__class__))
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_from_session(self, mock_first):
+        mock_first.return_value = self.user
+        self.assertEqual(
+            self.user,
+            self.user.__class__.from_session(self.username, self.base_session)
+        )
+        self.assertTrue(mock_first.called)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_from_session_throws_typerror(self, mock_first):
+        mock_first.return_value = self.bad_user
+        with self.assertRaises(TypeError):
+            self.user.__class__.from_session(self.username, self.base_session)
+
+        self.assertTrue(mock_first.called)
+
+
 class TestHashPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
