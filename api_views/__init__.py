@@ -4,7 +4,3 @@ Contains the endpoints for the API, created as pluggable objects using
 
 """
 __author__ = 'Michal Kononenko'
-
-
-class BadSchemaError(Exception):
-    pass
