@@ -176,7 +176,8 @@ class User(Base):
         return {
             'username': self.username,
             'email': self.email_address,
-            'date_created': self.date_created.isoformat()
+            'date_created': self.date_created.isoformat(),
+            'projects': [project.get_full for project in self.projects.all()]
         }
 
     def __repr__(self):

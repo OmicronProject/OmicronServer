@@ -11,6 +11,7 @@ from auth import auth
 from db_models.users import Administrator, User
 from db_models.db_sessions import ContextManagedSession
 from config import default_config as conf
+from api_views.projects import ProjectList
 
 log = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ api = Api(app, prefix='/api/v1')
 
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username>')
+api.add_resource(ProjectList, '/projects')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
