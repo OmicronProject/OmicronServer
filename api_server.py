@@ -14,6 +14,7 @@ from config import default_config as conf
 from api_views.projects import ProjectList
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 __author__ = 'Michal Kononenko'
 
