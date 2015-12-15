@@ -30,19 +30,14 @@ class TestAPIViewWithSchema(unittest.TestCase):
         cls.view = Resource()
 
 
-class TestParseSchemaRequestParams(TestAPIViewWithSchema):
-
+class TestAPIViewWithSchemaConstructor(TestAPIViewWithSchema):
     def setUp(self):
-        self.flask_request = mock.MagicMock(spec=request)
-        self.flask_request.args = mock.MagicMock()
+        self.view.show_schema = mock.MagicMock()
+        self.view.get = mock.MagicMock()
 
-    @mock.patch('views.schema_defined_resource.SchemaDefinedResource._parse_query_string',
-                return_value=True)
-    def test_parse_schema_request_params(self, mock_parse_q_string):
-
-        new_tuple = self.view._parse_schema_request_params(self.flask_request)
-
-        self.assertIsInstance(new_tuple, self.view.__request_params__)
+    def test_view_constructor(self):
+        self.view.__init__()
+        self.assertTrue(self.view.show_schema.called)
 
 
 class TestParseQueryString(TestAPIViewWithSchema):
@@ -67,60 +62,38 @@ class TestParseQueryString(TestAPIViewWithSchema):
         self.assertEqual(mock_abort_call, mock_abort.call_args)
 
 
-@mock.patch('views.schema_defined_resource.'
-            'SchemaDefinedResource._parse_schema_request_params')
 class TestShowSchema(TestAPIViewWithSchema):
 
     @staticmethod
     def _method_to_decorate():
         return True
 
-    def setUp(self):
-        self.view._parse_schema_request_params = mock.MagicMock()
-
-    def test_show_schema_no_q_params(self, mock_parse):
-        mock_parse.return_value = self.view.__request_params__(False, False)
-        func = self.view.show_schema(self._method_to_decorate)
-
-        self.assertTrue(func())
-        self.assertTrue(mock_parse.called)
-
-    def test_show_schema_show_data_true(self, mock_parse):
-        mock_parse.return_value = self.view.__request_params__(False, True)
-
-        func = self.view.show_schema(self._method_to_decorate)
-        self.assertTrue(func())
-
-        self.assertTrue(mock_parse.called)
-
+    @mock.patch('views.SchemaDefinedResource._parse_query_string',
+                return_value=True)
     @mock.patch('views.schema_defined_resource.jsonify')
-    def test_return_jsonified_schema(self, mock_jsonify, mock_parse):
-        mock_parse.return_value = self.view.__request_params__(True, False)
+    def test_show_schema_true(self, mock_jsonify, mock_q_string):
+        mock_request = mock.MagicMock()
+        func = self.view.show_schema(self._method_to_decorate, mock_request)
 
-        func = self.view.show_schema(self._method_to_decorate)
         self.assertTrue(func())
-
         self.assertEqual(
             mock.call(self.view.schema),
             mock_jsonify.call_args
         )
+        self.assertTrue(mock_q_string.called)
+        self.assertTrue(mock_request.args.get.called)
 
-    @staticmethod
-    def _echo_chamber(object_to_return):
-        return object_to_return
-
+    @mock.patch('views.SchemaDefinedResource._parse_query_string',
+                return_value=False)
     @mock.patch('views.schema_defined_resource.jsonify')
-    def test_return_jsonified_schema_with_data(self, mock_jsonify, mock_parse):
-        object_to_return = mock.MagicMock()
-        object_to_return.data = '{"data": "foo"}'
+    def test_show_schema_false(self, mock_jsonify, mock_parse):
+        mock_request = mock.MagicMock()
+        func = self.view.show_schema(self._method_to_decorate, mock_request)
 
-        mock_parse.return_value = self.view.__request_params__(True, True)
+        self.assertTrue(func())
 
-        func = self.view.show_schema(self._echo_chamber)
+        self.assertFalse(mock_jsonify.called)
 
-        func(object_to_return)
-
-        self.assertTrue(mock_jsonify.called)
         self.assertTrue(mock_parse.called)
 
 

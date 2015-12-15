@@ -87,7 +87,7 @@ class UserContainer(SchemaDefinedResource):
     )
 
     def __init__(self):
-        Resource.__init__(self)
+        SchemaDefinedResource.__init__(self)
 
     @staticmethod
     def parse_search_query_params(request):
