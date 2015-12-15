@@ -102,6 +102,27 @@ class User(Base):
         self.email_address = email
         self.date_created = date_created
 
+    @classmethod
+    def from_session(cls, username, session):
+        """
+        Provides an alternate "constructor" by using the supplied
+        session and returning the user matching the given username.
+        The method also asserts that a user was returned by the query.
+        If it did not happen, something horrible has happened.
+
+        :param str username: The username of the user to get
+        :param ContextManagedSession session: The session to use for retrieving
+            the user
+        :return: The user to be retrieved
+        """
+        user = session.query(cls).filter_by(username=username).first()
+        if not isinstance(user, cls):
+            raise TypeError(
+                'The returned user of type %s is not of expected type %s',
+                user.__class__.__name__, cls.__name__
+            )
+        return user
+
     @staticmethod
     def hash_password(password):
         """
