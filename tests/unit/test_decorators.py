@@ -102,10 +102,7 @@ class TestRestfulPagination(unittest.TestCase):
         in Sphinx being unable to write the docstring of the wrapped function
         """
         def _function_to_decorate():
-            """
-            Function that will be decorated, all it does is return its name
-            """
-            return _function_to_decorate.__name__
+            raise NotImplementedError
 
         function_name = _function_to_decorate.__name__
         function_doc = _function_to_decorate.__doc__
@@ -121,7 +118,7 @@ class TestRestfulPagination(unittest.TestCase):
 
         @decorators.restful_pagination()
         def _function_to_decorate():
-            pass
+            raise NotImplementedError
 
         _function_to_decorate.__doc__ = function_docstring
 
