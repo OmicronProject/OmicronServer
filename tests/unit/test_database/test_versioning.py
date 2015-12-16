@@ -1,9 +1,11 @@
-import unittest
-import mock
 import logging
-from db_schema import metadata as meta
-import db_versioning as dbv
 import sys
+import unittest
+
+import mock
+
+from database import versioning as dbv
+from database.schema import metadata as meta
 
 __author__ = 'Michal Kononenko'
 
@@ -63,7 +65,7 @@ class TestDatabaseManagerConstructor(unittest.TestCase):
 
 class TestDatabaseManagerDefaultEngine(TestDatabaseManager):
 
-    @mock.patch('db_versioning.create_engine')
+    @mock.patch('database.versioning.create_engine')
     def test_default_engine_none(self, mock_create_engine):
         mock_engine_call = mock.call(self.database_url)
         self.manager._default_engine = None
@@ -138,7 +140,8 @@ class TestCreateMigrationScript(TestDatabaseManager):
 
     @mock.patch('%s.eval' % builtin_string)
     @mock.patch('%s.open' % builtin_string)
-    @mock.patch('db_versioning.types.ModuleType', return_value=MockModule())
+    @mock.patch('database.versioning.types.ModuleType',
+                return_value=MockModule())
     def test_migrate_db(self, mock_module, mock_open, mock_exec):
         self.manager.create_migration_script()
 

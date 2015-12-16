@@ -5,6 +5,11 @@ engines:
     enabled: true
   radon:
     enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+        - python
 ratings:
   paths:
   - "**.py"

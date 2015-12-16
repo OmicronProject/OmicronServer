@@ -3,15 +3,15 @@ Defines the flask app which will run our HTTP application. This also creates
 a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
+import logging
+
 from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
-from api_views.users import UserContainer, UserView
-import logging
+
 from auth import auth
-from db_models.users import Administrator, User
-from db_models.db_sessions import ContextManagedSession
 from config import default_config as conf
-from api_views.projects import ProjectList
+from database import Administrator, User, ContextManagedSession
+from views import UserContainer, UserView
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

@@ -1,17 +1,19 @@
 """
 Contains unit tests for :mod:`views`
 """
-import unittest
-from api_server import app
-from db_schema import metadata
-from db_models.db_sessions import ContextManagedSession
-from db_models.users import User
-import logging
 import json
-import api_views.users as users
-from sqlalchemy import create_engine
-import mock
+import logging
+import unittest
 from base64 import b64encode
+
+import mock
+from sqlalchemy import create_engine
+
+import views.users as users
+from api_server import app
+from database.schema import metadata
+from database.models.users import User
+from database.sessions import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 
@@ -210,8 +212,8 @@ class TestGet(TestUserView):
         self.bad_user = User('foo', 'bar', 'foo@bar.com')
 
     @mock.patch('sqlalchemy.orm.Query.first')
-    @mock.patch('api_views.users.auth.login_required')
-    @mock.patch('api_views.users.g')
+    @mock.patch('views.users.auth.login_required')
+    @mock.patch('views.users.g')
     def test_get_correct(self, mock_g, mock_auth, mock_first):
         mock_auth.return_value = lambda f: f
         mock_first.return_value = self.user
@@ -224,8 +226,8 @@ class TestGet(TestUserView):
         self.assertTrue(mock_first.called)
 
     @mock.patch('sqlalchemy.orm.Query.first')
-    @mock.patch('api_views.users.auth.login_required')
-    @mock.patch('api_views.users.g')
+    @mock.patch('views.users.auth.login_required')
+    @mock.patch('views.users.g')
     def test_get_fake_user(self, mock_g, mock_auth, mock_first):
         mock_auth.return_value = lambda f: f
         mock_first.return_value = self.user

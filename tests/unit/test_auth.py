@@ -2,13 +2,15 @@
 Contains unit tests for :mod:`auth`
 """
 import unittest
-import auth
-import mock
-from db_schema import metadata
-from db_models.users import User, Token
-from sqlalchemy import create_engine
-from db_models.db_sessions import ContextManagedSession
 from uuid import uuid1
+
+import mock
+from sqlalchemy import create_engine
+
+import auth
+from database.schema import metadata
+from database.models.users import User, Token
+from database.sessions import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 
@@ -166,7 +168,7 @@ class TestVerifyPassword(TestAuth):
         self.assertFalse(auth.verify_password(self.token_string))
         self.assertTrue(mock_first.called)
 
-    @mock.patch('db_models.users.Token.verify_token', return_value=False)
+    @mock.patch('database.Token.verify_token', return_value=False)
     def test_verify_token_bad_token(self, mock_check_token):
         self.assertFalse(auth.verify_password(self.token_string))
         self.assertTrue(mock_check_token.called)
