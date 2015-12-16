@@ -1,17 +1,19 @@
 """
-Contains model classes relevant to User management.
+Contains all model classes relevant to management of users
 """
 from datetime import datetime, timedelta
-from db_models import Base
-from passlib.apps import custom_app_context as pwd_context
-from sqlalchemy.orm import relationship
-from config import default_config as conf
-from db_schema import users, users_projects_asoc_tables, tokens
-from db_models.projects import Project
-from db_models.db_sessions import ContextManagedSession
-from uuid import uuid1, UUID
 from hashlib import sha256
+from uuid import uuid1, UUID
+
+from database.models import Base
+from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import desc
+from sqlalchemy.orm import relationship
+
+from config import default_config as conf
+from database.schema import users, users_projects_asoc_tables, tokens
+from database.models.projects import Project
+from database.sessions import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 

@@ -1,7 +1,5 @@
 import abc
-import json
 import jsonschema
-from collections import namedtuple
 from functools import wraps
 from flask import request, jsonify, abort
 from flask.ext.restful import Resource
@@ -15,27 +13,14 @@ class SchemaDefinedResource(Resource):
     built into it. This class is capable of serving its schema
     and
     """
+    _http_method_list = frozenset([
+        'get', 'post', 'put', 'patch', 'delete', 'options', 'head'
+    ])
 
-    __request_params__ = namedtuple(
-            'RequestParams', ['show_schema', 'show_data']
-    )
-
-    @classmethod
-    def _parse_schema_request_params(cls, flask_request):
-        """
-        Take in parameters from the Flask request and determine if
-        the schema or data need to be shown
-        :param flask_request: The :attr:`Flask.request` that needs to be
-            parsed
-        :return: A named tuple consisting of two booleans, one
-            whether to show the schema and one to determine whether
-            to show the underlying data in the endpoint
-        """
-
-        return cls.__request_params__(
-            cls._parse_query_string(flask_request.args.get('schema')),
-            cls._parse_query_string(flask_request.args.get('show_data'))
-        )
+    def __init__(self):
+        for method in self._http_method_list:
+            if hasattr(self, method):
+                setattr(self, method, self.show_schema(getattr(self, method)))
 
     @staticmethod
     def _parse_query_string(string):
@@ -49,25 +34,15 @@ class SchemaDefinedResource(Resource):
             abort(404)
 
     @classmethod
-    def show_schema(cls, f):
-        request_params = cls._parse_schema_request_params(request)
+    def show_schema(cls, f, req_to_parse=request):
+        show_schema = cls._parse_query_string(req_to_parse.args.get('schema'))
 
         @wraps(f)
         def _wrapper(*args, **kwargs):
-            if not request_params.show_schema and not request_params.show_data:
-                return f(*args, **kwargs)
-            elif not request_params.show_schema and request_params.show_data:
-                return f(*args, **kwargs)
-            elif request_params.show_schema and not request_params.show_data:
+            if show_schema:
                 return jsonify(cls.schema)
-            elif request_params.show_schema and request_params.show_data:
-                response = f(*args, **kwargs)
-
-                response_dict = json.loads(response.data)
-
-                dict_to_return = dict(schema=cls.schema, **response_dict)
-
-                return jsonify(dict_to_return), response.status_code
+            else:
+                return f(*args, **kwargs)
 
         return _wrapper
 
