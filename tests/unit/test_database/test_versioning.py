@@ -12,7 +12,7 @@ __author__ = 'Michal Kononenko'
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
-builtin_string = '__builtin__' if sys.version.info < (3,) else 'builtins'
+builtin_string = '__builtin__' if sys.version_info < (3,) else 'builtins'
 
 
 class MockMigrateAPI(mock.MagicMock):
