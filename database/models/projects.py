@@ -37,3 +37,12 @@ class Project(Base):
     @property
     def date_created_isoformat(self):
         return self.date_created.isoformat()
+
+    @property
+    def get(self):
+        return {
+            'name': self.name,
+            'description': self.description,
+            'date_created': self.date_created,
+            'owner': self.owner.get if self.owner is not None else 'None'
+        }
