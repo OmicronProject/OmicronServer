@@ -10,13 +10,12 @@ Contents:
 
 .. toctree::
    :numbered:
-   :maxdepth: 3
 
    installation
    concepts
    technologies
    web_api
-   python_api
+   api_reference/index
 
 
 Introduction

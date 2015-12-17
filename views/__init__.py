@@ -5,4 +5,6 @@ Contains the endpoints for the API, created as pluggable objects using
 """
 from views.schema_defined_resource import SchemaDefinedResource
 from views.users import UserContainer, UserView
+from views.projects import ProjectContainer
+
 __author__ = 'Michal Kononenko'

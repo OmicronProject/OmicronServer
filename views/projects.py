@@ -1,15 +1,14 @@
 from flask import jsonify
 from flask_restful import Resource
 from config import default_config as conf
-from db_models.db_sessions import ContextManagedSession
-from db_models.projects import Project
+from database import ContextManagedSession, Project
 from decorators import restful_pagination
 __author__ = 'Michal Kononenko'
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
-class ProjectList(Resource):
+class ProjectContainer(Resource):
     """
     Maps the /projects endpoint
     """

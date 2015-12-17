@@ -361,3 +361,6 @@ epub_exclude_files = ['search.html']
 
 # If false, no index is generated.
 #epub_use_index = True
+
+
+numpydoc_show_class_members = False

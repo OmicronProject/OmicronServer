@@ -11,7 +11,7 @@ from flask_restful import Api
 from auth import auth
 from config import default_config as conf
 from database import Administrator, User, ContextManagedSession
-from views import UserContainer, UserView
+from views import UserContainer, UserView, ProjectContainer
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -23,7 +23,7 @@ api = Api(app, prefix='/api/v1')
 
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username>')
-api.add_resource(ProjectList, '/projects')
+api.add_resource(ProjectContainer, '/projects')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 

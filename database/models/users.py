@@ -143,9 +143,34 @@ class User(Base):
         """
         return pwd_context.verify(password, self.password_hash)
 
-    def generate_auth_token(self,
-            expiration=600,
-            session=ContextManagedSession(bind=conf.DATABASE_ENGINE)):
+    def generate_auth_token(
+            self, expiration=600,
+            session=ContextManagedSession(bind=conf.DATABASE_ENGINE)
+    ):
+        """
+        Generates a token for the user. The user's token is a `UUID 1`_,
+        randomly generated in this function. A :class:`Token` is created
+        with this randomly-generated UUID, the UUID token is hashed,
+        and stored in the database.
+
+            .. warning::
+
+                The string representation of the generated token is returned
+                only once, and is not recoverable from the data stored in the
+                database. The returned token is also a proxy for the user's
+                password, so treat it as such.
+
+        :param int expiration: The lifetime of the token in seconds.
+        :param ContextManagedSession session: The database session with
+            which this method will interact, in order to produce a token. By
+            default, this is a :class:`ContextManagedSession` that will
+            point to :attr:`conf.DATABASE_ENGINE`, but for the purposes of unit
+            testing, it can be repointed.
+        :return: The newly-created authentication token
+        :rtype: str
+
+        .. _UUID 1: https://goo.gl/iUS6s9
+        """
         expiration_date = datetime.utcnow() + timedelta(seconds=expiration)
 
         token_string = str(uuid1())
@@ -160,6 +185,13 @@ class User(Base):
         return token_string
 
     def verify_auth_token(self, token_string):
+        """
+        Loads the user's current token, and uses that token to check whether
+        the supplied token string is correct
+
+        :param str token_string: The token to validate
+        :return: ``True`` if the token is valid and ``False`` if not
+        """
         token = self.current_token
 
         return token.verify_token(token_string)
@@ -191,7 +223,6 @@ class User(Base):
     def __eq__(self, other):
         """
         :param User other: The user against which to compare
-        :return:
         """
         return self.username == other.username
 
@@ -199,12 +230,16 @@ class User(Base):
         """
         Check if two users are not equal
         :param other:
-        :return:
         """
         return self.username != other.username
 
 
 class Administrator(User):
+    """
+    Represents a "superuser" type. The administrator will be able to oversee
+    all projects, revoke anyone's token, and approve new users into the system,
+    when user approval is complete.
+    """
     __mapper_args__ = {
         'polymorphic_identity': True
     }
