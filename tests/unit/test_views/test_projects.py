@@ -2,7 +2,7 @@
 Contains unit tests for :mod:`views.projects`
 """
 import unittest
-import unittest.mock as mock
+import mock
 from api_server import app
 from database import Project, User
 
