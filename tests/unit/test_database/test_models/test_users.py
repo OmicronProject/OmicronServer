@@ -288,7 +288,8 @@ class TestGetFull(TestUser):
         self.expected_result = {
             'username': self.username,
             'email': self.email,
-            'date_created': self.user.date_created.isoformat()
+            'date_created': self.user.date_created.isoformat(),
+            'projects': []
         }
 
     def test_get_full(self):
