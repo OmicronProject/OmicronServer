@@ -4,10 +4,8 @@ a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
 import logging
-
 from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
-
 from auth import auth
 from config import default_config as conf
 from database import Administrator, User, ContextManagedSession

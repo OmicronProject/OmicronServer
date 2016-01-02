@@ -164,12 +164,13 @@ class TestParseSearchQueryParams(TestUserContainer):
         return json_dict
 
 
+@mock.patch('sqlalchemy.orm.Session.add')
 class TestCreateUser(TestUserContainer):
     def setUp(self):
         self.request_method = self.client.post
         self.url = 'api/v1/users'
 
-    def test_post(self):
+    def test_post(self, mock_add):
         data_to_post = {
             'username': self.username,
             'password': self.password,
@@ -180,7 +181,9 @@ class TestCreateUser(TestUserContainer):
                                 headers=self.headers)
         self.assertEqual(r.status_code, 201)
 
-    def test_post_bad_data(self):
+        self.assertTrue(mock_add.called)
+
+    def test_post_bad_data(self, mock_add):
         data_to_post = {
             'user': self.username,
             'password': self.password,
@@ -189,6 +192,7 @@ class TestCreateUser(TestUserContainer):
         r = self.request_method(self.url, data=json.dumps(data_to_post),
                                 headers=self.headers)
         self.assertEqual(r.status_code, 400)
+        self.assertFalse(mock_add.called)
 
 
 class TestUserView(TestView):

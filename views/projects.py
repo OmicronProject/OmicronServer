@@ -53,6 +53,9 @@ class ProjectContainer(Resource):
             username=request.json.get('owner')
         ).first()
 
+        if owner is None:
+            abort(400)
+
         project = Project(project_name, project_description, owner)
 
         session.add(project)
