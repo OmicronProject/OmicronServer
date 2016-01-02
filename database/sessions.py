@@ -35,7 +35,8 @@ class ContextManagedSession(Session):
     def _decorator(self, f):
         def _wrapped_function(*args, **kwargs):
             with self as session:
-                response = f(*args, **kwargs, session=session)
+                new_args = args + (session,)
+                response = f(*new_args, **kwargs)
             return response
 
         _wrapped_function.__name__ = f.__name__
