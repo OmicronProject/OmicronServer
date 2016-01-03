@@ -123,8 +123,8 @@ class UserContainer(SchemaDefinedResource):
         return search_string
 
     @auth.login_required
-    @restful_pagination()
     @database_session()
+    @restful_pagination()
     def get(self, session, pag_args):
         """
         Process a GET request for the /users endpoint
@@ -162,7 +162,6 @@ class UserContainer(SchemaDefinedResource):
         :return: A flask response object with the search request parsed
         """
         like_string = self.parse_search_query_params(request)
-
 
         user_query = session.query(
             User

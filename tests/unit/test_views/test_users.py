@@ -5,10 +5,8 @@ import json
 import logging
 import unittest
 from base64 import b64encode
-
 import mock
 from sqlalchemy import create_engine
-
 import views.users as users
 from api_server import app
 from database.schema import metadata
@@ -125,6 +123,29 @@ class TestParseSearchQueryParamsNone(TestParseSearchQueryParams):
                             users.request
                     )
             )
+
+
+@mock.patch('sqlalchemy.orm.Query.all')
+@mock.patch('sqlalchemy.orm.Query.count')
+@mock.patch('sqlalchemy.orm.Query.first')
+class TestUserContainerGet(TestUserContainer):
+    def setUp(self):
+        TestUserContainer.setUp(self)
+        self.request_method = self.client.get
+        self.url = 'api/v1/users'
+        self.user = User(self.username, self.password, self.email)
+        self.user.verify_password = mock.MagicMock(return_value=True)
+
+    def test_get(self, mock_first, mock_count, mock_all):
+        mock_first.return_value = self.user
+        mock_all.return_value = [self.user]
+        mock_count.return_value = 1
+
+        r = self.request_method(self.url, headers=self.headers)
+        self.assertEqual(r.status_code, 200)
+
+        self.assertEqual(mock.call(), mock_all.call_args)
+        self.assertEqual(mock.call(), mock_count.call_args)
 
 
 @mock.patch('sqlalchemy.orm.Session.add')
