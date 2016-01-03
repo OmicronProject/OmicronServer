@@ -115,7 +115,9 @@ def restful_pagination(default_items_per_page=1000):
                 page, items_per_page, offset
             )
 
-            response = f(pag_args=pag_args, *args, **kwargs)
+            new_args = args + (pag_args,)
+
+            response = f(*new_args, **kwargs)
 
             response.headers['page'] = page
             response.headers['items_per_page'] = items_per_page

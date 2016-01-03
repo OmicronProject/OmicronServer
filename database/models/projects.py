@@ -4,6 +4,7 @@ Contains all model
 from datetime import datetime
 from database.models import Base
 from database import schema
+from sqlalchemy.orm import relationship
 
 __author__ = 'Michal Kononenko'
 

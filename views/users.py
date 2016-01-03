@@ -123,8 +123,9 @@ class UserContainer(SchemaDefinedResource):
         return search_string
 
     @auth.login_required
+    @database_session()
     @restful_pagination()
-    def get(self, pag_args):
+    def get(self, session, pag_args):
         """
         Process a GET request for the /users endpoint
 
@@ -162,27 +163,27 @@ class UserContainer(SchemaDefinedResource):
         """
         like_string = self.parse_search_query_params(request)
 
-        with database_session() as session:
-            user_query = session.query(
-                User
-            ).filter(
-                User.username.like(like_string)
-            ).order_by(
-                User.id
-            ).limit(
-                pag_args.items_per_page
-            ).offset(
-                pag_args.offset
-            )
+        user_query = session.query(
+            User
+        ).filter(
+            User.username.like(like_string)
+        ).order_by(
+            User.id
+        ).limit(
+            pag_args.items_per_page
+        ).offset(
+            pag_args.offset
+        )
 
-            users = user_query.all()
-            user_count = user_query.count()
+        users = user_query.all()
+        user_count = user_query.count()
 
         response = jsonify({'users': [user.get for user in users]})
         response.headers['Count'] = user_count
         return response
 
-    def post(self):
+    @database_session()
+    def post(self, session):
         if not self.post_schema_validator.validate_dict(request.json)[0]:
             abort(400)
 
@@ -191,8 +192,8 @@ class UserContainer(SchemaDefinedResource):
         email = request.json.get('email')
 
         user = User(username, password, email)
-        with database_session() as session:
-            session.add(user)
+
+        session.add(user)
 
         response = jsonify({'user': username, 'email': email})
         response.status_code = 201

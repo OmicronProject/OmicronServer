@@ -11,7 +11,7 @@ from sqlalchemy import desc
 from sqlalchemy.orm import relationship
 
 from config import default_config as conf
-from database.schema import users, users_projects_asoc_tables, tokens
+from database import schema
 from database.models.projects import Project
 from database.sessions import ContextManagedSession
 
@@ -22,7 +22,7 @@ class Token(Base):
     """
     Contains methods for manipulating user tokens.
     """
-    __table__ = tokens
+    __table__ = schema.tokens
 
     token_hash = __table__.c.token_hash
     date_created = __table__.c.date_created
@@ -75,7 +75,7 @@ class User(Base):
     """
     Base class for a User.
     """
-    __table__ = users
+    __table__ = schema.users
     __columns__ = __table__.c
 
     id = __columns__.user_id
@@ -90,8 +90,11 @@ class User(Base):
     }
 
     projects = relationship(Project, backref='members',
-                            secondary=users_projects_asoc_tables,
+                            secondary=schema.users_projects_asoc_tables,
                             lazy='dynamic')
+
+    owned_projects = relationship(Project, backref='owner',
+                                  foreign_keys=schema.projects.c.owner_id)
 
     tokens = relationship(Token, backref='owner', lazy='dynamic')
 

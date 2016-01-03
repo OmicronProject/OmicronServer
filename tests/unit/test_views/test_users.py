@@ -5,10 +5,8 @@ import json
 import logging
 import unittest
 from base64 import b64encode
-
 import mock
 from sqlalchemy import create_engine
-
 import views.users as users
 from api_server import app
 from database.schema import metadata
@@ -61,115 +59,102 @@ class TestUserContainer(TestView):
 
 
 class TestParseSearchQueryParams(TestUserContainer):
+    def setUp(self):
+        self.url = '/api/v1/users'
 
+
+class TestParseSearchQueryParamsContains(TestParseSearchQueryParams):
+    def setUp(self):
+        TestParseSearchQueryParams.setUp(self)
+        self.contains_string = 'string'
+        self.context = app.test_request_context(
+            '%s?contains=%s' % (self.url, self.contains_string)
+        )
+
+    def test_contains_string_is_not_none(self):
+        with self.context:
+            search_string = users.UserContainer.parse_search_query_params(
+                    users.request)
+
+            self.assertEqual('%%%s%%' % self.contains_string, search_string)
+
+
+class TestParseSearchQueryParamsStartsWith(TestParseSearchQueryParams):
+    def setUp(self):
+        TestParseSearchQueryParams.setUp(self)
+        self.contains_string = 'string'
+        self.context = app.test_request_context(
+            '%s?starts_with=%s' % (self.url, self.contains_string)
+        )
+
+    def test_starts_with(self):
+        with self.context:
+            search_string = users.UserContainer.parse_search_query_params(
+                users.request
+            )
+            self.assertEqual('%s%%' % self.contains_string, search_string)
+
+
+class TestParseSearchQueryParamsEndsWith(TestParseSearchQueryParams):
+    def setUp(self):
+        TestParseSearchQueryParams.setUp(self)
+        self.contains_string = 'string'
+        self.context = app.test_request_context(
+            '%s?ends_with=%s' % (self.url, self.contains_string)
+        )
+
+    def test_ends_with(self):
+        with self.context:
+            search_string = users.UserContainer.parse_search_query_params(
+                users.request
+            )
+            self.assertEqual('%%%s' % self.contains_string, search_string)
+
+
+class TestParseSearchQueryParamsNone(TestParseSearchQueryParams):
+    def setUp(self):
+        TestParseSearchQueryParams.setUp(self)
+        self.context = app.test_request_context(self.url)
+
+    def test_none(self):
+        with self.context:
+            self.assertEqual(
+                '%%%%', users.UserContainer.parse_search_query_params(
+                            users.request
+                    )
+            )
+
+
+@mock.patch('sqlalchemy.orm.Query.all')
+@mock.patch('sqlalchemy.orm.Query.count')
+@mock.patch('sqlalchemy.orm.Query.first')
+class TestUserContainerGet(TestUserContainer):
     def setUp(self):
         TestUserContainer.setUp(self)
         self.request_method = self.client.get
-        self.template_url = 'api/v1/users'
+        self.url = 'api/v1/users'
+        self.user = User(self.username, self.password, self.email)
+        self.user.verify_password = mock.MagicMock(return_value=True)
 
-        user = User(self.username, self.password, self.email)
+    def test_get(self, mock_first, mock_count, mock_all):
+        mock_first.return_value = self.user
+        mock_all.return_value = [self.user]
+        mock_count.return_value = 1
 
-        with users.database_session as session:
-            session.add(user)
-
-        self.top_level_json_key = 'users'
-        self.api_charset = 'utf-8'
-
-    def tearDown(self):
-
-        with users.database_session as session:
-            user = session.query(User).filter_by(
-                username=self.username
-            ).first()
-
-            session.delete(user)
-
-    def test_contains_match_user(self):
-        contains_string = self.username[1:-1]
-        request_url = '%s?contains=%s' % (self.template_url, contains_string)
-
-        json_dict = self._get_request(request_url, 1)
-
-        self.assertTrue(json_dict[self.top_level_json_key])
-
-    def test_contains_user_not_found(self):
-        contains_string = 'abc'
-        self.assertNotIn(contains_string, self.username)
-
-        request_url = '%s?contains=%s' % (self.template_url, contains_string)
-
-        json_dict = self._get_request(request_url, 0)
-
-        self.assertFalse(json_dict[self.top_level_json_key])
-
-    def test_begins_with_user_found(self):
-        begins_with_string = self.username[0:2]
-        request_url = '%s?starts_with=%s' % (
-            self.template_url, begins_with_string
-        )
-
-        json_dict = self._get_request(request_url, 1)
-
-        self.assertTrue(json_dict[self.top_level_json_key])
-
-    def test_begins_with_user_not_found(self):
-        begins_with_string = 'y'
-
-        self.assertNotIn(begins_with_string, self.username)
-
-        request_url = '%s?starts_with=%s' % (
-            self.template_url, begins_with_string
-        )
-
-        json_dict = self._get_request(request_url, 0)
-
-        self.assertFalse(json_dict[self.top_level_json_key])
-
-    def test_ends_with_user_found(self):
-        ends_with_string = self.username[-1:-3]
-
-        request_url = '%s?ends_with=%s' % (
-            self.template_url, ends_with_string
-        )
-
-        json_dict = self._get_request(request_url, 1)
-
-        self.assertTrue(json_dict[self.top_level_json_key])
-
-    def test_ends_with_user_not_found(self):
-        ends_with_string = 'a'
-
-        self.assertNotIn(ends_with_string, self.username)
-
-        request_url = '%s?ends_with=%s' % (
-            self.template_url, ends_with_string
-        )
-
-        json_dict = self._get_request(request_url, 0)
-
-        self.assertFalse(json_dict[self.top_level_json_key])
-
-    def test_empty_search_string(self):
-        request_url = self.template_url
-
-        self._get_request(request_url, 1)
-
-    def _get_request(self, request_url, expected_count):
-        r = self.request_method(request_url, headers=self.headers)
+        r = self.request_method(self.url, headers=self.headers)
         self.assertEqual(r.status_code, 200)
-        self.assertEqual(int(r.headers['Count']), expected_count)
 
-        json_dict = json.loads(r.data.decode(self.api_charset))
-
-        return json_dict
+        self.assertEqual(mock.call(), mock_all.call_args)
+        self.assertEqual(mock.call(), mock_count.call_args)
 
 
+@mock.patch('sqlalchemy.orm.Session.add')
 class TestCreateUser(TestUserContainer):
     def setUp(self):
         self.request_method = self.client.post
         self.url = 'api/v1/users'
 
-    def test_post(self):
+    def test_post(self, mock_add):
         data_to_post = {
             'username': self.username,
             'password': self.password,
@@ -180,7 +165,9 @@ class TestCreateUser(TestUserContainer):
                                 headers=self.headers)
         self.assertEqual(r.status_code, 201)
 
-    def test_post_bad_data(self):
+        self.assertTrue(mock_add.called)
+
+    def test_post_bad_data(self, mock_add):
         data_to_post = {
             'user': self.username,
             'password': self.password,
@@ -189,6 +176,7 @@ class TestCreateUser(TestUserContainer):
         r = self.request_method(self.url, data=json.dumps(data_to_post),
                                 headers=self.headers)
         self.assertEqual(r.status_code, 400)
+        self.assertFalse(mock_add.called)
 
 
 class TestUserView(TestView):
@@ -207,7 +195,8 @@ class TestGet(TestUserView):
         self.request_method = self.client.get
         self.url = 'api/v1/users/%s' % self.username
         self.headers['Authorization'] = 'Basic %s' % \
-            b64encode(('%s:%s' % (self.username, self.password)).encode('ascii')).decode('ascii')
+            b64encode(('%s:%s' % (self.username, self.password)).
+                      encode('ascii')).decode('ascii')
 
         self.bad_user = User('foo', 'bar', 'foo@bar.com')
 

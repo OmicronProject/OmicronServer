@@ -5,6 +5,7 @@ import unittest
 import mock
 from api_server import app
 from database import Project, User
+import json
 
 __author__ = 'Michal Kononenko'
 
@@ -45,3 +46,54 @@ class TestGet(TestProjectView):
 
         self.assertTrue(mock_count.called)
         self.assertTrue(mock_all.called)
+
+
+class TestCreateProject(TestProjectView):
+    def setUp(self):
+        self.request_method = self.client.post
+        self.url = 'api/v1/projects'
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    @mock.patch('sqlalchemy.orm.Session.add')
+    def test_post(self, mock_add, mock_first):
+        mock_first.return_value = self.owner
+
+        data_to_post = {
+            'name': self.project_name,
+            'description': self.project_description,
+            'owner': self.owner_name
+        }
+
+        r = self.request_method(self.url, data=json.dumps(data_to_post),
+                                headers=self.headers)
+        self.assertEqual(r.status_code, 201)
+
+        self.assertEqual(mock.call(), mock_first.call_args)
+        self.assertTrue(mock_add.called)
+
+    def test_post_bad_data(self):
+        data_to_post = {
+            'not_a_valid_key': 'foo',
+            'description': self.project_description,
+            'owner': self.owner_name
+        }
+
+        r = self.request_method(self.url, data=json.dumps(data_to_post),
+                                headers=self.headers)
+
+        self.assertEqual(r.status_code, 400)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_post_no_owner(self, mock_first):
+        mock_first.return_value = None
+
+        data_to_post = {
+            'name': 'test_project',
+            'description': 'This is a description',
+            'owner': self.owner_name
+        }
+
+        r = self.request_method(self.url, data=json.dumps(data_to_post),
+                                headers=self.headers)
+
+        self.assertEqual(r.status_code, 400)
