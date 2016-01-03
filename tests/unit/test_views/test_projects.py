@@ -82,3 +82,18 @@ class TestCreateProject(TestProjectView):
                                 headers=self.headers)
 
         self.assertEqual(r.status_code, 400)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_post_no_owner(self, mock_first):
+        mock_first.return_value = None
+
+        data_to_post = {
+            'name': 'test_project',
+            'description': 'This is a description',
+            'owner': self.owner_name
+        }
+
+        r = self.request_method(self.url, data=json.dumps(data_to_post),
+                                headers=self.headers)
+
+        self.assertEqual(r.status_code, 400)
