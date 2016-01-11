@@ -26,7 +26,7 @@ class Config(object):
     BASE_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
     JSON_SCHEMA_PATH = os.path.join(BASE_DIRECTORY, 'schemas')
 
-    DATABASE_URL = 'sqlite:///%s' % ('test_db.sqlite3')
+    DATABASE_URL = 'sqlite:///%s/%s' % (BASE_DIRECTORY, 'test_db.sqlite3')
     DATABASE_ENGINE = create_engine(DATABASE_URL)
 
     SQLALCHEMY_MIGRATE_REPO = os.path.join(BASE_DIRECTORY, 'db_versioning_repo')

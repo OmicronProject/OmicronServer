@@ -3,7 +3,7 @@ Contains unit tests for :mod:`auth`
 """
 import unittest
 from uuid import uuid1
-
+from config import default_config as conf
 import mock
 from sqlalchemy import create_engine
 
@@ -17,10 +17,10 @@ __author__ = 'Michal Kononenko'
 
 class TestAuth(unittest.TestCase):
     engine = create_engine('sqlite:///')
-    auth.database_session = ContextManagedSession(bind=engine)
 
     @classmethod
     def setUpClass(cls):
+        auth.database_session = ContextManagedSession(bind=cls.engine)
         cls.username = 'scott'
         cls.password = 'tiger'
         cls.email = 'scott@tiger.com'
@@ -29,6 +29,8 @@ class TestAuth(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         metadata.drop_all(bind=cls.engine)
+        auth.database_session = ContextManagedSession(
+                bind=conf.DATABASE_ENGINE)
 
 
 class TestVerifyUser(TestAuth):
