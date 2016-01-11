@@ -1,5 +1,6 @@
 """
-Contains persistent model classes in the database.
+Contains database model classes. These can be loaded into and out of the
+database, and are stored in persistent storage.
 """
 from sqlalchemy.ext.declarative import declarative_base
 
