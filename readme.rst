@@ -27,6 +27,10 @@ Badges
    :target: https://codeclimate.com/github/MichalKononenko/OmicronServer
    :alt: Code Climate
 
+.. image:: https://badge.waffle.io/MichalKononenko/OmicronServer.png?label=ready&title=Ready
+   :target: https://waffle.io/MichalKononenko/OmicronServer
+   :alt: 'Stories in Ready'
+
 
 Installation
 ------------
