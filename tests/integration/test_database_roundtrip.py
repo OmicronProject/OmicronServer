@@ -11,7 +11,10 @@ __author__ = 'Michal Kononenko'
 
 
 class TestDatabaseRoundTrip(TestWithDatabase):
-
+    """
+    Tests that SQLAlchemy is successfully able to connect to the database,
+    store an object in the DB, and retrieve it successfully.
+    """
     def setUp(self):
         self.username = 'scott'
         self.password = 'tiger'
@@ -21,7 +24,9 @@ class TestDatabaseRoundTrip(TestWithDatabase):
         self.session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
     def test_write(self):
-
+        """
+        Tests the round trip
+        """
         with self.session() as session:
             session.add(self.object_to_write)
 
