@@ -66,8 +66,8 @@ class ContextManagedSession(Session):
 
     def __call__(self, f=None):
         """
-        Returns itself, provided that the argument ``f`` is not a callable
-        function. (i.e., it does not have a ``__call__`` `method`_ defined)
+        Returns itself, provided that the argument ``f`` is not a `callable`_
+        function. (i.e., it does not have a ``__call__`` method defined)
 
         :param f: The function to be decorated. If no function is provided,
             then f is ``None``.
@@ -77,7 +77,7 @@ class ContextManagedSession(Session):
             decorated.
         :rtype: :class:`ContextManagedSession` or a function
 
-        .. _method: http://goo.gl/qCr2Uk
+        .. _callable: http://goo.gl/qCr2Uk
         """
         if hasattr(f, '__call__'):
             return self._decorator(f)
