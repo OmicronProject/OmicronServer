@@ -79,8 +79,16 @@ def create_token():
 
     :return: A Flask response object with the token jsonified into ASCII
     """
-    token = g.user.generate_auth_token()
-    response = jsonify({'token': token})
+    try:
+        token = g.user.generate_auth_token(
+            expiration=int(request.args.get('expiration'))
+        )
+    except TypeError:
+        log.debug('No expiration supplied, using default expiration time')
+        token = g.user.generate_auth_token()
+    response = jsonify(
+            {'token': token}
+    )
     response.status_code = 201
     return response
 
