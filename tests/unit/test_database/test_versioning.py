@@ -1,10 +1,11 @@
+"""
+Contains unit tests for :mod:`database.versioning`
+"""
 import logging
 import sys
 import unittest
-
 import mock
-
-from database import versioning as dbv
+from database import DatabaseManager
 from database.schema import metadata as meta
 
 __author__ = 'Michal Kononenko'
@@ -16,7 +17,10 @@ builtin_string = '__builtin__' if sys.version_info < (3,) else 'builtins'
 
 
 class MockMigrateAPI(mock.MagicMock):
-
+    """
+    Designed to replicate the functionality of the sqlalchemy-migrate API in
+    order to perform testing
+    """
     _version = 1
 
     def db_version(self, db_url, migrate_repo):
@@ -28,15 +32,20 @@ class MockModule(mock.MagicMock):
 
 
 class TestDatabaseManager(unittest.TestCase):
-
+    """
+    Base test for :class:`database.versioning.DatabaseManager`
+    """
     @classmethod
     def setUpClass(cls):
+        """
+        Set up unit test
+        """
         cls.metadata = mock.MagicMock()
         cls.database_url = 'sqlite:///'
         cls.migrate_repo = 'test_directory'
         cls.api = MockMigrateAPI()
 
-        cls.manager = dbv.DatabaseManager(
+        cls.manager = DatabaseManager(
             metadata=cls.metadata, database_url=cls.database_url,
             migrate_repo=cls.migrate_repo, api=cls.api
         )
@@ -51,19 +60,35 @@ class TestDatabaseManagerConstructor(unittest.TestCase):
         self.api = MockMigrateAPI()
 
     def test_constructor(self):
-        manager = dbv.DatabaseManager(
+        """
+        Tests that the constructor is capable of creating a proper
+        :class:`database.versioning.DatabaseManager`, mapping provided
+        database URLs, migrate repos, and APIs to their respective attributes
+        """
+        manager = DatabaseManager(
             metadata=self.metadata, database_url=self.database_url,
             migrate_repo=self.migrate_repo, api=self.api
         )
 
-        self.assertIsInstance(manager, dbv.DatabaseManager)
+        self.assertIsInstance(manager, DatabaseManager)
         self.assertEqual(manager.api, self.api)
+        self.assertEqual(manager.migrate_repo, self.migrate_repo)
+        self.assertEqual(manager.database_url, self.database_url)
 
 
 class TestDatabaseManagerDefaultEngine(TestDatabaseManager):
+    """
+    Tests :attr:`database.versioning.DatabaseManager.default_engine`
+    """
 
     @mock.patch('database.versioning.create_engine')
     def test_default_engine_none(self, mock_create_engine):
+        """
+        Tests that if no engine is provided, then the manager creates an engine
+        of its own.
+        :param mock.MagicMock mock_create_engine: A mock call to
+            :meth:`sqlalchemy.create_engine`.
+        """
         mock_engine_call = mock.call(self.database_url)
         self.manager._default_engine = None
 
@@ -73,6 +98,9 @@ class TestDatabaseManagerDefaultEngine(TestDatabaseManager):
         self.assertEqual(mock_engine_call, mock_create_engine.call_args)
 
     def test_default_engine_is_not_none(self):
+        """
+        Tests that the :meth:`
+        """
         engine = mock.MagicMock()
         self.manager._default_engine = engine
         self.assertEqual(self.manager.default_engine, engine)
