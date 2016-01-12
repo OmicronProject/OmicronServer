@@ -76,8 +76,16 @@ class TestAPIServer(unittest.TestCase):
         metadata.drop_all(bind=test_engine)
 
 
-class TestGetAuthToken(TestAPIServer):
+class TestCreateToken(TestAPIServer):
+    """
+    Tests :meth:`api_server.create_token`
+    """
     def setUp(self):
+        """
+        Set up the tests by creating a mock token, and
+        assigning it as a return value to ``self.user``, which
+        is assigned to ``g.user``.
+        """
         self.url = 'api/v1/token'
         self.token = 'mock_token'
         self.request_method = self.client.post
@@ -86,6 +94,9 @@ class TestGetAuthToken(TestAPIServer):
         )
 
     def test_create_auth_token(self):
+        """
+        Tests that the method successfully creates an auth token
+        """
         response = self.request_method(self.url, headers=self.headers)
         self.assertEqual(response.status_code, 201)
 
@@ -95,6 +106,9 @@ class TestGetAuthToken(TestAPIServer):
 
 
 class TestRevokeToken(TestAPIServer):
+    """
+    Tests :meth:`api_server.revoke_token`
+    """
     token = mock.MagicMock()
 
     def setUp(self):
@@ -106,6 +120,16 @@ class TestRevokeToken(TestAPIServer):
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
     @mock.patch('database.User.current_token')
     def test_revoke_token(self, mock_cur_token, mock_query):
+        """
+        Tests that the method can revoke tokens successfully
+
+        :param mock.MagicMock mock_cur_token: A mock
+            call to the user's current token.
+        :param mock.MagicMock mock_query: A mock call
+            to the query method in sqlalchemy, stubs out
+            the database query, and always retrieves
+            the user test object
+        """
         mock_query.return_value = self.user
         response = self.request_method(self.url, headers=self.headers)
         self.assertEqual(response.status_code, 200)
