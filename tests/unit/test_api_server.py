@@ -3,10 +3,8 @@ Contains unit tests for :mod:`api_server`
 """
 import json
 import unittest
-
 import mock
 from sqlalchemy import create_engine
-
 import api_server
 from database.schema import metadata
 from database.models.users import User, Administrator
@@ -15,13 +13,14 @@ from database.sessions import ContextManagedSession
 __author__ = 'Michal Kononenko'
 
 test_engine = create_engine('sqlite:///')
-api_server.sessionmaker = mock.MagicMock(
-    return_value=ContextManagedSession(bind=test_engine)
-)
 
 
 class TestHelloWorld(unittest.TestCase):
+    """
+    Tests :meth:`api_server.hello_world`
+    """
     def setUp(self):
+        api_server.database_session = ContextManagedSession(bind=test_engine)
         self.app = api_server.app
         self.client = self.app.test_client()
         self.request_method = self.client.get
@@ -30,14 +29,25 @@ class TestHelloWorld(unittest.TestCase):
         self.headers = {'content-type': 'application/json'}
 
     def test_hello_world(self):
+        """
+        Tests that a request to the server's root endpoint returns 200,
+        indicating that the server has set up and is running successfully.
+        """
         r = self.request_method(self.url, headers=self.headers)
         self.assertEqual(r.status_code, 200)
 
 
 class TestAPIServer(unittest.TestCase):
+    """
+    Base class for unit tests in :mod:`api_server`
+    """
 
     @classmethod
     def setUpClass(cls):
+        """
+        Sets up basic parameters for testing in :mod:`api_server`.
+        """
+        api_server.database_session = ContextManagedSession(bind=test_engine)
         cls.app = api_server.app
         cls.username = 'scott'
         cls.password = 'tiger'
@@ -60,6 +70,9 @@ class TestAPIServer(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        """
+        Tear down the tests
+        """
         metadata.drop_all(bind=test_engine)
 
 
