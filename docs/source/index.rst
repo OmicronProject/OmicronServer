@@ -16,6 +16,7 @@ Contents:
    technologies
    web_api
    api_reference/index
+   tests/index
 
 
 Introduction
