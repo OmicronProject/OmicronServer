@@ -10,6 +10,14 @@ Schema-defined Resource
     :private-members:
     :special-members:
 
+Projects
+--------
+
+.. automodule:: views.projects
+    :members:
+    :private-members:
+    :special-members:
+
 Users
 -----
 

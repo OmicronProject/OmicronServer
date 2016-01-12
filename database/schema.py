@@ -1,6 +1,8 @@
 """
 Contains the database schema to be implemented or queried, from
-which models in :mod:`db_models` will be populated
+which models in :mod:`database.models` will be populated. This describes the
+database to be built on server initialization. This is the most current version
+of the database schema.
 """
 from sqlalchemy import MetaData, Table, Column, Integer, String, Boolean, \
     ForeignKey, DateTime
@@ -41,7 +43,8 @@ projects = Table(
     'projects', metadata,
     Column('project_id', Integer, primary_key=True),
     Column('name', String(128), nullable=False),
-    Column('date_created', DateTime, nullable=False, default=datetime.utcnow()),
+    Column('date_created', DateTime, nullable=False,
+           default=datetime.utcnow()),
     Column('owner_id', Integer, ForeignKey('users.user_id'), nullable=True),
     Column('description', String(1000), nullable=True)
 )

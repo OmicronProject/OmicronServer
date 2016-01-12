@@ -1,3 +1,12 @@
+"""
+Contains tools for versioning databases, and for managing database upgrades.
+This code is currently not implemented in the dev version of OmicronServer,
+but will eventually be used as part of the server's command line interface.
+
+This code was adapted from Miguel Grinberg's `Flask mega-tutorial`_.
+
+.. _Flask mega-tutorial: http://goo.gl/h5q3UP
+"""
 import logging
 import os.path
 import types
@@ -11,18 +20,33 @@ __author__ = 'Michal Kononenko'
 log = logging.getLogger(__name__)
 
 
-class FileExistsError(Exception):
-    pass
-
-
 class DatabaseManager(object):
     """
-    Contains methods for upgrading, downgrading, and migrating databases on
-    schema change
+    Wraps methods for managing database versions. The constructor requires
+    the following
+
+    :var metadata: An object of type :class:`sqlalchemy.MetaData`, containing
+        information about the database schema. Defaults to the metadata object
+        located in :mod:`database.models.schema`.
+    :var database_url: The URL [`RFC 3986`_] of the database to be upgraded
+        or downgraded. Defaults to the database URL given in :mod:`config`,
+        or read from command line environment variables.
+    :var migrate_repo: An absolute path to the directory in which database
+        migration scripts are stored. Defaults to the value given in
+        :mod:`config`.
+    :var api: The sqlalchemy-migrate API that will be used to perform the
+        migration operations. This is overwritten for testability. Defaults
+        to the API in :mod:`migrate.versioning`. See the Flask mega-tutorial
+        for more details
+
+    .. _RFC 3986: https://www.ietf.org/rfc/rfc3986.txt
     """
     def __init__(self, metadata=meta, database_url=conf.DATABASE_URL,
                  migrate_repo=conf.SQLALCHEMY_MIGRATE_REPO,
                  api=sqlalchemy_migrate_api):
+        """
+        Instantiates the variables listed above
+        """
         self.metadata = metadata
         self.database_url = database_url
         self.migrate_repo = migrate_repo
@@ -32,6 +56,11 @@ class DatabaseManager(object):
 
     @property
     def default_engine(self):
+        """
+        Returns the SQLAlchemy engine to be used for performing the database
+        versioning. If no engine exists, an engine will be created that
+        points to the database URL.
+        """
         if self._default_engine is None:
             self._default_engine = create_engine(self.database_url)
         return self._default_engine
@@ -39,7 +68,7 @@ class DatabaseManager(object):
     @property
     def version(self):
         """
-        Return the version of the database using a SQLAlchemy-migrate API
+        Return the version of the database using the SQLAlchemy-migrate API
         """
         return self.api.db_version(self.database_url, self.migrate_repo)
 
@@ -48,6 +77,7 @@ class DatabaseManager(object):
         Create a database at :attr:`self.database_url`
 
         :param engine: The SQLAlchemy engine which will be used to create
+            the database
         """
         if engine is None:
             engine = self.default_engine
@@ -63,8 +93,26 @@ class DatabaseManager(object):
 
     def create_migration_script(self):
         """
-        :param migration_script_path:
-        :return:
+        Creates a new migration script for the database. The migration
+        script is a python script located at :attr:`self.migrate_repo`. The
+        target version of the script is listed on the file name. Each
+        migration script must contain the following two functions.
+
+        ``upgrade`` describes how to move from the previous version to the
+        version written in the file name.
+
+        ``downgrade`` describes how to downgrade the database from the
+        version written on the file name to the previous version.
+
+        .. warning::
+
+            It is recommended that each migration script is reviewed prior
+            to use, ESPECIALLY IN PRODUCTION. Automatically-generated
+            migration scripts have known issues with migrations,
+            particularly with queries involving ``ALTER COLUMN`` queries.
+            In such situations, the migration script can easily ``DROP`` the
+            old column and create a new one. Care should be taken when
+            running migrations.
         """
         log.info(
             'Upgrading database at URL %s from version %d to %d',
@@ -90,12 +138,21 @@ class DatabaseManager(object):
             migration_script.write(script)
 
     def upgrade_db(self):
+        """
+        Upgrade the database to the most current version in the migrate
+        repository, by running ``upgrade`` in all the migration scripts from
+        the database's version up to the current version.
+        """
         self.api.upgrade(self.database_url, self.migrate_repo)
         log.info('Upgraded Database %s to version %d',
                  self.database_url, self.version
                  )
 
     def downgrade_db(self):
+        """
+        Downgrade the DB from the current version to the decremented
+        previous version.
+        """
         old_version = self.version
 
         self.api.downgrade(self.database_url, self.migrate_repo,

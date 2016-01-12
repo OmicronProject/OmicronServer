@@ -1,5 +1,5 @@
 """
-Contains all model
+Contains model classes related to managing projects on the Omicron server
 """
 from datetime import datetime
 from database.models import Base
@@ -16,7 +16,9 @@ class Project(Base):
 
     :var str project_name: The name of the project
     :var str description: A description of the project
-
+    :var datetime.datetime date_created: The date at which the project was
+        created, defaults to the current datetime
+    :var User owner: The user who owns this project
     """
     __table__ = schema.projects
 
@@ -30,6 +32,9 @@ class Project(Base):
         date_created=datetime.utcnow(),
         owner=None
     ):
+        """
+        Instantiates the variables described above
+        """
         self.name = project_name
         self.date_created = date_created
         self.owner = owner
@@ -37,10 +42,22 @@ class Project(Base):
 
     @property
     def date_created_isoformat(self):
+        """
+        Returns the project date created as an `ISO 8601`_ - compliant string
+        :return: The date string
+        :rtype: str
+
+        .. _ISO 8601: https://en.wikipedia.org/wiki/ISO_8601
+        """
         return self.date_created.isoformat()
 
     @property
     def get(self):
+        """
+        Returns a dictionary representing a summary of the project.
+        :return: A summary of the project
+        :rtype: dict
+        """
         return {
             'name': self.name,
             'description': self.description,

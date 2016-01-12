@@ -1,4 +1,4 @@
 """
-Contains unit tests for the API
+Contains standalone unit tests for the API.
 """
 __author__ = 'Michal Kononenko'
