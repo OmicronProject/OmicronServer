@@ -93,6 +93,21 @@ class TestGetAuthToken(TestAPIServer):
 
         self.assertEqual(self.token, json_dict['token'])
 
+    def test_create_auth_token_with_expiration(self):
+        seconds_to_exp = 1200
+        url = '%s?expiration=%d' % (self.url, seconds_to_exp)
+
+        response = self.request_method(url, headers=self.headers)
+        self.assertEqual(response.status_code, 201)
+
+        json_dict = json.loads(response.data.decode('utf-8'))
+        self.assertEqual(self.token, json_dict['token'])
+
+        self.assertEqual(
+                mock.call(expiration=seconds_to_exp),
+                self.user.generate_auth_token.call_args
+        )
+
 
 class TestRevokeToken(TestAPIServer):
     token = mock.MagicMock()
