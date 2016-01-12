@@ -25,7 +25,7 @@ users_projects_asoc_tables = Table(
     'user_to_projects', metadata,
     Column('user_id', Integer, ForeignKey('users.user_id'), primary_key=True),
     Column('project_id', Integer, ForeignKey('projects.project_id'),
-           primary_key=True),-
+           primary_key=True),
     Column('date_joined', DateTime, nullable=False, default=datetime.utcnow())
 )
 
