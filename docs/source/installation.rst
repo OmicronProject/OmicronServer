@@ -54,7 +54,7 @@ On Linux (specifically bash), this can be done using
 
 On Windows, this can be done using
 
-.. code-block:: cmd
+.. code-block:: bash
 
     > SET IP_ADDRESS=127.0.0.1
 
