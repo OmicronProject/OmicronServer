@@ -7,6 +7,8 @@ import unittest
 import mock
 from database import DatabaseManager
 from database.schema import metadata as meta
+from sqlalchemy import create_engine
+from database.versioning import DatabaseNotReferencedError
 
 __author__ = 'Michal Kononenko'
 
@@ -52,14 +54,18 @@ class TestDatabaseManager(unittest.TestCase):
 
 
 class TestDatabaseManagerConstructor(unittest.TestCase):
-
+    """
+    Contains unit tests for
+    :meth:`database.versioning.DatabaseManager.__init__`
+    """
     def setUp(self):
         self.metadata = meta
         self.database_url = 'sqlite:///'
         self.migrate_repo = 'test_directory'
         self.api = MockMigrateAPI()
+        self.engine = create_engine(self.database_url)
 
-    def test_constructor(self):
+    def test_constructor_no_engine(self):
         """
         Tests that the constructor is capable of creating a proper
         :class:`database.versioning.DatabaseManager`, mapping provided
@@ -75,44 +81,44 @@ class TestDatabaseManagerConstructor(unittest.TestCase):
         self.assertEqual(manager.migrate_repo, self.migrate_repo)
         self.assertEqual(manager.database_url, self.database_url)
 
-
-class TestDatabaseManagerDefaultEngine(TestDatabaseManager):
-    """
-    Tests :attr:`database.versioning.DatabaseManager.default_engine`
-    """
-
-    @mock.patch('database.versioning.create_engine')
-    def test_default_engine_none(self, mock_create_engine):
+    def test_constructor_with_engine(self):
         """
-        Tests that if no engine is provided, then the manager creates an engine
-        of its own.
-        :param mock.MagicMock mock_create_engine: A mock call to
-            :meth:`sqlalchemy.create_engine`.
+        Tests that the constructor ignores database URLs when an engine is
+        provided
         """
-        mock_engine_call = mock.call(self.database_url)
-        self.manager._default_engine = None
+        manager = DatabaseManager(
+            metadata=self.metadata, migrate_repo=self.migrate_repo,
+            engine=self.engine
+        )
+        self.assertIsNone(manager.database_url)
+        self.assertEqual(manager.engine, self.engine)
 
-        engine = self.manager.default_engine
-
-        self.assertIsInstance(engine, mock.MagicMock)
-        self.assertEqual(mock_engine_call, mock_create_engine.call_args)
-
-    def test_default_engine_is_not_none(self):
+    def test_constructor_no_reference_error(self):
         """
-        Tests that the :meth:`
+        Tests that the constructor throws an
+        :exc:`database.versioning.DatabaseNotReferencedError` if a
+        ``database_url`` and ``engine`` are not supplied.
         """
-        engine = mock.MagicMock()
-        self.manager._default_engine = engine
-        self.assertEqual(self.manager.default_engine, engine)
+        with self.assertRaises(DatabaseNotReferencedError):
+            DatabaseManager(
+                metadata=self.metadata, migrate_repo=self.migrate_repo,
+                engine=None, database_url=None
+            )
 
 
 class TestManagerVersion(TestDatabaseManager):
+    """
+    Tests :meth:`database.versioning.DatabaseManager.version`
+    """
     def setUp(self):
         TestDatabaseManager.setUp(self)
         self.version = 1
         self.api._version = self.version
 
     def test_version(self):
+        """
+        Tests the property
+        """
         self.assertEqual(self.version, self.manager.version[0])
         self.assertEqual(mock.call(self.database_url, self.migrate_repo),
                          self.manager.version[1]
@@ -120,9 +126,13 @@ class TestManagerVersion(TestDatabaseManager):
 
 
 class TestCreateDB(TestDatabaseManager):
+    """
+    Contains unit tests for
+    :meth:`database.versioning.DatabaseManager.create_db`
+    """
     def setUp(self):
         self.manager.metadata = mock.MagicMock()
-        self.manager._default_engine = mock.MagicMock()
+        self.manager.engine = mock.MagicMock()
 
     @mock.patch('os.path.exists', return_value=False)
     def test_create_db_no_engine(self, mock_path_exists):
@@ -136,11 +146,21 @@ class TestCreateDB(TestDatabaseManager):
 
         self.assertEqual(
             self.manager.metadata.create_all.call_args,
-            mock.call(bind=self.manager.default_engine)
+            mock.call(bind=self.manager.engine)
         )
+        self.assertTrue(self.manager.api.create.called)
 
     @mock.patch('os.path.exists', return_value=True)
     def test_create_db_version_control(self, mock_os_exists):
+        """
+        Tests that :meth:`database.versioning.DatabaseManager.create_db`
+        calls the version control method of the API if the migrate repository
+        exists, and a new database is created.
+
+        :param mock.MagicMock mock_os_exists: A mock call to
+            :meth:`os.path.exists`. Its return value of true tests the code
+            as if a migrate repo exists
+        """
         self.manager.engine = mock.MagicMock()
 
         mock_version_call = mock.call(
@@ -159,6 +179,10 @@ class TestCreateDB(TestDatabaseManager):
 
 
 class TestCreateMigrationScript(TestDatabaseManager):
+    """
+    Contains unit tests for
+    :meth:`database.versioning.DatabaseManager.create_migration_script`
+    """
     def setUp(self):
         TestDatabaseManager.setUp(self)
         self.manager.api.db_version = mock.MagicMock(new=1)
@@ -168,6 +192,16 @@ class TestCreateMigrationScript(TestDatabaseManager):
     @mock.patch('database.versioning.types.ModuleType',
                 return_value=MockModule())
     def test_migrate_db(self, mock_module, mock_open, mock_exec):
+        """
+        Tests the method
+
+        :param mock.MagicMock mock_module: A mock call to the ``eval``
+            function, used to evaluate and run the migration script.
+        :param mock.MagicMock mock_open: A mock call to the function that
+            opens the file to be evaluated
+        :param mock.MagicMock mock_exec: A mock call to the temporary
+            module that holds our migration script prior to writing
+        """
         self.manager.create_migration_script()
 
         self.assertTrue(mock_exec.called)
@@ -176,6 +210,9 @@ class TestCreateMigrationScript(TestDatabaseManager):
 
 
 class TestUpgradeDB(TestDatabaseManager):
+    """
+    Contains tests for :meth:`database.versioning.DatabaseManager.upgrade_db`
+    """
     def setUp(self):
         TestDatabaseManager.setUp(self)
         self.manager.api.db_version = \
@@ -186,6 +223,9 @@ class TestUpgradeDB(TestDatabaseManager):
         )
 
     def test_upgrade_db(self):
+        """
+        Tests the method
+        """
         self.manager.upgrade_db()
 
         self.assertEqual(
@@ -194,6 +234,9 @@ class TestUpgradeDB(TestDatabaseManager):
 
 
 class TestDowngradeDB(TestDatabaseManager):
+    """
+    Contains tests for :meth:`database.versioning.DatabaseManager.downgrade_db`
+    """
     def setUp(self):
         TestDatabaseManager.setUp(self)
 
@@ -205,9 +248,29 @@ class TestDowngradeDB(TestDatabaseManager):
         )
 
     def test_downgrade_db(self):
-
+        """
+        Tests the method
+        """
         self.manager.downgrade_db()
 
         self.assertEqual(
             self.manager.api.downgrade.call_args, self.mock_downgrade_call
+        )
+
+
+class TestRepr(TestDatabaseManager):
+    """
+    Tests :meth:`database.versioning.DatabaseManager.__repr__`
+    """
+    def test_repr(self):
+        """
+        Runs the test
+        """
+        self.assertEqual(
+            self.manager.__repr__(),
+            '%s(engine=%s, url=%s, migrate_repo=%s, api=%s)' % (
+                self.manager.__class__.__name__, self.manager.engine,
+                self.manager.database_url,
+                self.manager.migrate_repo, self.manager.api
+            )
         )
