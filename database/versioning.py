@@ -20,6 +20,14 @@ __author__ = 'Michal Kononenko'
 log = logging.getLogger(__name__)
 
 
+class DatabaseNotReferencedError(Exception):
+    """
+    Thrown if :class:database.versioning.DatabaseManager` is instantiated
+    without an engine or a database url.
+    """
+    pass
+
+
 class DatabaseManager(object):
     """
     Wraps methods for managing database versions. The constructor requires
@@ -41,29 +49,27 @@ class DatabaseManager(object):
 
     .. _RFC 3986: https://www.ietf.org/rfc/rfc3986.txt
     """
-    def __init__(self, metadata=meta, database_url=conf.DATABASE_URL,
+    def __init__(self, metadata=meta, database_url=None,
                  migrate_repo=conf.SQLALCHEMY_MIGRATE_REPO,
-                 api=sqlalchemy_migrate_api):
+                 api=sqlalchemy_migrate_api, engine=conf.DATABASE_ENGINE):
         """
         Instantiates the variables listed above
+        :raises: DatabaseNotReferencedError if the DatabaseManager is created
+            without a database url or a database engine
         """
+        if database_url is None and engine is None:
+            raise DatabaseNotReferencedError(
+                    'The manager %s was instantiated without a valid '
+                    'database to work on')
+        if database_url is not None:
+            self.engine = create_engine(database_url)
+        else:
+            self.engine = engine
+
         self.metadata = metadata
         self.database_url = database_url
         self.migrate_repo = migrate_repo
         self.api = api
-
-        self._default_engine = None
-
-    @property
-    def default_engine(self):
-        """
-        Returns the SQLAlchemy engine to be used for performing the database
-        versioning. If no engine exists, an engine will be created that
-        points to the database URL.
-        """
-        if self._default_engine is None:
-            self._default_engine = create_engine(self.database_url)
-        return self._default_engine
 
     @property
     def version(self):
@@ -80,7 +86,7 @@ class DatabaseManager(object):
             the database
         """
         if engine is None:
-            engine = self.default_engine
+            engine = self.engine
 
         self.metadata.create_all(bind=engine)
 
@@ -158,3 +164,13 @@ class DatabaseManager(object):
         self.api.downgrade(self.database_url, self.migrate_repo,
                            (old_version - 1)
                            )
+
+    def __repr__(self):
+        """
+        Returns a representation of the Database Manager useful for debugging
+        :return:
+        """
+        return '%s(engine=%s, url=%s, migrate_repo=%s, api=%s)' % (
+            self.__class__.__name__, self.engine, self.database_url,
+            self.migrate_repo, self.api
+        )
