@@ -3,6 +3,7 @@ Contains an abstract representation of a REST API view, as well as a
 subclass of Marshmallow
 """
 from marshmallow import fields, Schema, ValidationError
+import re
 
 __author__ = 'Michal Kononenko'
 
@@ -18,22 +19,18 @@ class MarshmallowJSONSchema(Schema):
     """
     Exposes the JSON Schema for a given schema
     """
-    required = ()
     meta_schema = "http://json-schema.org/draft-04/schema#"
     title = None
     description = None
     type = 'object'
 
     def __init__(self, strict=True, **kwargs):
-        super(Schema, self).__init__(strict=strict, **kwargs)
+        Schema.__init__(self, strict=strict, **kwargs)
 
-    def _check_required_fields_in_schema(self):
-        for field in self.required:
-            if field not in self.__dict__.keys():
-                raise RequiredFieldNotFoundError(
-                        'Unable to find field %s in schema %s',
-                        field, self.__repr__()
-                )
+    @property
+    def required_fields(self):
+        return [field_name for field_name in self.fields
+                if self.fields[field_name].required]
 
     @property
     def schema(self):
@@ -42,6 +39,13 @@ class MarshmallowJSONSchema(Schema):
             schema['title'] = self.title
         if self.description is not None:
             schema['description'] = self.description
+
+        schema['properties'] = {
+            field: self.fields[field].schema for field in self.fields if
+            hasattr(self.fields[field], 'schema')}
+
+        schema['required'] = self.required_fields
+
         return schema
 
     def __repr__(self):
@@ -53,7 +57,7 @@ class MarshmallowJSONSchema(Schema):
 class DateTime(fields.DateTime):
     """
     """
-    type = 'date'
+    type = 'datetime'
 
     def __init__(self, description=None, **kwargs):
         super(DateTime, self).__init__(**kwargs)
@@ -103,7 +107,7 @@ class Integer(fields.Integer):
 
     @property
     def schema(self):
-        schema = dict()
+        schema = dict(type=self.type)
         if self.description is not None:
             schema['description'] = self.description
         if self.minimum is not None:
@@ -112,3 +116,25 @@ class Integer(fields.Integer):
             schema['maximum'] = self.maximum
 
         return schema
+
+
+class String(fields.String):
+    """
+    Contains a JSON Schema-compliant datatype for string
+    """
+    type = 'string'
+
+    def __init__(
+            self, *args, description=None, regex_pattern=None, **kwargs
+    ):
+        super(String, self).__init__(*args, **kwargs)
+        self.description = description
+
+        if regex_pattern is not None:
+            self.regex = re.compile(regex_pattern)
+            self.validators.append(self._validate_against_regex)
+        else:
+            self.regex = None
+
+    def _validate_against_regex(self, value):
+        return self.regex.search(value) is not None

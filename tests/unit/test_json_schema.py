@@ -2,31 +2,37 @@
 Contains unit tests for :mod:`json_schema`
 """
 import unittest
+import mock
 import json_schema
 
 __author__ = 'Michal Kononenko'
 
-description = 'Test Description'
-minimum = 3
-maximum = 10
 
-
-class SchemaForTesting(json_schema.MarshmallowJSONSchema):
-    test_field = json_schema.Integer(
-            description, minimum=minimum, maximum=maximum
-    )
-
-
-class TestLoading(unittest.TestCase):
+class TestMarshmallowJSONSchema(unittest.TestCase):
     def setUp(self):
-        self.schema = SchemaForTesting()
+        self.schema_title = 'Test Schema'
+        self.schema_description = 'Test Description'
 
-    def test_load_min(self):
-        value = 1
-        with self.assertRaises(json_schema.ValidationError):
-            self.schema.load(dict(test_field=value))
 
-    def test_load_over_max(self):
-        value = 100
-        with self.assertRaises(json_schema.ValidationError):
-            self.schema.load(dict(test_field=value))
+class TestMarshmallowJSONSchemaConstructor(TestMarshmallowJSONSchema):
+
+    @mock.patch('marshmallow.Schema.__init__')
+    def test_constructor(self, mock_init):
+
+        schema = json_schema.MarshmallowJSONSchema()
+        expected_call = mock.call(schema, strict=True)
+
+        self.assertEqual(expected_call, mock_init.call_args)
+
+
+class TestSchemaRequiredFields(TestMarshmallowJSONSchema):
+    class SchemaToTest(json_schema.MarshmallowJSONSchema):
+        field = json_schema.Integer(required=True)
+
+    def setUp(self):
+        TestMarshmallowJSONSchema.setUp(self)
+        self.schema = self.SchemaToTest()
+        self.data_to_load = {'field': 1}
+
+    def test_required(self):
+        self.assertEqual(self.schema.required_fields, ['field'])

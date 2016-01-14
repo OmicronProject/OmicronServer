@@ -17,6 +17,13 @@ If there is anything to which this document doesn't do justice, or you feel
 like information on an important concept is missing, that's a bug. Please
 report it `here <https://github.com/MichalKononenko/OmicronServer/issues>`_.
 
+Required Reading
+----------------
+
+    -    `The Tao of Programming`_, for much-needed humor
+
+.. _The Tao of Programming: http://www.mit.edu/~xela/tao.html
+
 Representational State Transfer (REST)
 --------------------------------------
 
