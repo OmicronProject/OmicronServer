@@ -25,7 +25,7 @@ class MarshmallowJSONSchema(Schema):
                 if self.fields[field_name].required]
 
     @property
-    def schema(self):
+    def json_schema(self):
         schema = {"$schema": self.meta_schema, 'type': self.type}
         if self.title is not None:
             schema['title'] = self.title

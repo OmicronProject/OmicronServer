@@ -19,7 +19,7 @@ class DateTime(_marshmallow_fields.DateTime):
         self.description = description
 
     @property
-    def schema(self):
+    def json_schema(self):
         schema = dict(type=self.type, format=self.format)
         if self.description is not None:
             schema['description'] = self.description
@@ -65,7 +65,7 @@ class Integer(_marshmallow_fields.Integer):
         return True
 
     @property
-    def schema(self):
+    def json_schema(self):
         schema = dict(type=self.type)
         if self.description is not None:
             schema['description'] = self.description
@@ -98,24 +98,31 @@ class String(_marshmallow_fields.String):
     def _validate_against_regex(self, value):
         return self.regex.search(value) is not None
 
-
-class Nested(_marshmallow_fields.Nested):
-    description = None
-    type = 'object'
-
-    def __init__(self, *args, strict=True, **kwargs):
-        _marshmallow_fields.Nested.__init__(self, *args, **kwargs)
-        self.strict = strict
-
     @property
-    def schema(self):
+    def json_schema(self):
         schema = dict(type=self.type)
         if self.description is not None:
             schema['description'] = self.description
+        if self.regex is not None:
+            schema['pattern'] = self.regex.pattern
 
         return schema
 
 
-class List(_marshmallow_fields.List):
-    def __init__(self, *args, strict=True, **kwargs):
-        _marshmallow_fields.List.__init__(self, *args, strict=strict, **kwargs)
+class Nested(_marshmallow_fields.Nested):
+    type = 'object'
+
+    def __init__(self, schema, description=None,
+                 strict=True, *args, **kwargs):
+        _marshmallow_fields.Nested.__init__(self, schema, *args, **kwargs)
+        self.strict = strict
+        self.description = description
+
+    @property
+    def json_schema(self):
+        schema = dict(type=self.type)
+        if self.description is not None:
+            schema['description'] = self.description
+        if hasattr(self.schema, 'json_schema'):
+            schema['properties'] = self.schema.json_schema
+        return schema

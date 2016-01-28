@@ -2,24 +2,23 @@
 Contains unit tests for :mod:`json_schema.fields`
 """
 from marshmallow import fields as marshmallow_fields
-from json_schema import fields
+from json_schema import fields, schema
 import unittest
+import re
 
 __author__ = 'Michal Kononenko'
 
 
 class TestField(unittest.TestCase):
-    pass
-
-
-class TestDateTime(TestField):
     def setUp(self):
         self.description = 'Test Description'
 
 
+class TestDateTime(TestField):
+    pass
+
+
 class TestDateTimeConstructor(TestDateTime):
-    def setUp(self):
-        TestDateTime.setUp(self)
 
     def test_constructor(self):
         date = fields.DateTime(description=self.description)
@@ -50,7 +49,7 @@ class TestDateTimeSchema(TestDateTimeWithObject):
                 description=self.description
         )
 
-        self.assertEqual(expected_dict, self.datetime.schema)
+        self.assertEqual(expected_dict, self.datetime.json_schema)
 
 
 class TestInteger(TestField):
@@ -126,5 +125,116 @@ class TestIntegerSchema(TestIntegerWithObject):
 
     def test_schema(self):
         self.assertEqual(
-            self.expected_dict, self.field.schema
+            self.expected_dict, self.field.json_schema
         )
+
+
+class TestString(TestField):
+    def setUp(self):
+        TestField.setUp(self)
+        self.test_string = 'Test regex'
+        self.regex_pattern = r'^%s' % self.test_string
+
+        self.assertIsNotNone(re.search(self.regex_pattern, self.test_string))
+
+
+class TestStringConstructor(TestString):
+    def test_constructor_no_regex(self):
+        field = fields.String(description=self.description)
+
+        self.assertIsNone(field.regex)
+        self.assertEqual(field.description, self.description)
+
+    def test_constructor_with_regex(self):
+        field = fields.String(description=self.description,
+                              regex_pattern=self.regex_pattern)
+
+        self.assertEqual(field.validators, [field._validate_against_regex])
+
+
+class TestStringWithObject(TestString):
+    def setUp(self):
+        TestString.setUp(self)
+        self.field = fields.String(
+            description=self.description,
+            regex_pattern=self.regex_pattern
+        )
+
+
+class TestValidateAgainstRegex(TestStringWithObject):
+    def setUp(self):
+        TestStringWithObject.setUp(self)
+        self.bad_string = 'not a valid string'
+        self.unmatched_string = '%s plus bad things'
+
+    def test_validate_good_string(self):
+        self.assertTrue(
+            self.field._validate_against_regex(self.test_string)
+        )
+
+    def test_validate_bad_string(self):
+        self.assertFalse(
+            self.field._validate_against_regex(self.bad_string)
+        )
+        self.assertFalse(
+            self.field._validate_against_regex(self.unmatched_string)
+        )
+
+
+class TestStringSchema(TestStringWithObject):
+    def setUp(self):
+        TestStringWithObject.setUp(self)
+        self.expected_dict = dict(
+            description=self.description,
+            pattern=self.regex_pattern,
+            type=self.field.type
+        )
+
+    def test_schema(self):
+        self.assertEqual(
+            self.expected_dict, self.field.json_schema
+        )
+
+
+class TestNested(TestField):
+
+    class SchemaToTest(schema.MarshmallowJSONSchema):
+        data = fields.Integer()
+
+    def setUp(self):
+        TestField.setUp(self)
+        self.schema_to_nest = self.SchemaToTest()
+        self.valid_data = 1
+
+
+class TestNestedConstructor(TestNested):
+    def test_constructor(self):
+        field = fields.Nested(
+            self.schema_to_nest,
+            description=self.description
+        )
+        self.assertEqual(field.description, self.description)
+        self.assertTrue(field.strict)
+
+
+class TestNestedWithObject(TestNested):
+    def setUp(self):
+        TestNested.setUp(self)
+        self.field = fields.Nested(
+            self.schema_to_nest,
+            description=self.description
+        )
+
+
+class TestNestedJsonSchema(TestNestedWithObject):
+    def setUp(self):
+        TestNestedWithObject.setUp(self)
+        self.expected_dict = dict(
+            description=self.description,
+            properties=self.field.schema.json_schema,
+            type=self.field.type
+        )
+
+    def test_json_schema(self):
+        self.assertEqual(self.expected_dict,
+                         self.field.json_schema)
