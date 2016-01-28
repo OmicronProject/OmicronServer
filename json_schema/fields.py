@@ -11,7 +11,8 @@ __author__ = 'Michal Kononenko'
 class DateTime(_marshmallow_fields.DateTime):
     """
     """
-    type = 'datetime'
+    type = 'string'
+    format = 'date-time'
 
     def __init__(self, description=None, **kwargs):
         super(DateTime, self).__init__(**kwargs)
@@ -19,7 +20,7 @@ class DateTime(_marshmallow_fields.DateTime):
 
     @property
     def schema(self):
-        schema = dict(type=self.type)
+        schema = dict(type=self.type, format=self.format)
         if self.description is not None:
             schema['description'] = self.description
         return schema
