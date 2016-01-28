@@ -112,3 +112,19 @@ class TestIntegerValidator(TestIntegerWithObject):
         self.assertTrue(
                 self.field._validate_quantity(self.valid_integer)
         )
+
+
+class TestIntegerSchema(TestIntegerWithObject):
+    def setUp(self):
+        TestIntegerWithObject.setUp(self)
+        self.expected_dict = dict(
+            type=self.field.type,
+            description=self.description,
+            exclusiveMinimum=self.minimum,
+            exclusiveMaximum=self.maximum
+        )
+
+    def test_schema(self):
+        self.assertEqual(
+            self.expected_dict, self.field.schema
+        )
