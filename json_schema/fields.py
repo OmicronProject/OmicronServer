@@ -123,6 +123,9 @@ class Nested(_marshmallow_fields.Nested):
         schema = dict(type=self.type)
         if self.description is not None:
             schema['description'] = self.description
-        if hasattr(self.schema, 'json_schema'):
-            schema['properties'] = self.schema.json_schema
+        schema['properties'] = {
+            field: self.schema.fields[field].json_schema
+            for field in self.schema.fields
+            if hasattr(self.schema.fields[field], 'json_schema')
+        }
         return schema

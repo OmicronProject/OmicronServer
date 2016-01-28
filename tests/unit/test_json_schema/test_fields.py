@@ -231,7 +231,7 @@ class TestNestedJsonSchema(TestNestedWithObject):
         TestNestedWithObject.setUp(self)
         self.expected_dict = dict(
             description=self.description,
-            properties=self.field.schema.json_schema,
+            properties={"data": {"type": "integer"}},
             type=self.field.type
         )
 
