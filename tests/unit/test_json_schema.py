@@ -36,3 +36,12 @@ class TestSchemaRequiredFields(TestMarshmallowJSONSchema):
 
     def test_required(self):
         self.assertEqual(self.schema.required_fields, ['field'])
+
+
+class TestSchemaDisplayMethod(TestMarshmallowJSONSchema):
+    class SchemaToTest(json_schema.MarshmallowJSONSchema):
+        field = json_schema.Integer(required=True)
+
+    def setUp(self):
+        TestMarshmallowJSONSchema.setUp(self)
+        self.schema = self.SchemaToTest()
