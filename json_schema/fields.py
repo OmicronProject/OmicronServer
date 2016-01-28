@@ -43,6 +43,10 @@ class Integer(_marshmallow_fields.Integer):
         self.validators.append(self._validate_quantity)
 
     def _validate_quantity(self, value):
+        """
+        :param int value: The integer to validate
+        :return:
+        """
         if self.minimum is not None:
             if value < self.minimum:
                 raise ValidationError(
@@ -58,7 +62,7 @@ class Integer(_marshmallow_fields.Integer):
                     value, self.maximum, self.__repr__()
                 )
 
-        super(Integer, self)._validate(value)
+        return True
 
     @property
     def schema(self):

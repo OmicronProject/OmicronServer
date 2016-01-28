@@ -51,3 +51,64 @@ class TestDateTimeSchema(TestDateTimeWithObject):
         )
 
         self.assertEqual(expected_dict, self.datetime.schema)
+
+
+class TestInteger(TestField):
+    def setUp(self):
+        self.minimum = 0
+        self.maximum = 2
+        self.valid_integer = 1
+        self.integer_too_big = 4
+        self.integer_too_small = -1
+        self.description = 'Test Description'
+
+
+class TestIntegerConstructor(TestInteger):
+    def test_constructor_default_args(self):
+        integer_field = fields.Integer()
+        self.assertIsNone(integer_field.description)
+        self.assertIsNone(integer_field.minimum)
+        self.assertIsNone(integer_field.maximum)
+
+        self.assertEqual(integer_field.validators,
+                         [integer_field._validate_quantity])
+
+    def test_constructor_non_default_args(self):
+        integer_field = fields.Integer(
+            minimum=self.minimum, maximum=self.maximum,
+            description=self.description
+        )
+
+        self.assertEqual(integer_field.minimum, self.minimum)
+        self.assertEqual(integer_field.maximum, self.maximum)
+        self.assertEqual(integer_field.description, self.description)
+
+
+class TestIntegerWithObject(TestInteger):
+    def setUp(self):
+        TestInteger.setUp(self)
+        self.field = fields.Integer(
+            description=self.description,
+            minimum=self.minimum,
+            maximum=self.maximum
+        )
+
+
+class TestIntegerValidator(TestIntegerWithObject):
+    def setUp(self):
+        TestIntegerWithObject.setUp(self)
+        self.assertLess(self.integer_too_small, self.minimum)
+        self.assertGreater(self.integer_too_big, self.maximum)
+
+    def test_validator_integer_too_small(self):
+        with self.assertRaises(fields.ValidationError):
+            self.field._validate_quantity(self.integer_too_small)
+
+    def test_validator_integer_too_big(self):
+        with self.assertRaises(fields.ValidationError):
+            self.field._validate_quantity(self.integer_too_big)
+
+    def test_validator_integer_correct(self):
+        self.assertTrue(
+                self.field._validate_quantity(self.valid_integer)
+        )
