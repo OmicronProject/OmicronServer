@@ -84,7 +84,8 @@ class String(_marshmallow_fields.String):
     type = 'string'
 
     def __init__(
-            self, description=None, regex_pattern=None, *args, **kwargs
+            self, description=None, regex_pattern=None, enum=None, *args,
+            **kwargs
     ):
         super(String, self).__init__(*args, **kwargs)
         self.description = description
@@ -95,8 +96,17 @@ class String(_marshmallow_fields.String):
         else:
             self.regex = None
 
+        if enum is not None:
+            self.enum = enum
+            self.validators.append(self._validate_enum)
+        else:
+            self.enum = None
+
     def _validate_against_regex(self, value):
         return self.regex.search(value) is not None
+
+    def _validate_enum(self, value):
+        return value in self.enum
 
     @property
     def json_schema(self):
@@ -129,3 +139,16 @@ class Nested(_marshmallow_fields.Nested):
             if hasattr(self.schema.fields[field], 'json_schema')
         }
         return schema
+
+
+class List(_marshmallow_fields.List):
+    """
+    Contains JSON schema definition for a simple array type
+    """
+    type = 'array'
+
+    def __init__(self, items, *args, **kwargs):
+        
+        _marshmallow_fields.List.__init__(self, *args, **kwargs)
+        self.items = items
+

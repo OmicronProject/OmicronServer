@@ -137,6 +137,10 @@ class TestString(TestField):
 
         self.assertIsNotNone(re.search(self.regex_pattern, self.test_string))
 
+        self.enum = [self.test_string]
+
+        self.assertIn(self.test_string, self.enum)
+
 
 class TestStringConstructor(TestString):
     def test_constructor_no_regex(self):
@@ -179,6 +183,17 @@ class TestValidateAgainstRegex(TestStringWithObject):
         self.assertFalse(
             self.field._validate_against_regex(self.unmatched_string)
         )
+
+
+class TestValidateEnum(TestString):
+    def setUp(self):
+        TestString.setUp(self)
+        self.schema = fields.String(description=self.description,
+                                    enum=self.enum)
+
+    def test_validate_enum(self):
+        self.assertTrue(self.schema._validate_enum(self.test_string))
+        self.assertFalse(self.schema._validate_enum('Not a valid string'))
 
 
 class TestStringSchema(TestStringWithObject):
@@ -238,3 +253,8 @@ class TestNestedJsonSchema(TestNestedWithObject):
     def test_json_schema(self):
         self.assertEqual(self.expected_dict,
                          self.field.json_schema)
+
+
+class TestList(TestField):
+    def setUp(self):
+        TestField.setUp(self)
