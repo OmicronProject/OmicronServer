@@ -25,7 +25,45 @@ class ProjectContainer(Resource):
     )
 
     @restful_pagination()
+    @auth.login_required
     def get(self, pag_args):
+        """
+        Returns the list of projects accessible to the user
+
+        **Example Response**
+
+        .. sourcecode:: http
+
+            HTTP/1.1 200 OK
+            Content-type: application/json
+            page: 1
+            items_per_page: 1
+            Count: 1
+
+            {
+                "projects": [
+                    {
+                        "name": "NMR Project",
+                        "description": "This is a project",
+                        "date_created": "2015-01-01T12:00:00",
+                        "owner": {
+                            "username": "mkononen"
+                            "email": "my@email.com"
+                        }
+                    }
+                ]
+            }
+
+        :statuscode 200: Request completed without errors
+        :statuscode 400: Bad request, occurred due to malformed JSON or due
+            to the fact that the user was not found
+
+        :param PaginationArgs pag_args: A named tuple injected into the
+            function's arguments by the ``@restful_pagination()`` decorator,
+            containing parsed parameters for pagination
+        :return: A flask response object containing the required data to be
+            displayed
+        """
         with database_session() as session:
             p_query = session.query(
                 Project

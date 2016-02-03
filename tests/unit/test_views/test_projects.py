@@ -36,7 +36,8 @@ class TestGet(TestProjectView):
 
     @mock.patch('sqlalchemy.orm.Query.all')
     @mock.patch('sqlalchemy.orm.Query.count')
-    def test_get(self, mock_count, mock_all):
+    @mock.patch('auth._verify_user', return_value=True)
+    def test_get(self, mock_auth, mock_count, mock_all):
         project_list = [self.project]
 
         mock_all.return_value = project_list
@@ -48,6 +49,7 @@ class TestGet(TestProjectView):
 
         self.assertTrue(mock_count.called)
         self.assertTrue(mock_all.called)
+        self.assertTrue(mock_auth.called)
 
 
 class TestCreateProject(TestProjectView):
