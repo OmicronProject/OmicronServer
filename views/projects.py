@@ -158,16 +158,33 @@ class Projects(Resource):
     """
     Maps the "/projects/<project_id>" endpoint
     """
+    class ProjectNotFoundError(Exception):
+        """
+        Thrown if ``__getitem__`` cannot find the required project
+        """
+        pass
 
-    @auth.login_required
     @database_session()
-    def get(self, project_name_or_id, session):
+    def __getitem__(self, project_name_or_id, session):
+        """
+        Return the project corresponding to the name or ID
+
+        :param ContextManagedSession session: The database session to be used
+            for making the request. This is injected into the method using
+            the ``@database_session()`` decorator
+
+        :param str project_name_or_id: The project name or the project ID
+        :return: The project model class from the database
+        :rtype: database.models.projects.Project
+
+        :raises: ``Projects.ProjectNotFoundError`` if the project is not
+            found in the DB
+        """
         try:
             project_name_or_id = int(project_name_or_id)
 
             project = session.query(Project).filter_by(
-                    id=project_name_or_id
-            ).first()
+                id=project_name_or_id).first()
 
         except ValueError:
             log.debug("parameter %s has no integer representation, server "
@@ -177,28 +194,87 @@ class Projects(Resource):
                 name=project_name_or_id
             ).first()
 
+        if project is None:
+            raise self.ProjectNotFoundError(
+                'The project with name or id %s could not be found',
+                project_name_or_id
+            )
+
+        return project
+
+    @database_session()
+    def __delitem__(self, project_name_or_id, session):
+        """
+        Retrieve the required project name or ID corresponding r
+
+        :param ContextManagedSession session: The database session that this
+            method will use to communicate with the database
+        :param str project_name_or_id: The project name or ID that will be
+            used as the key to find the project
+        """
+        try:
+            project = self[project_name_or_id]
+        except self.ProjectNotFoundError as error:
+            log.debug('Attempted to delete non-existent project %s',
+                      project_name_or_id)
+            raise error
+
+        session.delete(project)
+
+    @auth.login_required
+    def get(self, project_name_or_id):
+        """
+        Returns the details for a given project
+
+        **Example Response**
+
+        .. sourcecode:: http
+
+            HTTP/1.1 200 OK
+
+            {
+                "name": "NMR Project",
+                "description": "NMR Project Description",
+                "owner": {
+                    "username": "mkononen",
+                    "email": "my@email.com"
+                }
+            }
+
+        :statuscode 200: The Request completed successfully
+        :statuscode 404: The request project could not be found
+
+        :param ``int or str`` project_name_or_id: The id or name
+         of the project to retrieve
+        :return: A flask response object containing the required data
+        :rtype: ``flask.Response``
+        """
+        try:
+            project = self[project_name_or_id]
+        except self.ProjectNotFoundError as error:
+            abort(404)
+            raise error
+
         response = jsonify(project.get)
         response.status_code = 200
 
         return response
 
-    @database_session()
     @auth.login_required
-    def delete(self, project_name_or_id, session):
+    def delete(self, project_name_or_id):
+        """
+        Delete a project
+
+        :statuscode 200: The project was deleted successfully
+        :statuscode 404: Unable to find the project to delete
+
+        :param int or str project_name_or_id: The project to delete
+        """
         try:
-            project_name_or_id = int(project_name_or_id)
-            project = session.query(Project).filter_by(
-                id=project_name_or_id
-            ).first()
-        except ValueError:
-            log.debug('Parameter %s has no integer representation,'
-                      'assuming this is a string', project_name_or_id)
-
-            project = session.query(Project).filter_by(
-                name=project_name_or_id
-            ).first()
-
-        session.delete(project)
+            del self[project_name_or_id]
+        except self.ProjectNotFoundError as error:
+            abort(404)
+            raise error
 
         response = jsonify({'status': 'resource deleted'})
         response.status_code = 200
