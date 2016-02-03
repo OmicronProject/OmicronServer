@@ -62,10 +62,6 @@ class TestAPIServer(unittest.TestCase):
         cls.client = cls.app.test_client()
         cls.headers = {'content-type': 'application/json'}
 
-        api_server.auth.verify_password_callback = mock.MagicMock(
-            return_value=True
-        )
-
         metadata.create_all(bind=test_engine)
 
     @classmethod
@@ -76,6 +72,7 @@ class TestAPIServer(unittest.TestCase):
         metadata.drop_all(bind=test_engine)
 
 
+@mock.patch('api_server.auth.verify_password_callback', return_value=True)
 class TestGetAuthToken(TestAPIServer):
     def setUp(self):
         self.url = 'api/v1/token'
@@ -85,7 +82,7 @@ class TestGetAuthToken(TestAPIServer):
             return_value=self.token
         )
 
-    def test_create_auth_token(self):
+    def test_create_auth_token(self, mock_verify):
         response = self.request_method(self.url, headers=self.headers)
         self.assertEqual(response.status_code, 201)
 
@@ -93,7 +90,9 @@ class TestGetAuthToken(TestAPIServer):
 
         self.assertEqual(self.token, json_dict['token'])
 
-    def test_create_auth_token_with_expiration(self):
+        self.assertTrue(mock_verify.called)
+
+    def test_create_auth_token_with_expiration(self, mock_verify):
         seconds_to_exp = 1200
         url = '%s?expiration=%d' % (self.url, seconds_to_exp)
 
@@ -108,7 +107,10 @@ class TestGetAuthToken(TestAPIServer):
                 self.user.generate_auth_token.call_args
         )
 
+        self.assertTrue(mock_verify.called)
 
+
+@mock.patch('api_server.auth.verify_password_callback', return_value=True)
 class TestRevokeToken(TestAPIServer):
     token = mock.MagicMock()
 
@@ -120,18 +122,20 @@ class TestRevokeToken(TestAPIServer):
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
     @mock.patch('database.User.current_token')
-    def test_revoke_token(self, mock_cur_token, mock_query):
+    def test_revoke_token(self, mock_cur_token, mock_query, mock_auth):
         mock_query.return_value = self.user
         response = self.request_method(self.url, headers=self.headers)
         self.assertEqual(response.status_code, 200)
 
         self.assertTrue(mock_cur_token.first().revoke.called)
+        self.assertTrue(mock_auth.called)
 
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
     @mock.patch('api_server.g')
     @mock.patch('database.User.current_token')
-    def test_administrator_revoke(self, mock_cur_token, mock_g, mock_query):
+    def test_administrator_revoke(self, mock_cur_token, mock_g, mock_query,
+                                  mock_auth):
         mock_g.user = self.admin
         mock_query.return_value = self.admin
 
@@ -140,16 +144,18 @@ class TestRevokeToken(TestAPIServer):
         self.assertEqual(response.status_code, 200)
 
         self.assertTrue(mock_cur_token.first().revoke.called)
+        self.assertTrue(mock_auth.called)
 
     @mock.patch('sqlalchemy.orm.Query.first', return_value=None)
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
     @mock.patch('api_server.g')
     @mock.patch('database.User.current_token')
     def test_administrator_revoke_user_not_found(self, mock_cur_token, mock_g,
-                                                 mock_query):
+                                                 mock_query, mock_auth):
         url = '%s?username=%s' % (self.url, self.username)
         mock_g.user = self.admin
 
         response = self.request_method(url, headers=self.headers)
         self.assertEqual(response.status_code, 404)
         self.assertFalse(mock_cur_token.first().revoke.called)
+        self.assertTrue(mock_auth.called)
