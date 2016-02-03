@@ -84,7 +84,48 @@ class ProjectContainer(Resource):
         return response
 
     @database_session()
+    @auth.login_required
     def post(self, session):
+        """
+        Create a new project
+
+        **Example Request**
+
+        .. sourcecode:: http
+
+            HTTP/1.1
+            Content-Type: application/json
+
+            {
+                "name": "NMR Project",
+                "description": "NMR Project Description",
+                "owner": "mkononen"
+            }
+
+        **Example Response**
+
+        .. sourcecode:: http
+
+            HTTP/1.1 201 CREATED
+            Content-Type: application/json
+
+            {
+                "name": "NMR Project",
+                "description": "NMR Project Description",
+                "owner": {
+                    "username": "mkononen",
+                    "email": "my@email.com"
+                }
+            }
+
+        :statuscode 201: Project successfully created
+        :statuscode 400: Unable to create project due to malformed JSON
+
+        :param ContextManagedSession session: The database session to be
+            used for making the request
+        :return: A Flask response
+        :rtype: flask.Response
+        """
         if not self.post_schema_validator.validate_dict(request.json)[0]:
             abort(400)
 

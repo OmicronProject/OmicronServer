@@ -52,6 +52,7 @@ class TestGet(TestProjectView):
         self.assertTrue(mock_auth.called)
 
 
+@mock.patch('api_server.auth.verify_password_callback', return_value=True)
 class TestCreateProject(TestProjectView):
     def setUp(self):
         self.request_method = self.client.post
@@ -59,7 +60,7 @@ class TestCreateProject(TestProjectView):
 
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.add')
-    def test_post(self, mock_add, mock_first):
+    def test_post(self, mock_add, mock_first, mock_auth):
         mock_first.return_value = self.owner
 
         data_to_post = {
@@ -74,8 +75,9 @@ class TestCreateProject(TestProjectView):
 
         self.assertEqual(mock.call(), mock_first.call_args)
         self.assertTrue(mock_add.called)
+        self.assertTrue(mock_auth.called)
 
-    def test_post_bad_data(self):
+    def test_post_bad_data(self, mock_auth):
         data_to_post = {
             'not_a_valid_key': 'foo',
             'description': self.project_description,
@@ -86,9 +88,10 @@ class TestCreateProject(TestProjectView):
                                 headers=self.headers)
 
         self.assertEqual(r.status_code, 400)
+        self.assertTrue(mock_auth.called)
 
     @mock.patch('sqlalchemy.orm.Query.first')
-    def test_post_no_owner(self, mock_first):
+    def test_post_no_owner(self, mock_first, mock_auth):
         mock_first.return_value = None
 
         data_to_post = {
@@ -101,6 +104,7 @@ class TestCreateProject(TestProjectView):
                                 headers=self.headers)
 
         self.assertEqual(r.status_code, 400)
+        self.assertTrue(mock_auth.called)
 
 
 class TestDedicatedProject(unittest.TestCase):
