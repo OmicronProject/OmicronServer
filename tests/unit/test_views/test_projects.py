@@ -121,15 +121,76 @@ class TestDedicatedProject(unittest.TestCase):
         self.headers = {'Content-Type': 'application/json'}
 
 
+class TestDedicatedProjectGetItem(TestDedicatedProject):
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def _generic_getitem_case(self, project_name_or_id, mock_first):
+        mock_first.return_value = self.project
+
+        with app.test_request_context(self.template_url % project_name_or_id):
+            endpoint = Projects()
+            project = endpoint[project_name_or_id]
+            self.assertEqual(project, self.project)
+
+        self.assertTrue(mock_first.called)
+
+    def test_get_project_int_name(self):
+        self._generic_getitem_case(self.project_id)
+
+    def test_get_project_str_name(self):
+        self._generic_getitem_case(self.project_name)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_get_project_none_found(self, mock_first):
+        mock_first.return_value = None
+
+        with self.assertRaises(Projects.ProjectNotFoundError):
+            with app.test_request_context(
+                            self.template_url % self.project_name):
+                endpoint = Projects()
+                _ = endpoint[self.project_name]
+
+        self.assertTrue(mock_first.called)
+
+
+@mock.patch('views.projects.Projects.__getitem__')
+@mock.patch('sqlalchemy.orm.Session.delete')
+class TestDedicatedProjectDelItem(TestDedicatedProject):
+    def test_delitem_no_error(self, mock_delete, mock_getitem):
+        mock_getitem.return_value = self.project
+
+        with app.test_request_context(
+            self.template_url % self.project_name
+        ):
+            endpoint = Projects()
+            del endpoint[self.project_name]
+
+        self.assertTrue(mock_getitem.called)
+        self.assertTrue(mock_delete.called)
+
+    def test_delitem_no_project_found(self, mock_delete, mock_getitem):
+        mock_getitem.side_effect = Projects.ProjectNotFoundError()
+
+        with self.assertRaises(Projects.ProjectNotFoundError):
+            with app.test_request_context(
+                self.template_url % self.project_name
+            ):
+                endpoint = Projects()
+                del endpoint[self.project_name]
+
+        self.assertTrue(mock_getitem.called)
+        self.assertFalse(mock_delete.called)
+
+
 class TestDedicatedProjectGet(TestDedicatedProject):
     def setUp(self):
         TestDedicatedProject.setUp(self)
         self.request_method = self.client.get
 
     @mock.patch('auth._verify_user', return_value=True)
-    @mock.patch('sqlalchemy.orm.Query.first')
-    def test_get_int_username(self, mock_first, mock_verify_user):
-        mock_first.return_value = self.project
+    @mock.patch('views.projects.Projects.__getitem__')
+    def test_get_int_projname(self, mock_getitem, mock_verify_user):
+        mock_getitem.return_value = self.project
 
         with app.test_request_context(self.template_url % self.project_id):
             p = Projects()
@@ -138,15 +199,32 @@ class TestDedicatedProjectGet(TestDedicatedProject):
         self.assertTrue(mock_verify_user.called)
 
     @mock.patch('auth._verify_user', return_value=True)
-    @mock.patch('sqlalchemy.orm.Query.first')
-    def test_get_str_username(self, mock_first, mock_verify_user):
-        mock_first.return_value = self.project
+    @mock.patch('views.projects.Projects.__getitem__')
+    def test_get_str_projname(self, mock_getitem, mock_verify_user):
+        mock_getitem.return_value = self.project
 
         with app.test_request_context(self.template_url % self.project_name):
             p = Projects()
             response = p.get(self.project_name)
             self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_verify_user.called)
+
+    @mock.patch('auth._verify_user', return_value=True)
+    @mock.patch('views.projects.Projects.__getitem__')
+    @mock.patch('views.projects.abort')
+    def test_get_project_not_found(
+            self, mock_abort, mock_getitem, mock_auth
+    ):
+        mock_getitem.side_effect = Projects.ProjectNotFoundError()
+
+        with app.test_request_context(self.template_url % self.project_name):
+            with self.assertRaises(Projects.ProjectNotFoundError):
+                p = Projects()
+                p.get(self.project_name)
+
+        self.assertEqual(mock.call(404), mock_abort.call_args)
+        self.assertTrue(mock_auth.called)
+        self.assertTrue(mock_getitem.called)
 
 
 class TestDedicatedProjectDelete(TestDedicatedProject):
@@ -189,3 +267,21 @@ class TestDedicatedProjectDelete(TestDedicatedProject):
 
         self.assertTrue(mock_verify_user.called)
         self.assertEqual(mock.call(self.project), mock_delete.call_args)
+
+    @mock.patch('auth._verify_user', return_value=True)
+    @mock.patch('views.projects.Projects.__getitem__',
+                side_effect=Projects.ProjectNotFoundError())
+    @mock.patch('views.projects.abort')
+    def test_delete_proj_not_found(self, mock_abort, mock_getitem,
+                                   mock_verify_user):
+        with self.assertRaises(Projects.ProjectNotFoundError):
+            with app.test_request_context(
+                            self.template_url % self.project_name):
+                endpoint = Projects()
+                endpoint.delete(self.project_name)
+
+        self.assertTrue(mock_verify_user.called)
+        self.assertTrue(mock_getitem.called)
+        self.assertEqual(
+            mock.call(404), mock_abort.call_args
+        )
