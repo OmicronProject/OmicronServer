@@ -39,8 +39,9 @@ decorator that then decorates a particular function.
 
 .. _decorator: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 """
-from flask import request
 from collections import namedtuple
+from flask import request
+
 __author__ = 'Michal Kononenko'
 
 PaginationArgs = namedtuple(
