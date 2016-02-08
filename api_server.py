@@ -10,7 +10,6 @@ from auth import auth
 from config import default_config as conf
 from database import Administrator, User, ContextManagedSession
 from views import UserContainer, UserView, ProjectContainer, Projects
-from decorators import crossdomain
 from flask.ext.cors import CORS
 
 log = logging.getLogger(__name__)
