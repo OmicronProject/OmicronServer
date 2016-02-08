@@ -9,7 +9,8 @@ from flask_restful import Api
 from auth import auth
 from config import default_config as conf
 from database import Administrator, User, ContextManagedSession
-from views import UserContainer, UserView, ProjectContainer
+from views import UserContainer, UserView, ProjectContainer, Projects
+from flask.ext.cors import CORS
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -22,12 +23,14 @@ api = Api(app, prefix='/api/v1')
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username_or_id>')
 api.add_resource(ProjectContainer, '/projects')
+api.add_resource(Projects, 'projects/<project_name_or_id>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
+CORS(app)
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=["GET", "OPTIONS"])
+@app.route('/index', methods=["GET", "OPTIONS"])
 def hello_world():
     """
     Base URL to confirm that the API actually works. Eventually, this endpoint
@@ -47,7 +50,7 @@ def hello_world():
     :return: Hello, world!
     :rtype: str
     """
-    return 'Hello World!'
+    return jsonify({'message': 'hello_world'})
 
 
 @app.route('/api/v1/token', methods=['POST'])
