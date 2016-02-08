@@ -8,7 +8,8 @@ from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
 from auth import auth
 from config import default_config as conf
-from database import Administrator, User, ContextManagedSession
+from models import Administrator, User
+from database import ContextManagedSession
 from views import UserContainer, UserView, ProjectContainer, Projects
 from flask.ext.cors import CORS
 

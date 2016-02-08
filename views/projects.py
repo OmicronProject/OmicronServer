@@ -2,7 +2,8 @@ from auth import auth
 from flask import jsonify
 from flask_restful import Resource
 from config import default_config as conf
-from database import ContextManagedSession, Project, User
+from database import ContextManagedSession
+from models import Project, User
 from decorators import restful_pagination
 from json_schema_parser import JsonSchemaValidator
 import os

@@ -4,7 +4,7 @@ Contains unit tests for :mod:`views.projects`
 import unittest
 import mock
 from api_server import app
-from database import Project, User
+from models import Project, User
 import json
 from datetime import datetime
 from views import Projects

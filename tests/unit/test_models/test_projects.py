@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from database.models.projects import Project
+from models.projects import Project
 
 __author__ = 'Michal Kononenko'
 

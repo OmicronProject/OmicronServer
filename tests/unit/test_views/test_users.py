@@ -5,13 +5,15 @@ import json
 import logging
 import unittest
 from base64 import b64encode
+
 import mock
 from sqlalchemy import create_engine
+
 import views.users as users
 from api_server import app
 from database.schema import metadata
-from database.models.users import User
 from database.sessions import ContextManagedSession
+from models.users import User
 
 __author__ = 'Michal Kononenko'
 

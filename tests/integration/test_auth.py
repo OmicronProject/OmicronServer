@@ -4,13 +4,14 @@ without stubbing out any functionality.
 """
 import unittest
 from config import default_config as conf
-from database import User, ContextManagedSession
+from database import ContextManagedSession
 from database.schema import metadata
 import auth
 from api_server import app
 from base64 import b64encode
 import json
 from uuid import uuid4
+from models import User
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)

@@ -3,12 +3,14 @@ Contains unit tests for :mod:`api_server`
 """
 import json
 import unittest
+
 import mock
 from sqlalchemy import create_engine
+
 import api_server
 from database.schema import metadata
-from database.models.users import User, Administrator
 from database.sessions import ContextManagedSession
+from models.users import User, Administrator
 
 __author__ = 'Michal Kononenko'
 
@@ -121,7 +123,7 @@ class TestRevokeToken(TestAPIServer):
 
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
-    @mock.patch('database.User.current_token')
+    @mock.patch('models.User.current_token')
     def test_revoke_token(self, mock_cur_token, mock_query, mock_auth):
         mock_query.return_value = self.user
         response = self.request_method(self.url, headers=self.headers)
@@ -133,7 +135,7 @@ class TestRevokeToken(TestAPIServer):
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
     @mock.patch('api_server.g')
-    @mock.patch('database.User.current_token')
+    @mock.patch('models.User.current_token')
     def test_administrator_revoke(self, mock_cur_token, mock_g, mock_query,
                                   mock_auth):
         mock_g.user = self.admin
@@ -149,7 +151,7 @@ class TestRevokeToken(TestAPIServer):
     @mock.patch('sqlalchemy.orm.Query.first', return_value=None)
     @mock.patch('api_server.auth.login_required', new=lambda t: t)
     @mock.patch('api_server.g')
-    @mock.patch('database.User.current_token')
+    @mock.patch('models.User.current_token')
     def test_administrator_revoke_user_not_found(self, mock_cur_token, mock_g,
                                                  mock_query, mock_auth):
         url = '%s?username=%s' % (self.url, self.username)

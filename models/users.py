@@ -5,15 +5,15 @@ from datetime import datetime, timedelta
 from hashlib import sha256
 from uuid import uuid1, UUID
 
-from database.models import Base
+from models.base import Base
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import desc
 from sqlalchemy.orm import relationship
 
 from config import default_config as conf
 from database import schema
-from database.models.projects import Project
 from database.sessions import ContextManagedSession
+from models.projects import Project
 
 __author__ = 'Michal Kononenko'
 

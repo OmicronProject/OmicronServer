@@ -2,11 +2,13 @@ import unittest
 from datetime import datetime, timedelta
 from hashlib import sha256
 from uuid import uuid1
+
 import mock
 from freezegun import freeze_time
 from sqlalchemy import create_engine
-import database.models.users
+
 import database.sessions
+import models.users
 from config import default_config as conf
 from database.schema import metadata
 
@@ -29,11 +31,11 @@ class TestTokenConstructor(TestToken):
         self.token_string = 'foobarbaz123456'
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('database.models.users.Token.hash_token')
+    @mock.patch('models.users.Token.hash_token')
     def test_constructor_with_expiration_date(self, mock_hash_token):
 
-        token = database.models.users.Token(self.token_string, self.expiration_date)
-        self.assertIsInstance(token, database.models.users.Token)
+        token = models.users.Token(self.token_string, self.expiration_date)
+        self.assertIsInstance(token, models.users.Token)
 
         self.assertEqual(self.expiration_date, token.expiration_date)
         self.assertEqual(self.time_to_freeze, token.date_created)
@@ -43,17 +45,17 @@ class TestTokenConstructor(TestToken):
         )
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('database.models.users.Token.hash_token')
+    @mock.patch('models.users.Token.hash_token')
     def test_constructor_no_expiration_date(self, mock_hash):
 
-        token = database.models.users.Token(self.token_string)
+        token = models.users.Token(self.token_string)
         expiration_date = self.time_to_freeze + timedelta(seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME)
 
         self.assertEqual(expiration_date, token.expiration_date)
         self.assertTrue(mock_hash.called)
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('database.models.users.Token.hash_token')
+    @mock.patch('models.users.Token.hash_token')
     @mock.patch('uuid.UUID.__str__', return_value=str(uuid1()))
     def test_construtor_uuid_token(self, mock_uuid_str, mock_hash):
         """
@@ -67,9 +69,9 @@ class TestTokenConstructor(TestToken):
             decorator
         """
 
-        token = database.models.users.Token(uuid1())
+        token = models.users.Token(uuid1())
 
-        self.assertIsInstance(token, database.models.users.Token)
+        self.assertIsInstance(token, models.users.Token)
         self.assertTrue(mock_uuid_str.called)
         self.assertTrue(mock_hash.called)
 
@@ -77,9 +79,9 @@ class TestTokenConstructor(TestToken):
 class TestHashToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.token = database.models.users.Token(self.token_string)
+        self.token = models.users.Token(self.token_string)
 
-    @mock.patch('database.models.users.sha256')
+    @mock.patch('models.users.sha256')
     def test_hash_token(self, mock_sha256):
         mock_sha256.return_value = sha256('foobarbaz123456'.encode('ascii'))
         self.token.hash_token(self.token_string)
@@ -94,10 +96,10 @@ class TestHashToken(TestToken):
 class TestVerifyToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.token = database.models.users.Token(self.token_string)
+        self.token = models.users.Token(self.token_string)
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('database.models.users.Token.hash_token')
+    @mock.patch('models.users.Token.hash_token')
     def test_verify_token(self, mock_hash):
         mock_hash.return_value = self.token.token_hash
 
@@ -140,13 +142,13 @@ class TestUser(unittest.TestCase):
 
 class TestUserConstructor(TestUser):
 
-    @mock.patch('database.models.users.User.hash_password')
+    @mock.patch('models.users.User.hash_password')
     def test_constructor(self, mock_hash_function):
 
         mock_hash_function.return_value = 'hashed_password'
 
-        user = database.models.users.User(self.username, self.password, self.email)
-        self.assertIsInstance(user, database.models.users.User)
+        user = models.users.User(self.username, self.password, self.email)
+        self.assertIsInstance(user, models.users.User)
         self.assertEqual(user.username, self.username)
         self.assertEqual(user.email_address, self.email)
         self.assertEqual(user.password_hash, mock_hash_function.return_value)
@@ -159,8 +161,8 @@ class TestFromSession(TestUser):
 
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password,
-                                               self.email)
+        self.user = models.users.User(self.username, self.password,
+                                      self.email)
 
         self.bad_user = [self.user, 'another list']
 
@@ -187,12 +189,12 @@ class TestFromSession(TestUser):
 class TestHashPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
 
-    @mock.patch('database.models.users.pwd_context.encrypt')
+    @mock.patch('models.users.pwd_context.encrypt')
     def test_hash_password(self, mock_encrypt):
         self.assertEqual(
-            mock_encrypt.return_value, database.models.users.User.hash_password(self.password)
+            mock_encrypt.return_value, models.users.User.hash_password(self.password)
         )
 
         mock_encrypt_call = mock.call(self.password)
@@ -204,7 +206,7 @@ class TestHashPassword(TestUser):
 class TestVerifyPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
         self.bad_password = 'invalid'
 
         self.assertNotEqual(self.password, self.bad_password)
@@ -219,11 +221,11 @@ class TestVerifyPassword(TestUser):
 class TestGenerateAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
         self.mock_token = uuid1()
 
     @mock.patch('sqlalchemy.orm.Session.add')
-    @mock.patch('database.models.users.uuid1')
+    @mock.patch('models.users.uuid1')
     @mock.patch('sqlalchemy.orm.Query.first')
     def test_generate_auth_token(self, mock_first, mock_guid, mock_add):
         mock_guid.return_value = self.mock_token
@@ -240,10 +242,10 @@ class TestGenerateAuthToken(TestUser):
 class TestVerifyAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
         self.mock_token ='foobarbaz123456'
 
-    @mock.patch('database.models.users.User.current_token')
+    @mock.patch('models.users.User.current_token')
     def test_verify_token(self, mock_token):
         self.user.verify_auth_token(self.mock_token)
         self.assertEqual(
@@ -256,8 +258,8 @@ class TestCurrentToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
         self.token_string = 'foobarbaz123456'
-        self.user = database.models.users.User(self.username, self.password, self.email)
-        self.mock_token = database.models.users.Token(self.token_string)
+        self.user = models.users.User(self.username, self.password, self.email)
+        self.mock_token = models.users.Token(self.token_string)
 
     @mock.patch('sqlalchemy.orm.Query.order_by')
     def test_current_token(self, mock_order):
@@ -268,7 +270,7 @@ class TestCurrentToken(TestUser):
 class TestGet(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
             'email': self.email,
@@ -282,7 +284,7 @@ class TestGet(TestUser):
 class TestGetFull(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
             'email': self.email,
@@ -297,7 +299,7 @@ class TestGetFull(TestUser):
 class TestUserRepr(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = models.users.User(self.username, self.password, self.email)
         self.expected_result = '%s(%s, %s, %s)' % (
             self.user.__class__.__name__, self.username,
             self.user.password_hash, self.email
@@ -310,14 +312,14 @@ class TestUserRepr(TestUser):
 class TestEqandNe(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(
+        self.user = models.users.User(
             self.username, self.password, self.email
         )
-        self.other_user = database.models.users.User(
+        self.other_user = models.users.User(
             'foo', 'bar', 'foo@bar.com'
         )
 
-        self.identical_user = database.models.users.User(
+        self.identical_user = models.users.User(
             self.username, self.password, self.email
         )
 

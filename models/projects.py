@@ -2,9 +2,9 @@
 Contains model classes related to managing projects on the Omicron server
 """
 from datetime import datetime
-from database.models import Base
+
 from database import schema
-from sqlalchemy.orm import relationship
+from models.base import Base
 
 __author__ = 'Michal Kononenko'
 
