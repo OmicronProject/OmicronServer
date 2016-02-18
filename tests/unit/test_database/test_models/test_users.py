@@ -2,11 +2,9 @@ import unittest
 from datetime import datetime, timedelta
 from hashlib import sha256
 from uuid import uuid1
-
 import mock
 from freezegun import freeze_time
 from sqlalchemy import create_engine
-
 import database.models.users
 import database.sessions
 from config import default_config as conf
