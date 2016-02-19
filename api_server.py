@@ -77,20 +77,23 @@ def create_token():
         Content-Type: application/json
 
         {
-            "token": "1294DKJFKAJ9224ALSJDL1J23"
+            "token": "a409a362-d733-11e5-b625-7e14f79230d0",
+            "expiration_date": "2015-01-01T12:00:00"
         }
 
     :return: A Flask response object with the token jsonified into ASCII
     """
     try:
-        token = g.user.generate_auth_token(
+        token, expiration_date = g.user.generate_auth_token(
             expiration=int(request.args.get('expiration'))
         )
     except TypeError:
         log.debug('No expiration supplied, using default expiration time')
-        token = g.user.generate_auth_token()
+        token, expiration_date = g.user.generate_auth_token()
     response = jsonify(
-            {'token': token}
+            {'token': token,
+             'expiration_date': expiration_date.isoformat()
+        }
     )
     response.status_code = 201
     return response
