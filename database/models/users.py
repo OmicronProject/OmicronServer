@@ -169,8 +169,10 @@ class User(Base):
             default, this is a :class:`ContextManagedSession` that will
             point to :attr:`conf.DATABASE_ENGINE`, but for the purposes of unit
             testing, it can be repointed.
-        :return: The newly-created authentication token
-        :rtype: str
+        :return: A tuple containing the newly-created authentication token,
+            and the expiration date of the new token. The expiration date
+            is an object of type :class:`Datetime`
+        :rtype: tuple(str, Datetime)
 
         .. _UUID 1: https://goo.gl/iUS6s9
         """
@@ -185,7 +187,7 @@ class User(Base):
             token = Token(token_string, expiration_date, owner=user)
             session.add(token)
 
-        return token_string
+        return token_string, expiration_date
 
     def verify_auth_token(self, token_string):
         """

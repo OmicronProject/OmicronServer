@@ -220,17 +220,17 @@ class TestGenerateAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
         self.user = database.models.users.User(self.username, self.password, self.email)
-        self.mock_token = uuid1()
+        self.mock_token_return_value = uuid1()
 
     @mock.patch('sqlalchemy.orm.Session.add')
     @mock.patch('database.models.users.uuid1')
     @mock.patch('sqlalchemy.orm.Query.first')
     def test_generate_auth_token(self, mock_first, mock_guid, mock_add):
-        mock_guid.return_value = self.mock_token
+        mock_guid.return_value = self.mock_token_return_value
         mock_first.return_value = self.user
 
-        token = self.user.generate_auth_token()
-        self.assertEqual(str(self.mock_token), token)
+        token = self.user.generate_auth_token()[0]
+        self.assertEqual(str(self.mock_token_return_value), token)
 
         self.assertTrue(mock_guid.called)
         self.assertTrue(mock_add.called)

@@ -9,6 +9,8 @@ import api_server
 from database.schema import metadata
 from database.models.users import User, Administrator
 from database.sessions import ContextManagedSession
+from freezegun import freeze_time
+from datetime import datetime, timedelta
 
 __author__ = 'Michal Kononenko'
 
@@ -73,6 +75,7 @@ class TestAPIServer(unittest.TestCase):
 
 
 @mock.patch('api_server.auth.verify_password_callback', return_value=True)
+@freeze_time('2016-01-01')
 class TestGetAuthToken(TestAPIServer):
     """
     Tests :meth:`api_server.create_token`
@@ -85,9 +88,10 @@ class TestGetAuthToken(TestAPIServer):
         """
         self.url = 'api/v1/token'
         self.token = 'mock_token'
+        self.token_expiry_date = datetime.utcnow()
         self.request_method = self.client.post
         self.user.generate_auth_token = mock.MagicMock(
-            return_value=self.token
+            return_value=(self.token, self.token_expiry_date)
         )
 
     def test_create_auth_token(self, mock_verify):
@@ -97,6 +101,10 @@ class TestGetAuthToken(TestAPIServer):
         json_dict = json.loads(response.data.decode('utf-8'))
 
         self.assertEqual(self.token, json_dict['token'])
+        self.assertEqual(
+                self.token_expiry_date.isoformat(),
+                json_dict['expiration_date']
+         )
 
         self.assertTrue(mock_verify.called)
 
