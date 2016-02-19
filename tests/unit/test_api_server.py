@@ -74,7 +74,15 @@ class TestAPIServer(unittest.TestCase):
 
 @mock.patch('api_server.auth.verify_password_callback', return_value=True)
 class TestGetAuthToken(TestAPIServer):
+    """
+    Tests :meth:`api_server.create_token`
+    """
     def setUp(self):
+        """
+        Set up the tests by creating a mock token, and
+        assigning it as a return value to ``self.user``, which
+        is assigned to ``g.user``.
+        """
         self.url = 'api/v1/token'
         self.token = 'mock_token'
         self.request_method = self.client.post
@@ -112,6 +120,9 @@ class TestGetAuthToken(TestAPIServer):
 
 @mock.patch('api_server.auth.verify_password_callback', return_value=True)
 class TestRevokeToken(TestAPIServer):
+    """
+    Tests :meth:`api_server.revoke_token`
+    """
     token = mock.MagicMock()
 
     def setUp(self):
