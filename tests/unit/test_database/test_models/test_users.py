@@ -219,7 +219,9 @@ class TestVerifyPassword(TestUser):
 class TestGenerateAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = database.models.users.User(self.username, self.password, self.email)
+        self.user = database.models.users.User(
+                self.username, self.password, self.email
+        )
         self.mock_token_return_value = uuid1()
 
     @mock.patch('sqlalchemy.orm.Session.add')
@@ -235,6 +237,24 @@ class TestGenerateAuthToken(TestUser):
         self.assertTrue(mock_guid.called)
         self.assertTrue(mock_add.called)
         self.assertTrue(mock_first.called)
+
+    @mock.patch('sqlalchemy.orm.Session.add')
+    @mock.patch('database.models.users.uuid1')
+    @mock.patch('sqlalchemy.orm.Query.first')
+    @freeze_time('2012-01-01')
+    def test_generate_auth_token_default_date(
+            self, mock_first, mock_guid, mock_add
+    ):
+        mock_guid.return_value = self.mock_token_return_value
+        mock_first.return_value = self.user
+        _, expiration_date = self.user.generate_auth_token()
+        self.assertEqual(
+            expiration_date,
+            datetime.utcnow() + timedelta(
+                    seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME
+            )
+        )
+
 
 
 class TestVerifyAuthToken(TestUser):

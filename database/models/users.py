@@ -147,7 +147,7 @@ class User(Base):
         return pwd_context.verify(password, self.password_hash)
 
     def generate_auth_token(
-            self, expiration=600,
+            self, expiration=conf.DEFAULT_TOKEN_EXPIRATION_TIME,
             session=ContextManagedSession(bind=conf.DATABASE_ENGINE)
     ):
         """
