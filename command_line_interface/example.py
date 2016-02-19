@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Usage: example.py [ -h | --help ] (TEXT) ...
 
