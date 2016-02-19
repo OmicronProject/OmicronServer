@@ -1,3 +1,6 @@
+"""
+Contains unit tests for :mod:`decorators`
+"""
 import unittest
 import decorators
 import json
@@ -11,6 +14,33 @@ url = '/test_pagination'
 @app.route(url)
 @decorators.restful_pagination()
 def _get_pagination_arguments(pag_args):
+    """
+    Dynamically inject the URL into the app, so that pagination should be
+    tested. The endpoint simply returns the pagination arguments
+    in JSON
+
+    **Example Request**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 GET /test_pagination?page=1&items_per_page=10
+        Content-type: application/json
+
+    **Example Response**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 GET 200 OK
+
+        {
+            "page": 1,
+            "items_per_page": 1000
+        }
+
+    :param PaginationArgs pag_args: A named tuple of pagination arguments
+        dynamically injected into the endpoint
+    :return:
+    """
 
     return jsonify(
         {'page': pag_args.page,
