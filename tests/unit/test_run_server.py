@@ -35,7 +35,7 @@ class TestCreateRootUser(TestRunServer):
 
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.add')
-    def test_create_root_user_found(self, mock_add, mock_first):
+    def test_create_root_user_not_found(self, mock_add, mock_first):
         mock_first.return_value = None
         run_server.create_root_user()
 
