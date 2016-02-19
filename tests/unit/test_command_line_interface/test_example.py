@@ -10,7 +10,10 @@ from config import default_config as config
 
 class TestExample(unittest.TestCase):
     def setUp(self):
-        self.command_to_run = 'python %s/command_line_interface/example.py' % config.BASE_DIRECTORY
+        self.command_to_run = [
+            'python',
+            '%s/command_line_interface/example.py' % config.BASE_DIRECTORY
+            ]
 
     def test_example(self):
         completed_command = subprocess.Popen(self.command_to_run, stderr=subprocess.PIPE)
@@ -26,7 +29,10 @@ class TestExample(unittest.TestCase):
 
 class TestString(unittest.TestCase):
     def setUp(self):
-        self.command_to_run = 'python %s/command_line_interface/example.py HELLO WORLD' % config.BASE_DIRECTORY
+        self.command_to_run = [
+            'python',
+            '%s/command_line_interface/example.py HELLO WORLD' % config.BASE_DIRECTORY
+            ]
 
     def test_string(self):
         completed_command = subprocess.Popen(self.command_to_run, stdout=subprocess.PIPE)
@@ -38,7 +44,10 @@ class TestString(unittest.TestCase):
 
 class TestHelp(unittest.TestCase):
     def setUp(self):
-        self.command_to_run = 'python %s/command_line_interface/example.py -h' % config.BASE_DIRECTORY
+        self.command_to_run = [
+            'python',
+            '%s/command_line_interface/example.py -h' % config.BASE_DIRECTORY
+            ]
 
     def test_help(self):
         completed_command = subprocess.Popen(self.command_to_run, stdout=subprocess.PIPE)
