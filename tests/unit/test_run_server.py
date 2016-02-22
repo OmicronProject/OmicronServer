@@ -5,7 +5,6 @@ import unittest
 import mock
 import omicron_server.run_server as run_server
 import logging
-from database import Administrator
 from config import Config
 
 from omicron_server import run_server
