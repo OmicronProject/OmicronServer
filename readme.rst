@@ -99,6 +99,8 @@ environment variables. These are
 - ``DATABASE_URL``: The URL at which the database sits. This is the database to be used by the server
 - ``DEBUG``: If ``TRUE``, then stack traces will be displayed when **in the browser** if the server throws a 500 error
 - ``STATE``: A generic flag for specifying between ``DEV``, ``CI``, and ``PROD`` machines. Currently not wired to anything
+- ``LOGFILE``: The file to which the log should be written. If this is not
+    defined, the application log will be written to ```sys.stdout```.
 
 Command Line Parsing
 ~~~~~~~~~~~~~~~~~~~~
