@@ -6,11 +6,40 @@ import mock
 import run_server
 import logging
 from database import Administrator
+from config import Config
 
 __author__ = 'Michal Kononenko'
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
+
+
+class TestSetLogFile(unittest.TestCase):
+    """
+    Tests that if a logfile path is provided, that the master
+    application log will log data to the filename given
+    """
+    def setUp(self):
+        self.logfile_name = 'logfile'
+
+        self.mock_conf = Config()
+        self.mock_conf.LOGFILE = self.logfile_name
+
+    @mock.patch('logging.basicConfig')
+    def test_logging(self, mock_basic_config):
+        expected_config_call = mock.call(filename=self.logfile_name)
+
+        run_server.set_logfile(self.mock_conf)
+
+        self.assertEqual(expected_config_call, mock_basic_config.call_args)
+
+    @mock.patch('logging.basicConfig')
+    def test_logging_no_logfile(self, mock_config):
+        mock_conf = self.mock_conf
+        mock_conf.LOGFILE = None
+        run_server.set_logfile(mock_conf)
+
+        self.assertFalse(mock_config.called)
 
 
 class TestRunServer(unittest.TestCase):

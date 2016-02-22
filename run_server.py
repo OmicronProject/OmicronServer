@@ -18,6 +18,19 @@ log.setLevel(logging.DEBUG)
 db_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
+def set_logfile(config_object=conf):
+    """
+    If the ```LOGFILE``` environment variable is defined in the server,
+    this method configures the log to output to a logfile
+
+    :param Config config_object: The application config parameters. Defaults
+        to the master config object, but is left open as an argument for
+        testability.
+    """
+    if config_object.LOGFILE is not None:
+        logging.basicConfig(filename=config_object.LOGFILE)
+
+
 @db_session()
 def create_root_user(session):
     """
@@ -36,6 +49,7 @@ def create_root_user(session):
         session.add(user)
 
 if __name__ == "__main__":
+    set_logfile()
     metadata.create_all(bind=conf.DATABASE_ENGINE)
 
     os.environ['PYTHONPATH'] = \
