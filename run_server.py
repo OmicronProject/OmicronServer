@@ -30,6 +30,8 @@ def set_logfile(config_object=conf):
     if config_object.LOGFILE is not None:
         logging.basicConfig(filename=config_object.LOGFILE)
 
+set_logfile()
+
 
 @db_session()
 def create_root_user(session):
@@ -49,7 +51,6 @@ def create_root_user(session):
         session.add(user)
 
 if __name__ == "__main__":
-    set_logfile()
     metadata.create_all(bind=conf.DATABASE_ENGINE)
 
     os.environ['PYTHONPATH'] = \
