@@ -1,13 +1,15 @@
 """
 Contains unit tests for :mod:`views.projects`
 """
-import unittest
-import mock
-from api_server import app
-from database import Project, User
 import json
+import unittest
 from datetime import datetime
-from views import Projects
+
+import mock
+from database import Project, User
+
+from omicron_server.api_server import app
+from omicron_server.views import Projects
 
 __author__ = 'Michal Kononenko'
 

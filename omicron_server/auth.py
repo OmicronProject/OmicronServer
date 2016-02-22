@@ -6,10 +6,12 @@ circular import where :mod:`api_server` imports
 declared in :mod:`api_server`
 """
 from uuid import UUID
+
 from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
-from config import default_config as conf
-from database import User, Token, ContextManagedSession
+
+from omicron_server.config import default_config as conf
+from omicron_server.database import User, Token, ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 auth = HTTPBasicAuth()

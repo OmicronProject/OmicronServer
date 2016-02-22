@@ -1,13 +1,15 @@
-from auth import auth
-from flask import jsonify
-from flask_restful import Resource
-from config import default_config as conf
-from database import ContextManagedSession, Project, User
-from decorators import restful_pagination
-from json_schema_parser import JsonSchemaValidator
-import os
 import logging
+import os
+
+from auth import auth
+from decorators import restful_pagination
+from flask import jsonify
 from flask import request, abort
+from flask_restful import Resource
+from json_schema_parser import JsonSchemaValidator
+
+from omicron_server.config import default_config as conf
+from omicron_server.database import ContextManagedSession, Project, User
 
 __author__ = 'Michal Kononenko'
 

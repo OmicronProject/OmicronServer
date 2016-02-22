@@ -4,7 +4,7 @@ database, and are stored in persistent storage.
 """
 from sqlalchemy.ext.declarative import declarative_base
 
-from database import schema
+from omicron_server.database import schema
 
 __author__ = 'Michal Kononenko'
 

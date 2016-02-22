@@ -3,14 +3,16 @@ Contains unit tests for :mod:`api_server`
 """
 import json
 import unittest
+from datetime import datetime
+
 import mock
-from sqlalchemy import create_engine
-import api_server
-from database.schema import metadata
 from database.models.users import User, Administrator
 from database.sessions import ContextManagedSession
 from freezegun import freeze_time
-from datetime import datetime, timedelta
+from sqlalchemy import create_engine
+
+from omicron_server import api_server
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 

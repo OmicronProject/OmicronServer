@@ -1,6 +1,6 @@
 import unittest
-import mock
-from config import Config
+
+from omicron_server.config import Config
 
 __author__ = 'Michal Kononenko'
 

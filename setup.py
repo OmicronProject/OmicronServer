@@ -1,11 +1,14 @@
 from setuptools import setup
+import omicron_server
 
 setup(
     name='OmicronServer',
-    version="0.1",
-    author='Michal Kononenko',
-    author_email='michalkononenko@gmail.com',
-    description='The back end to the Omicron Project stack, used to manage projects on the Omicron system',
-    license='MIT',
+    version=omicron_server.__version__,
+    author=omicron_server.__author__,
+    author_email='mkononen@uwaterloo.ca',
+    maintainer='MichalKononenko',
+    maintainer_email='mkononen@uwaterloo.ca',
+    description='The back end to the Omicron Project stack.',
+    license=omicron_server.__license__,
     url='https://github.com/MichalKononenko/OmicronServer'
     )

@@ -1,8 +1,9 @@
 import unittest
-import mock
+
 import jsonschema
-from views.schema_defined_resource import SchemaDefinedResource
-from flask import request
+import mock
+
+from omicron_server.views import SchemaDefinedResource
 
 __author__ = 'Michal Kononenko'
 

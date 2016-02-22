@@ -2,15 +2,17 @@
 Contains integration tests for :mod:`auth`, performing authentication
 without stubbing out any functionality.
 """
+import json
 import unittest
-from config import default_config as conf
-from database import User, ContextManagedSession
-from database.schema import metadata
+from base64 import b64encode
+from uuid import uuid4
+
 import auth
 from api_server import app
-from base64 import b64encode
-import json
-from uuid import uuid4
+from database import User, ContextManagedSession
+
+from omicron_server.config import default_config as conf
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)

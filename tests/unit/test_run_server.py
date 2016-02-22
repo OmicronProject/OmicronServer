@@ -1,11 +1,13 @@
 """
 Contains unit tests for :mod:`run_server`
 """
-import unittest
-import mock
-import run_server
 import logging
-from database import Administrator
+import unittest
+
+import mock
+
+from omicron_server import run_server
+from omicron_server.database import Administrator
 
 __author__ = 'Michal Kononenko'
 

@@ -2,8 +2,10 @@
 Contains unit tests for :mod:`json_schema_parser`
 """
 import unittest
+
 import mock
-import json_schema_parser as parser
+
+from omicron_server import json_schema_parser as parser
 
 __author__ = 'Michal Kononenko'
 

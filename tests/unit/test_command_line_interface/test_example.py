@@ -1,9 +1,10 @@
 """
 Testing the basic CLI example which reprints the input
 """
-import unittest
 import subprocess
-from config import default_config as config
+import unittest
+
+from omicron_server.config import default_config as config
 
 
 class TestExample(unittest.TestCase):

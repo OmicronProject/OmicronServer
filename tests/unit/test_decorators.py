@@ -1,8 +1,10 @@
-import unittest
-import decorators
 import json
+import unittest
+
 from api_server import app
 from flask import jsonify
+
+from omicron_server import decorators
 
 __author__ = 'Michal Kononenko'
 url = '/test_pagination'

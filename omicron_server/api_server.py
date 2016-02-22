@@ -4,13 +4,15 @@ a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
 import logging
-from flask import Flask, g, jsonify, request, abort
-from flask_restful import Api
+
 from auth import auth
-from config import default_config as conf
 from database import Administrator, User, ContextManagedSession
-from views import UserContainer, UserView, ProjectContainer, Projects
+from flask import Flask, g, jsonify, request, abort
 from flask.ext.cors import CORS
+from flask_restful import Api
+
+from omicron_server.config import default_config as conf
+from omicron_server.views import UserContainer, UserView, ProjectContainer, Projects
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)

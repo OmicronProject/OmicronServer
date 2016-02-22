@@ -4,11 +4,13 @@ Contains unit tests for :mod:`database.versioning`
 import logging
 import sys
 import unittest
+
 import mock
 from database import DatabaseManager
-from database.schema import metadata as meta
-from sqlalchemy import create_engine
 from database.versioning import DatabaseNotReferencedError
+from sqlalchemy import create_engine
+
+from omicron_server.database.schema import metadata as meta
 
 __author__ = 'Michal Kononenko'
 

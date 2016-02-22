@@ -3,14 +3,15 @@ Contains unit tests for :mod:`auth`
 """
 import unittest
 from uuid import uuid1
-from config import default_config as conf
-import mock
-from sqlalchemy import create_engine
 
 import auth
-from database.schema import metadata
+import mock
 from database.models.users import User, Token
 from database.sessions import ContextManagedSession
+from sqlalchemy import create_engine
+
+from omicron_server.config import default_config as conf
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 

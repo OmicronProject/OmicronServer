@@ -5,10 +5,11 @@ import logging
 import os
 
 from api_server import app
-from config import default_config as conf
-from database.schema import metadata
 from database.models.users import Administrator
 from database.sessions import ContextManagedSession
+
+from omicron_server.config import default_config as conf
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 

@@ -2,14 +2,16 @@
 Contains views for the ``/users`` endpoint.
 """
 import os
-from flask import request, abort, jsonify, g
-from flask_restful import Resource
+
 from auth import auth
-from config import default_config as conf
 from database import User, ContextManagedSession
 from decorators import restful_pagination
-from views import SchemaDefinedResource
+from flask import request, abort, jsonify
+from flask_restful import Resource
 from json_schema_parser import JsonSchemaValidator
+
+from omicron_server.config import default_config as conf
+from omicron_server.views import SchemaDefinedResource
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
