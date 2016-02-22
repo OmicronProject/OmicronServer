@@ -3,7 +3,7 @@ Contains unit tests for :mod:`run_server`
 """
 import unittest
 import mock
-import run_server
+import omicron_server.run_server as run_server
 import logging
 from database import Administrator
 from config import Config
