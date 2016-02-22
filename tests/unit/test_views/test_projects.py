@@ -6,7 +6,7 @@ import unittest
 from datetime import datetime
 
 import mock
-from database import Project, User
+from omicron_server.database import Project, User
 
 from omicron_server.api_server import app
 from omicron_server.views import Projects
@@ -38,7 +38,7 @@ class TestGet(TestProjectView):
 
     @mock.patch('sqlalchemy.orm.Query.all')
     @mock.patch('sqlalchemy.orm.Query.count')
-    @mock.patch('auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
     def test_get(self, mock_auth, mock_count, mock_all):
         project_list = [self.project]
 
@@ -54,7 +54,8 @@ class TestGet(TestProjectView):
         self.assertTrue(mock_auth.called)
 
 
-@mock.patch('api_server.auth.verify_password_callback', return_value=True)
+@mock.patch('omicron_server.api_server.auth.verify_password_callback',
+            return_value=True)
 class TestCreateProject(TestProjectView):
     def setUp(self):
         self.request_method = self.client.post
@@ -155,7 +156,7 @@ class TestDedicatedProjectGetItem(TestDedicatedProject):
         self.assertTrue(mock_first.called)
 
 
-@mock.patch('views.projects.Projects.__getitem__')
+@mock.patch('omicron_server.views.projects.Projects.__getitem__')
 @mock.patch('sqlalchemy.orm.Session.delete')
 class TestDedicatedProjectDelItem(TestDedicatedProject):
     def test_delitem_no_error(self, mock_delete, mock_getitem):
@@ -189,8 +190,8 @@ class TestDedicatedProjectGet(TestDedicatedProject):
         TestDedicatedProject.setUp(self)
         self.request_method = self.client.get
 
-    @mock.patch('auth._verify_user', return_value=True)
-    @mock.patch('views.projects.Projects.__getitem__')
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.views.projects.Projects.__getitem__')
     def test_get_int_projname(self, mock_getitem, mock_verify_user):
         mock_getitem.return_value = self.project
 
@@ -200,8 +201,8 @@ class TestDedicatedProjectGet(TestDedicatedProject):
             self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_verify_user.called)
 
-    @mock.patch('auth._verify_user', return_value=True)
-    @mock.patch('views.projects.Projects.__getitem__')
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.views.projects.Projects.__getitem__')
     def test_get_str_projname(self, mock_getitem, mock_verify_user):
         mock_getitem.return_value = self.project
 
@@ -211,9 +212,9 @@ class TestDedicatedProjectGet(TestDedicatedProject):
             self.assertEqual(response.status_code, 200)
         self.assertTrue(mock_verify_user.called)
 
-    @mock.patch('auth._verify_user', return_value=True)
-    @mock.patch('views.projects.Projects.__getitem__')
-    @mock.patch('views.projects.abort')
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.views.projects.Projects.__getitem__')
+    @mock.patch('omicron_server.views.projects.abort')
     def test_get_project_not_found(
             self, mock_abort, mock_getitem, mock_auth
     ):
@@ -235,7 +236,7 @@ class TestDedicatedProjectDelete(TestDedicatedProject):
         TestDedicatedProject.setUp(self)
         self.request_method = self.client.delete
 
-    @mock.patch('auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.delete')
     def test_delete_int_project(
@@ -253,7 +254,7 @@ class TestDedicatedProjectDelete(TestDedicatedProject):
 
         self.assertEqual(mock.call(self.project), mock_delete.call_args)
 
-    @mock.patch('auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.delete')
     def test_delete_str_project(
@@ -270,10 +271,10 @@ class TestDedicatedProjectDelete(TestDedicatedProject):
         self.assertTrue(mock_verify_user.called)
         self.assertEqual(mock.call(self.project), mock_delete.call_args)
 
-    @mock.patch('auth._verify_user', return_value=True)
-    @mock.patch('views.projects.Projects.__getitem__',
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.views.projects.Projects.__getitem__',
                 side_effect=Projects.ProjectNotFoundError())
-    @mock.patch('views.projects.abort')
+    @mock.patch('omicron_server.views.projects.abort')
     def test_delete_proj_not_found(self, mock_abort, mock_getitem,
                                    mock_verify_user):
         with self.assertRaises(Projects.ProjectNotFoundError):

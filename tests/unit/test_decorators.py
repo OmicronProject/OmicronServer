@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from api_server import app
+from omicron_server import app
 from flask import jsonify
 
 from omicron_server import decorators

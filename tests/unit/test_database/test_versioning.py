@@ -6,8 +6,8 @@ import sys
 import unittest
 
 import mock
-from database import DatabaseManager
-from database.versioning import DatabaseNotReferencedError
+from omicron_server.database import DatabaseManager
+from omicron_server.database.versioning import DatabaseNotReferencedError
 from sqlalchemy import create_engine
 
 from omicron_server.database.schema import metadata as meta
@@ -191,7 +191,7 @@ class TestCreateMigrationScript(TestDatabaseManager):
 
     @mock.patch('%s.eval' % builtin_string)
     @mock.patch('%s.open' % builtin_string)
-    @mock.patch('database.versioning.types.ModuleType',
+    @mock.patch('omicron_server.database.versioning.types.ModuleType',
                 return_value=MockModule())
     def test_migrate_db(self, mock_module, mock_open, mock_exec):
         """

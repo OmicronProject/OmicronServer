@@ -7,12 +7,12 @@ import unittest
 from base64 import b64encode
 
 import mock
-from database.models.users import User
-from database.schema import metadata
-from database.sessions import ContextManagedSession
+from omicron_server.database.models.users import User
+from omicron_server.database.schema import metadata
+from omicron_server.database.sessions import ContextManagedSession
 from sqlalchemy import create_engine
 
-from omicron_server import views as users
+from omicron_server.views import users
 from omicron_server.api_server import app
 
 __author__ = 'Michal Kononenko'
@@ -206,27 +206,20 @@ class TestGet(TestUserView):
 
         self.bad_user = User('foo', 'bar', 'foo@bar.com')
 
-    @mock.patch('views.users.g')
-    def test_get_correct(self, mock_g, mock_first, mock_count, mock_all):
+    def test_get_correct(self, mock_first, mock_count, mock_all):
         mock_first.return_value = self.user
         mock_all.return_value = []
         mock_count.return_value = 0
-
-        mock_g.user = self.user
-
         r = self.request_method(self.url, headers=self.headers)
         self.assertEqual(r.status_code, 200)
 
         self.assertTrue(mock_first.called)
 
-    @mock.patch('views.users.g')
-    def test_get_by_user_id(self, mock_g, mock_first, mock_count, mock_all):
+    def test_get_by_user_id(self, mock_first, mock_count, mock_all):
         self.user.id = 1
         mock_first.return_value = self.user
         mock_all.return_value = []
         mock_count.return_value = 0
-        mock_g.user = self.user
-
         url = 'api/v1/users/1'
 
         r = self.request_method(url, headers=self.headers)

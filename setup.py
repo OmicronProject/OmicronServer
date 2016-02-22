@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from setuptools import setup
 import omicron_server
 
@@ -10,5 +11,6 @@ setup(
     maintainer_email='mkononen@uwaterloo.ca',
     description='The back end to the Omicron Project stack.',
     license=omicron_server.__license__,
-    url='https://github.com/MichalKononenko/OmicronServer'
+    url='https://github.com/MichalKononenko/OmicronServer',
+    packages=['omicron_server']
     )

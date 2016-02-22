@@ -10,10 +10,8 @@ This code was adapted from Miguel Grinberg's `Flask mega-tutorial`_.
 import logging
 import os.path
 import types
-
 from migrate.versioning import api as sqlalchemy_migrate_api
 from sqlalchemy import create_engine
-
 from omicron_server.config import default_config as conf
 from omicron_server.database.schema import metadata as meta
 

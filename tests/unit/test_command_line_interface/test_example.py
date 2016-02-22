@@ -3,7 +3,6 @@ Testing the basic CLI example which reprints the input
 """
 import subprocess
 import unittest
-
 from omicron_server.config import default_config as config
 
 

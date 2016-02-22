@@ -2,9 +2,7 @@
 Contains unit tests for :mod:`json_schema_parser`
 """
 import unittest
-
 import mock
-
 from omicron_server import json_schema_parser as parser
 
 __author__ = 'Michal Kononenko'
@@ -30,7 +28,8 @@ class TestJsonSchemaValidator(unittest.TestCase):
     def setUp(self):
         self.path = r'D:\test\this\is\not\a\real\path'
         with mock.patch(
-            'json_schema_parser.JsonSchemaValidator._read_schema_from_file',
+            'omicron_server.json_schema_parser.JsonSchemaValidator'
+            '._read_schema_from_file',
             return_value=test_schema
         ):
             with mock.patch('os.path.isfile', return_value=True):
@@ -38,7 +37,8 @@ class TestJsonSchemaValidator(unittest.TestCase):
 
 
 @mock.patch('os.path.isfile')
-@mock.patch('json_schema_parser.JsonSchemaValidator._read_schema_from_file')
+@mock.patch('omicron_server.json_schema_parser.JsonSchemaValidator'
+            '._read_schema_from_file')
 class TestJsonSchemaConstructor(unittest.TestCase):
 
     def setUp(self):

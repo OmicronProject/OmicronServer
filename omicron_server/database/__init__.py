@@ -7,5 +7,8 @@ The purpose of :class:`DatabaseManager` is to provide versioning support for
 the DB
 """
 from omicron_server.database.models.users import User, Token, Administrator
+from omicron_server.database.models.projects import Project
+from omicron_server.database.sessions import ContextManagedSession
+from omicron_server.database.versioning import DatabaseManager
 
 __author__ = 'Michal Kononenko'
