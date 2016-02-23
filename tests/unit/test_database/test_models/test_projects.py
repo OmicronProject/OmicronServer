@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-from database.models.projects import Project
+from omicron_server.database import Project
 
 __author__ = 'Michal Kononenko'
 

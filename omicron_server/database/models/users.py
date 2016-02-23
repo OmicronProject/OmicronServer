@@ -4,16 +4,14 @@ Contains all model classes relevant to management of users
 from datetime import datetime, timedelta
 from hashlib import sha256
 from uuid import uuid1, UUID
-
-from database.models import Base
+from omicron_server.database.models import Base
+from omicron_server.database.models.projects import Project
+from omicron_server.database.sessions import ContextManagedSession
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import desc
 from sqlalchemy.orm import relationship
-
-from config import default_config as conf
-from database import schema
-from database.models.projects import Project
-from database.sessions import ContextManagedSession
+from omicron_server.config import default_config as conf
+from omicron_server.database import schema
 
 __author__ = 'Michal Kononenko'
 
@@ -147,7 +145,7 @@ class User(Base):
         return pwd_context.verify(password, self.password_hash)
 
     def generate_auth_token(
-            self, expiration=600,
+            self, expiration=conf.DEFAULT_TOKEN_EXPIRATION_TIME,
             session=ContextManagedSession(bind=conf.DATABASE_ENGINE)
     ):
         """
@@ -169,8 +167,10 @@ class User(Base):
             default, this is a :class:`ContextManagedSession` that will
             point to :attr:`conf.DATABASE_ENGINE`, but for the purposes of unit
             testing, it can be repointed.
-        :return: The newly-created authentication token
-        :rtype: str
+        :return: A tuple containing the newly-created authentication token,
+            and the expiration date of the new token. The expiration date
+            is an object of type :class:`Datetime`
+        :rtype: tuple(str, Datetime)
 
         .. _UUID 1: https://goo.gl/iUS6s9
         """
@@ -185,7 +185,7 @@ class User(Base):
             token = Token(token_string, expiration_date, owner=user)
             session.add(token)
 
-        return token_string
+        return token_string, expiration_date
 
     def verify_auth_token(self, token_string):
         """

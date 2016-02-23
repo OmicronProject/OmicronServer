@@ -4,13 +4,16 @@ a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
 import logging
+
+from omicron_server.auth import auth
+from omicron_server.database import Administrator, User, ContextManagedSession
 from flask import Flask, g, jsonify, request, abort
-from flask_restful import Api
-from auth import auth
-from config import default_config as conf
-from database import Administrator, User, ContextManagedSession
-from views import UserContainer, UserView, ProjectContainer, Projects
 from flask.ext.cors import CORS
+from flask_restful import Api
+
+from omicron_server.config import default_config as conf
+from omicron_server.views import UserContainer, UserView, ProjectContainer
+from omicron_server.views import Projects
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -77,20 +80,23 @@ def create_token():
         Content-Type: application/json
 
         {
-            "token": "1294DKJFKAJ9224ALSJDL1J23"
+            "token": "a409a362-d733-11e5-b625-7e14f79230d0",
+            "expiration_date": "2015-01-01T12:00:00"
         }
 
     :return: A Flask response object with the token jsonified into ASCII
     """
     try:
-        token = g.user.generate_auth_token(
+        token, expiration_date = g.user.generate_auth_token(
             expiration=int(request.args.get('expiration'))
         )
     except TypeError:
         log.debug('No expiration supplied, using default expiration time')
-        token = g.user.generate_auth_token()
+        token, expiration_date = g.user.generate_auth_token()
     response = jsonify(
-            {'token': token}
+            {'token': token,
+             'expiration_date': expiration_date.isoformat()
+        }
     )
     response.status_code = 201
     return response

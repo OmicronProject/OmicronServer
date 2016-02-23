@@ -24,6 +24,7 @@ notifications:
 
 install:
   - pip install -r requirements.txt
+  - python setup.py install
 
 before_script:
   - sh -c "if [ '$DATABASE_URL' = "postgres://postgres:@localhost:5432/test_database" ] ; then psql -c 'DROP DATABASE IF EXISTS test_database;' -U postgres ; fi"
