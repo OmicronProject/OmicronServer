@@ -231,31 +231,30 @@ class TestDedicatedProjectGet(TestDedicatedProject):
         TestDedicatedProject.setUp(self)
         self.request_method = self.client.get
 
-    def template_case(self, request_context, getter_variable):
+    @mock.patch('omicron_server.auth._verify_user', return_value=True)
+    @mock.patch('omicron_server.views.projects.Projects.__getitem__')
+    def template_case(
+            self,  request_context,
+            getter_variable, mock_getitem, mock_verify_user):
+        mock_getitem.return_value = self.project
+
         with app.test_request_context(request_context):
             p = Projects()
             response = p.get(getter_variable)
             self.assertEqual(response.status_code, 200)
 
-    @mock.patch('omicron_server.auth._verify_user', return_value=True)
-    @mock.patch('omicron_server.views.projects.Projects.__getitem__')
-    def test_get_int_projname(self, mock_getitem, mock_verify_user):
-        mock_getitem.return_value = self.project
+        self.assertTrue(mock_verify_user.called)
+
+    def test_get_int_projname(self):
 
         self.template_case(
                 self.template_url % self.project_id, self.project_id
         )
-        self.assertTrue(mock_verify_user.called)
 
-    @mock.patch('omicron_server.auth._verify_user', return_value=True)
-    @mock.patch('omicron_server.views.projects.Projects.__getitem__')
-    def test_get_str_projname(self, mock_getitem, mock_verify_user):
-        mock_getitem.return_value = self.project
-
+    def test_get_str_projname(self):
         self.template_case(
             self.template_url % self.project_name, self.project_name
         )
-        self.assertTrue(mock_verify_user.called)
 
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('omicron_server.views.projects.Projects.__getitem__')
