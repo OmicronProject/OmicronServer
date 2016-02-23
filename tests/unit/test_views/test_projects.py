@@ -18,6 +18,10 @@ class TestProjectView(unittest.TestCase):
     """
     @classmethod
     def setUpClass(cls):
+        """
+        Set up the tests once for each test class subclassing from
+        ``TestProjectView``
+        """
         cls.client = app.test_client()
         cls.headers = {'content-type': 'application/json'}
 
@@ -32,6 +36,10 @@ class TestProjectView(unittest.TestCase):
 
 
 class TestGet(TestProjectView):
+    """
+    Contains unit tests for
+    :meth:`omicron_server.views.projects.ProjectContainer.get`
+    """
 
     def setUp(self):
         self.request_method = self.client.get
@@ -41,6 +49,19 @@ class TestGet(TestProjectView):
     @mock.patch('sqlalchemy.orm.Query.count')
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
     def test_get(self, mock_auth, mock_count, mock_all):
+        """
+        Test that the method performs as expected
+
+        :param mock_auth: A mock call to
+            :meth:`omicron_server.auth._verify_user`, suspending the business
+            logic for authentication and automatically authenticating the user
+            for the test
+        :param mock_count: A mock call to
+            :meth:`sqlalchemy.orm.Query.count`, returns the length of the list
+            of projects returned
+        :param mock_all: A mock call to stub out database access and instead
+            return the list of projects retrieved by the ORM
+        """
         project_list = [self.project]
 
         mock_all.return_value = project_list
@@ -253,19 +274,17 @@ class TestDedicatedProjectDelete(TestDedicatedProject):
         self.assertTrue(mock_verify_user.called)
         self.assertEqual(mock.call(self.project), mock_delete.call_args)
 
-        return response
+        self.assertEqual(response.status_code, 200)
 
     def test_delete_int_project(self):
-        response = self.template_delete_project_case(
+        self.template_delete_project_case(
                 request_context=self.template_url % self.project_id
         )
-        self.assertEqual(response.status_code, 200)
 
     def test_delete_str_project(self):
-        response = self.template_delete_project_case(
+        self.template_delete_project_case(
                 request_context=self.template_url % self.project_name
         )
-        self.assertEqual(response.status_code, 200)
 
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('omicron_server.views.projects.Projects.__getitem__',
