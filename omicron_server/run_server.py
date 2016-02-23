@@ -4,11 +4,12 @@ Script to run the server
 import logging
 import os
 
-from api_server import app
-from config import default_config as conf
-from database.schema import metadata
-from database.models.users import Administrator
-from database.sessions import ContextManagedSession
+from omicron_server import app
+from omicron_server.database.models.users import Administrator
+from omicron_server.database.sessions import ContextManagedSession
+
+from omicron_server.config import default_config as conf
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 
@@ -16,6 +17,21 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 db_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
+
+
+def set_logfile(config_object=conf):
+    """
+    If the ```LOGFILE``` environment variable is defined in the server,
+    this method configures the log to output to a logfile
+
+    :param Config config_object: The application config parameters. Defaults
+        to the master config object, but is left open as an argument for
+        testability.
+    """
+    if config_object.LOGFILE is not None:
+        logging.basicConfig(filename=config_object.LOGFILE)
+
+set_logfile()
 
 
 @db_session()

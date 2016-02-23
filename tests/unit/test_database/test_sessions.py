@@ -2,9 +2,11 @@
 Contains unit tests for :mod:`database.sessions`
 """
 import unittest
+
 import mock
 from sqlalchemy import create_engine
-from database import ContextManagedSession
+
+from omicron_server.database import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 

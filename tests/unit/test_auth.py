@@ -3,14 +3,15 @@ Contains unit tests for :mod:`auth`
 """
 import unittest
 from uuid import uuid1
-from config import default_config as conf
+
+import omicron_server.auth as auth
 import mock
+from omicron_server.database.models.users import User, Token
+from omicron_server.database.sessions import ContextManagedSession
 from sqlalchemy import create_engine
 
-import auth
-from database.schema import metadata
-from database.models.users import User, Token
-from database.sessions import ContextManagedSession
+from omicron_server.config import default_config as conf
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 
@@ -71,7 +72,7 @@ class TestVerifyUser(TestAuth):
                 mock.call()
              )
 
-    @mock.patch('auth.User.verify_password', return_value=True)
+    @mock.patch('omicron_server.auth.User.verify_password', return_value=True)
     def test_user_query(self, mock_verify_pwd):
 
         self.assertTrue(auth.verify_password(
@@ -83,7 +84,7 @@ class TestVerifyUser(TestAuth):
             mock.call(self.password)
         )
 
-    @mock.patch('auth.User.verify_password', return_value=True)
+    @mock.patch('omicron_server.auth.User.verify_password', return_value=True)
     def test_user_query_no_user_found(self, mock_verify):
         with auth.database_session() as session:
             user = session.query(self.user.__class__).filter_by(
@@ -96,7 +97,7 @@ class TestVerifyUser(TestAuth):
 
         self.assertFalse(mock_verify.called)
 
-    @mock.patch('auth.User.verify_password', return_value=False)
+    @mock.patch('omicron_server.auth.User.verify_password', return_value=False)
     def test_user_query_bad_password(self, mock_verify):
         self.assertFalse(auth.verify_password(
             self.username, self.password
@@ -112,9 +113,10 @@ class TestVerifyUser(TestAuth):
 
         self.assertIsInstance(auth.g.user, self.user.__class__)
 
-    @mock.patch('auth.User.verify_auth_token', return_value=False)
+    @mock.patch('omicron_server.auth.User.verify_auth_token',
+                return_value=False)
     @mock.patch('sqlalchemy.orm.query.Query.first')
-    @mock.patch('auth.User.verify_password', return_value=True)
+    @mock.patch('omicron_server.auth.User.verify_password', return_value=True)
     def test_user_password_verify_adds_to_g(
             self, mock_verify_password, mock_query, mock_verify_token
     ):
@@ -170,7 +172,8 @@ class TestVerifyPassword(TestAuth):
         self.assertFalse(auth.verify_password(self.token_string))
         self.assertTrue(mock_first.called)
 
-    @mock.patch('database.Token.verify_token', return_value=False)
+    @mock.patch('omicron_server.database.Token.verify_token',
+                return_value=False)
     def test_verify_token_bad_token(self, mock_check_token):
         self.assertFalse(auth.verify_password(self.token_string))
         self.assertTrue(mock_check_token.called)

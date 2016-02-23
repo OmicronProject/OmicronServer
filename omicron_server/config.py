@@ -40,12 +40,14 @@ class Config(object):
         'BASE_DIRECTORY', 'PORT',
         'DATABASE_URL', 'TOKEN_SECRET_KEY',
         'DEBUG', 'STATE', 'IP_ADDRESS', 'ROOT_USER', 'ROOT_PASSWORD',
-        'DEFAULT_TOKEN_EXPIRATION_TIME'
+        'DEFAULT_TOKEN_EXPIRATION_TIME', 'LOGFILE'
     ]
 
     ROOT_USER = 'root'
     ROOT_PASSWORD = 'toor'
     ROOT_EMAIL = 'scott@tiger.com'
+
+    LOGFILE = None
 
     def __init__(self, conf_dict=os.environ):
         """
