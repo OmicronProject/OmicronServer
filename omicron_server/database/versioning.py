@@ -12,8 +12,8 @@ import os.path
 import types
 from migrate.versioning import api as sqlalchemy_migrate_api
 from sqlalchemy import create_engine
-from config import default_config as conf
-from database.schema import metadata as meta
+from omicron_server.config import default_config as conf
+from omicron_server.database.schema import metadata as meta
 
 __author__ = 'Michal Kononenko'
 

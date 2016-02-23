@@ -3,14 +3,16 @@ Contains unit tests for :mod:`api_server`
 """
 import json
 import unittest
+from datetime import datetime
+
 import mock
-from sqlalchemy import create_engine
-import api_server
-from database.schema import metadata
-from database.models.users import User, Administrator
-from database.sessions import ContextManagedSession
+from omicron_server.database.models.users import User, Administrator
+from omicron_server.database.sessions import ContextManagedSession
 from freezegun import freeze_time
-from datetime import datetime, timedelta
+from sqlalchemy import create_engine
+
+from omicron_server import api_server
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 
@@ -74,7 +76,8 @@ class TestAPIServer(unittest.TestCase):
         metadata.drop_all(bind=test_engine)
 
 
-@mock.patch('api_server.auth.verify_password_callback', return_value=True)
+@mock.patch('omicron_server.api_server.auth.verify_password_callback',
+            return_value=True)
 @freeze_time('2016-01-01')
 class TestGetAuthToken(TestAPIServer):
     """
@@ -126,7 +129,8 @@ class TestGetAuthToken(TestAPIServer):
         self.assertTrue(mock_verify.called)
 
 
-@mock.patch('api_server.auth.verify_password_callback', return_value=True)
+@mock.patch('omicron_server.api_server.auth.verify_password_callback',
+            return_value=True)
 class TestRevokeToken(TestAPIServer):
     """
     Tests :meth:`api_server.revoke_token`
@@ -139,8 +143,9 @@ class TestRevokeToken(TestAPIServer):
         self.admin = Administrator(self.username, self.password, self.email)
 
     @mock.patch('sqlalchemy.orm.Query.first')
-    @mock.patch('api_server.auth.login_required', new=lambda t: t)
-    @mock.patch('database.User.current_token')
+    @mock.patch('omicron_server.api_server.auth.login_required',
+                new=lambda t: t)
+    @mock.patch('omicron_server.database.User.current_token')
     def test_revoke_token(self, mock_cur_token, mock_query, mock_auth):
         mock_query.return_value = self.user
         response = self.request_method(self.url, headers=self.headers)
@@ -150,9 +155,10 @@ class TestRevokeToken(TestAPIServer):
         self.assertTrue(mock_auth.called)
 
     @mock.patch('sqlalchemy.orm.Query.first')
-    @mock.patch('api_server.auth.login_required', new=lambda t: t)
-    @mock.patch('api_server.g')
-    @mock.patch('database.User.current_token')
+    @mock.patch('omicron_server.api_server.auth.login_required',
+                new=lambda t: t)
+    @mock.patch('omicron_server.api_server.g')
+    @mock.patch('omicron_server.database.User.current_token')
     def test_administrator_revoke(self, mock_cur_token, mock_g, mock_query,
                                   mock_auth):
         mock_g.user = self.admin
@@ -166,9 +172,10 @@ class TestRevokeToken(TestAPIServer):
         self.assertTrue(mock_auth.called)
 
     @mock.patch('sqlalchemy.orm.Query.first', return_value=None)
-    @mock.patch('api_server.auth.login_required', new=lambda t: t)
-    @mock.patch('api_server.g')
-    @mock.patch('database.User.current_token')
+    @mock.patch('omicron_server.api_server.auth.login_required',
+                new=lambda t: t)
+    @mock.patch('omicron_server.api_server.g')
+    @mock.patch('omicron_server.database.User.current_token')
     def test_administrator_revoke_user_not_found(self, mock_cur_token, mock_g,
                                                  mock_query, mock_auth):
         url = '%s?username=%s' % (self.url, self.username)

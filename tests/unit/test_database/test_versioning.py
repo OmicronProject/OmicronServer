@@ -4,11 +4,13 @@ Contains unit tests for :mod:`database.versioning`
 import logging
 import sys
 import unittest
+
 import mock
-from database import DatabaseManager
-from database.schema import metadata as meta
+from omicron_server.database import DatabaseManager
+from omicron_server.database.versioning import DatabaseNotReferencedError
 from sqlalchemy import create_engine
-from database.versioning import DatabaseNotReferencedError
+
+from omicron_server.database.schema import metadata as meta
 
 __author__ = 'Michal Kononenko'
 
@@ -189,7 +191,7 @@ class TestCreateMigrationScript(TestDatabaseManager):
 
     @mock.patch('%s.eval' % builtin_string)
     @mock.patch('%s.open' % builtin_string)
-    @mock.patch('database.versioning.types.ModuleType',
+    @mock.patch('omicron_server.database.versioning.types.ModuleType',
                 return_value=MockModule())
     def test_migrate_db(self, mock_module, mock_open, mock_exec):
         """
