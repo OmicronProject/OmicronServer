@@ -1,13 +1,11 @@
 """
-Contains unit tests for :mod:`views.projects`
+Contains unit tests for :mod:`omicron_server.views.projects`
 """
 import json
 import unittest
 from datetime import datetime
-
 import mock
 from omicron_server.database import Project, User
-
 from omicron_server.api_server import app
 from omicron_server.views import Projects
 
@@ -15,6 +13,9 @@ __author__ = 'Michal Kononenko'
 
 
 class TestProjectView(unittest.TestCase):
+    """
+    Contains unit tests for :class:`omicron_server.views.projects.ProjectView`
+    """
     @classmethod
     def setUpClass(cls):
         cls.client = app.test_client()
@@ -159,14 +160,18 @@ class TestDedicatedProjectGetItem(TestDedicatedProject):
 @mock.patch('omicron_server.views.projects.Projects.__getitem__')
 @mock.patch('sqlalchemy.orm.Session.delete')
 class TestDedicatedProjectDelItem(TestDedicatedProject):
+
+    def send_delete_request(self, request_context=None):
+        with app.test_request_context(request_context):
+            endpoint = Projects()
+            del endpoint[self.project_name]
+
     def test_delitem_no_error(self, mock_delete, mock_getitem):
         mock_getitem.return_value = self.project
 
-        with app.test_request_context(
-            self.template_url % self.project_name
-        ):
-            endpoint = Projects()
-            del endpoint[self.project_name]
+        self.send_delete_request(
+                request_context=self.template_url % self.project_name
+        )
 
         self.assertTrue(mock_getitem.called)
         self.assertTrue(mock_delete.called)
@@ -175,12 +180,9 @@ class TestDedicatedProjectDelItem(TestDedicatedProject):
         mock_getitem.side_effect = Projects.ProjectNotFoundError()
 
         with self.assertRaises(Projects.ProjectNotFoundError):
-            with app.test_request_context(
-                self.template_url % self.project_name
-            ):
-                endpoint = Projects()
-                del endpoint[self.project_name]
-
+            self.send_delete_request(
+                request_context=self.template_url % self.project_name
+            )
         self.assertTrue(mock_getitem.called)
         self.assertFalse(mock_delete.called)
 
@@ -239,37 +241,31 @@ class TestDedicatedProjectDelete(TestDedicatedProject):
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.delete')
-    def test_delete_int_project(
-            self, mock_delete, mock_first, mock_verify_user
+    def template_delete_project_case(
+            self, mock_delete, mock_first, mock_verify_user,
+            request_context=None
     ):
         mock_first.return_value = self.project
-
-        with app.test_request_context(self.template_url % self.project_id):
+        with app.test_request_context(request_context):
             p = Projects()
             response = p.delete(self.project_id)
 
-            self.assertEqual(response.status_code, 200)
-
-        self.assertTrue(mock_verify_user.called)
-
-        self.assertEqual(mock.call(self.project), mock_delete.call_args)
-
-    @mock.patch('omicron_server.auth._verify_user', return_value=True)
-    @mock.patch('sqlalchemy.orm.Query.first')
-    @mock.patch('sqlalchemy.orm.Session.delete')
-    def test_delete_str_project(
-            self, mock_delete, mock_first, mock_verify_user
-    ):
-        mock_first.return_value = self.project
-
-        with app.test_request_context(self.template_url % self.project_name):
-            p = Projects()
-            response = p.delete(self.project_name)
-
-            self.assertEqual(response.status_code, 200)
-
         self.assertTrue(mock_verify_user.called)
         self.assertEqual(mock.call(self.project), mock_delete.call_args)
+
+        return response
+
+    def test_delete_int_project(self):
+        response = self.template_delete_project_case(
+                request_context=self.template_url % self.project_id
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_delete_str_project(self):
+        response = self.template_delete_project_case(
+                request_context=self.template_url % self.project_name
+        )
+        self.assertEqual(response.status_code, 200)
 
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('omicron_server.views.projects.Projects.__getitem__',
