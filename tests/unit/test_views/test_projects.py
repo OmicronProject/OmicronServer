@@ -79,6 +79,10 @@ class TestGet(TestProjectView):
 @mock.patch('omicron_server.api_server.auth.verify_password_callback',
             return_value=True)
 class TestCreateProject(TestProjectView):
+    """
+    Contains unit tests for
+    :meth:`omicron_server.views.projects.ProjectContainer.post`
+    """
     def setUp(self):
         self.request_method = self.client.post
         self.url = 'api/v1/projects'
@@ -86,6 +90,15 @@ class TestCreateProject(TestProjectView):
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.add')
     def test_post(self, mock_add, mock_first, mock_auth):
+        """
+        Tests that the method performs as expected
+
+        :param mock_add: A mock call to add the project to the SQLAlchemy
+            session
+        :param mock_first: A mock call to get the project from SQLAlchemy
+        :param mock_auth: A mock call to ensure that authentication occurred
+            and to authenticate the user.
+        """
         mock_first.return_value = self.owner
 
         data_to_post = {
@@ -103,6 +116,11 @@ class TestCreateProject(TestProjectView):
         self.assertTrue(mock_auth.called)
 
     def test_post_bad_data(self, mock_auth):
+        """
+        Tests that the method returns a 400 status code if an incorrect post is
+        made
+        :param mock_auth: A mock call to authenticate the user
+        """
         data_to_post = {
             'not_a_valid_key': 'foo',
             'description': self.project_description,
@@ -213,15 +231,20 @@ class TestDedicatedProjectGet(TestDedicatedProject):
         TestDedicatedProject.setUp(self)
         self.request_method = self.client.get
 
+    def template_case(self, request_context, getter_variable):
+        with app.test_request_context(request_context):
+            p = Projects()
+            response = p.get(getter_variable)
+            self.assertEqual(response.status_code, 200)
+
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
     @mock.patch('omicron_server.views.projects.Projects.__getitem__')
     def test_get_int_projname(self, mock_getitem, mock_verify_user):
         mock_getitem.return_value = self.project
 
-        with app.test_request_context(self.template_url % self.project_id):
-            p = Projects()
-            response = p.get(self.project_id)
-            self.assertEqual(response.status_code, 200)
+        self.template_case(
+                self.template_url % self.project_id, self.project_id
+        )
         self.assertTrue(mock_verify_user.called)
 
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
@@ -229,10 +252,9 @@ class TestDedicatedProjectGet(TestDedicatedProject):
     def test_get_str_projname(self, mock_getitem, mock_verify_user):
         mock_getitem.return_value = self.project
 
-        with app.test_request_context(self.template_url % self.project_name):
-            p = Projects()
-            response = p.get(self.project_name)
-            self.assertEqual(response.status_code, 200)
+        self.template_case(
+            self.template_url % self.project_name, self.project_name
+        )
         self.assertTrue(mock_verify_user.called)
 
     @mock.patch('omicron_server.auth._verify_user', return_value=True)
