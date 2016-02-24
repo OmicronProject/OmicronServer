@@ -1,13 +1,11 @@
+#! /usr/bin/env python
 """
 Script to run the server
 """
 import logging
-import os
-
-from omicron_server import app
+from omicron_server.api_server import app
 from omicron_server.database.models.users import Administrator
 from omicron_server.database.sessions import ContextManagedSession
-
 from omicron_server.config import default_config as conf
 from omicron_server.database.schema import metadata
 
@@ -53,10 +51,6 @@ def create_root_user(session):
 
 if __name__ == "__main__":
     metadata.create_all(bind=conf.DATABASE_ENGINE)
-
-    os.environ['PYTHONPATH'] = \
-        '%s;%s' % (conf.BASE_DIRECTORY, os.environ['PYTHONPATH'])
-
     create_root_user()
 
     app.run(host=conf.IP_ADDRESS, port=conf.PORT, debug=conf.DEBUG)
