@@ -7,7 +7,7 @@ setup(
     version=omicron_server.__version__,
     author=omicron_server.__author__,
     author_email='mkononen@uwaterloo.ca',
-    maintainer='MichalKononenko',
+    maintainer='Michal Kononenko',
     maintainer_email='mkononen@uwaterloo.ca',
     description='The back end to the Omicron Project stack.',
     license=omicron_server.__license__,
