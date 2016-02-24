@@ -20,5 +20,12 @@ setup(
         'omicron_server.database.models'
     ],
     include_package_data=True,
-    package_data={'omicron_server': ['omicron_server/*/*.json']}
+    package_data={'omicron_server': [
+        'schemas/*.json',
+        'schemas/projects/*.json',
+        'schemas/projects-project_id-file/*.json',
+        'schemas/token/*.json',
+        'schemas/users/*.json',
+        'schemas/users-user_id/*.json'
+        ]}
     )
