@@ -1,1 +1,1 @@
-web: python run_server.py
+web: python ./omicron_server/run_server.py
