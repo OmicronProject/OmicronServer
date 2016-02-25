@@ -8,7 +8,6 @@ import logging
 from omicron_server.auth import auth
 from omicron_server.database import Administrator, User, ContextManagedSession
 from flask import Flask, g, jsonify, request, abort
-from flask.ext.cors import CORS
 from flask_restful import Api
 from omicron_server.config import default_config as conf
 from omicron_server.views import UserContainer, UserView, ProjectContainer

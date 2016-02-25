@@ -1,8 +1,10 @@
 import json
 import unittest
+import mock
 from omicron_server import app
 from flask import jsonify
 from omicron_server import decorators
+from datetime import timedelta
 
 __author__ = 'Michal Kononenko'
 url = '/test_pagination'
@@ -175,3 +177,65 @@ class TestCrossdomainDecorator(unittest.TestCase):
 
         self._compare_headers(response, '*', custom_methods,
                               21600)
+
+    def test_custom_headers(self):
+        custom_headers = {"CUSTOM-HEADER-KEY"}
+
+        response = decorators.crossdomain(
+            origin='*', headers=custom_headers
+        )(lambda x: x)('foo')
+
+        self._compare_headers(response, '*', self.methods, 21600)
+
+        self.assertEqual(
+            set(custom_headers),
+            set(response.headers['Access-Control-Allow-Headers'].split(', '))
+        )
+
+    def test_custom_origin(self):
+        custom_origins = ['website1', 'website2']
+        response = decorators.crossdomain(
+            origin=custom_origins
+        )(lambda x: x)('foo')
+
+        self._compare_headers(
+            response, ', '.join(custom_origins), self.methods, 21600
+        )
+
+    def test_max_age(self):
+        custom_max_age = 1000
+
+        max_age = timedelta(seconds=custom_max_age)
+
+        response = decorators.crossdomain(
+            origin='*',
+            max_age=max_age
+        )(lambda x: x)('foo')
+
+        self.assertEqual(
+            response.headers['Access-Control-Max-Age'],
+            str(float(custom_max_age))
+        )
+
+    @mock.patch('flask.Flask.make_default_options_response')
+    @mock.patch('omicron_server.decorators.request')
+    def test_decorator_automatic_options(self, mock_request, mock_default):
+        mock_request.method = "OPTIONS"
+
+        decorators.crossdomain(
+            origin='*', automatic_options=True
+        )(lambda x: x)('foo')
+
+        self.assertTrue(mock_default.called)
+
+    def test_attach_to_all(self):
+        response = decorators.crossdomain(origin='*', attach_to_all=False)(
+            lambda x: x)('foo')
+
+        access_control_headers = {
+            'Access-Control-Allow-Origin', 'Access-Control-Allow-Methods',
+            'Access-Control-Max-Age', 'Access-Control-Allow-Headers'
+        }
+
+        for header in access_control_headers:
+            self.assertNotIn(header, response.headers)
