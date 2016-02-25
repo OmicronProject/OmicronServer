@@ -103,7 +103,7 @@ def create_token():
 
 
 @app.route('/api/v1/token', methods=['DELETE'])
-@crossdomain(origin='*', headers=["Authorization"])
+@crossdomain(origin='*')
 @auth.login_required
 def revoke_token():
     """
