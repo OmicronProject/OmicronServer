@@ -55,7 +55,7 @@ def hello_world():
     return jsonify({'message': 'hello_world'})
 
 
-@app.route('/api/v1/token', methods=['POST'])
+@app.route('/api/v1/token', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 @auth.login_required
 def create_token():
@@ -96,7 +96,7 @@ def create_token():
     response = jsonify(
             {'token': token,
              'expiration_date': expiration_date.isoformat()
-        }
+             }
     )
     response.status_code = 201
     return response
