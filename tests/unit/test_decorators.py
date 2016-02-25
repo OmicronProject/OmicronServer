@@ -1,10 +1,10 @@
 import json
 import unittest
-
+import mock
 from omicron_server import app
 from flask import jsonify
-
 from omicron_server import decorators
+from datetime import timedelta
 
 __author__ = 'Michal Kononenko'
 url = '/test_pagination'
@@ -130,3 +130,112 @@ class TestRestfulPagination(unittest.TestCase):
         )
 
         self.assertEqual(function_docstring, _function_to_decorate.__doc__)
+
+
+class TestCrossdomainDecorator(unittest.TestCase):
+    def setUp(self):
+        self.origin = '*'
+        self.methods = ["HEAD", "GET", "OPTIONS"]
+        self.headers = {"content-type", "authorization"}
+        self.default_max_age = 21600
+
+        self.context = app.test_request_context('/index')
+        self.context.push()
+
+    def tearDown(self):
+        self.context.pop()
+
+    def _compare_headers(self, response, expected_origin, expected_methods,
+                         expected_max_age):
+        self.assertEqual(
+            expected_origin,
+            response.headers['Access-Control-Allow-Origin']
+        )
+        self.assertEqual(
+            set(expected_methods),
+            set(response.headers["Access-Control-Allow-Methods"].split(', '))
+        )
+        self.assertEqual(
+            str(expected_max_age),
+            response.headers["Access-Control-Max-Age"]
+        )
+
+    def test_decorator_default_args(self):
+        response = decorators.crossdomain(origin='*')(lambda x: x)('foo')
+        self.assertEqual(response.status_code, 200)
+
+        self._compare_headers(
+            response, '*', ['OPTIONS', 'HEAD', "GET"],
+            21600
+        )
+
+    def test_decorator_custom_methods(self):
+        custom_methods = ["HEAD", "OPTIONS", "GET", "POST", "PATCH"]
+        response = decorators.crossdomain(
+                origin='*', methods=custom_methods)(
+                lambda x: x)('foo')
+
+        self._compare_headers(response, '*', custom_methods,
+                              21600)
+
+    def test_custom_headers(self):
+        custom_headers = {"CUSTOM-HEADER-KEY"}
+
+        response = decorators.crossdomain(
+            origin='*', headers=custom_headers
+        )(lambda x: x)('foo')
+
+        self._compare_headers(response, '*', self.methods, 21600)
+
+        self.assertEqual(
+            set(custom_headers),
+            set(response.headers['Access-Control-Allow-Headers'].split(', '))
+        )
+
+    def test_custom_origin(self):
+        custom_origins = ['website1', 'website2']
+        response = decorators.crossdomain(
+            origin=custom_origins
+        )(lambda x: x)('foo')
+
+        self._compare_headers(
+            response, ', '.join(custom_origins), self.methods, 21600
+        )
+
+    def test_max_age(self):
+        custom_max_age = 1000
+
+        max_age = timedelta(seconds=custom_max_age)
+
+        response = decorators.crossdomain(
+            origin='*',
+            max_age=max_age
+        )(lambda x: x)('foo')
+
+        self.assertEqual(
+            response.headers['Access-Control-Max-Age'],
+            str(float(custom_max_age))
+        )
+
+    @mock.patch('flask.Flask.make_default_options_response')
+    @mock.patch('omicron_server.decorators.request')
+    def test_decorator_automatic_options(self, mock_request, mock_default):
+        mock_request.method = "OPTIONS"
+
+        decorators.crossdomain(
+            origin='*', automatic_options=True
+        )(lambda x: x)('foo')
+
+        self.assertTrue(mock_default.called)
+
+    def test_attach_to_all(self):
+        response = decorators.crossdomain(origin='*', attach_to_all=False)(
+            lambda x: x)('foo')
+
+        access_control_headers = {
+            'Access-Control-Allow-Origin', 'Access-Control-Allow-Methods',
+            'Access-Control-Max-Age', 'Access-Control-Allow-Headers'
+        }
+
+        for header in access_control_headers:
+            self.assertNotIn(header, response.headers)
