@@ -25,8 +25,8 @@ class ProjectContainer(Resource):
         os.path.join(conf.JSON_SCHEMA_PATH, 'projects', 'post.json')
     )
 
+    @crossdomain(origin='*', methods=["GET", "OPTIONS", "HEAD"])
     @restful_pagination()
-    @crossdomain(origin='*')
     @auth.login_required
     def get(self, pag_args):
         """
@@ -224,7 +224,7 @@ class Projects(Resource):
 
         session.delete(project)
 
-    @crossdomain(origin='*')
+    @crossdomain(origin='*', methods=["OPTIONS", "HEAD", "GET"])
     @auth.login_required
     def get(self, project_name_or_id):
         """
@@ -264,7 +264,7 @@ class Projects(Resource):
 
         return response
 
-    @crossdomain(origin='*')
+    @crossdomain(origin='*', methods=["OPTIONS", "HEAD", "DELETE"])
     @auth.login_required
     def delete(self, project_name_or_id):
         """

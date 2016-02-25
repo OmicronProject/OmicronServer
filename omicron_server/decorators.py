@@ -145,15 +145,28 @@ def crossdomain(origin=None, methods=None, headers=None,
     .. _Armin Ronacher: https://github.com/mitsuhiko
     .. _crossdomain http://flask.pocoo.org/snippets/56/
 
-    :param str or list origin: A string URL or a list of URLs from which
+    :param Union[str, list] origin: A string URL or a list of URLs from which
         crossdomain requests are to be allowed. To allow requests from *all*
         domains, pass in the string ``'*'``
-    :param str or list methods: The HTTP methods to allow into the request
-    :param headers:
-    :param max_age:
-    :param attach_to_all:
-    :param automatic_options:
-    :return:
+    :param Union[str, list] methods: The HTTP methods to allow into the request
+    :param Union[str, set, list] headers: The allowed headers for this request.
+        If none are given, then all headers will be allowed
+    :param Union[int, timedelta] max_age: The maximum time that a preflight
+        request requesting allowed resources can be cached. If an integer is
+        passed in, it will be assumed to be that integer as number of
+        seconds. If a :class:`datetime.timedelta` is passed in, then the
+        expiration time will be converted to the number of seconds
+    :param bool attach_to_all: If false, the access control headers sent to
+        this decorator will only be attached if the request is an
+        ``OPTIONS`` request. If true, the access control headers will be
+        attached to all HTTP responses. This is ``True`` by default
+    :param bool automatic_options: If true, then the response to an
+        ``OPTIONS`` request will be the default one made by Flask, and will
+        not be affected by this decorator. The default value for this
+        argument is ``False``.
+    :return: A decorator that fills in the access control headers for
+        cross-origin resource sharing (CORS) for a given endpoint.
+    :rtype function:
     """
     if methods is not None:
         methods = ', '.join(sorted(x.upper() for x in methods))
@@ -172,6 +185,13 @@ def crossdomain(origin=None, methods=None, headers=None,
         return options_resp.headers['allow']
 
     def decorator(f):
+        """
+        Method that wraps the underlying endpoint, adding in access control
+        headers to the returned response
+        :param function f: The function to decorate
+        :return: A flask response with access control headers
+        :rtype Flask.Response:
+        """
         def wrapped_function(*args, **kwargs):
             if automatic_options and request.method == 'OPTIONS':
                 resp = current_app.make_default_options_response()
