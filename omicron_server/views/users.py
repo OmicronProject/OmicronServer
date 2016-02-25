@@ -4,7 +4,7 @@ Contains views for the ``/users`` endpoint.
 import os
 from omicron_server.auth import auth
 from omicron_server.database import User, ContextManagedSession
-from omicron_server.decorators import restful_pagination
+from omicron_server.decorators import restful_pagination, crossdomain
 from flask import request, abort, jsonify
 from flask_restful import Resource
 from omicron_server.json_schema_parser import JsonSchemaValidator
@@ -122,6 +122,7 @@ class UserContainer(SchemaDefinedResource):
 
         return search_string
 
+    @crossdomain(origin='*')
     @auth.login_required
     @database_session()
     @restful_pagination()
@@ -183,6 +184,7 @@ class UserContainer(SchemaDefinedResource):
         response.headers['Count'] = user_count
         return response
 
+    @crossdomain(origin='*')
     @database_session()
     def post(self, session):
         """
@@ -243,6 +245,7 @@ class UserView(Resource):
     """
     Maps the ``/users/<username>`` endpoint
     """
+    @crossdomain(origin='*')
     @auth.login_required
     @database_session()
     def get(self, session, username_or_id):

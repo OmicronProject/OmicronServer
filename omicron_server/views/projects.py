@@ -1,15 +1,14 @@
 import logging
 import os
-
 from omicron_server.auth import auth
 from omicron_server.decorators import restful_pagination
 from flask import jsonify
 from flask import request, abort
 from flask_restful import Resource
 from omicron_server.json_schema_parser import JsonSchemaValidator
-
 from omicron_server.config import default_config as conf
 from omicron_server.database import ContextManagedSession, Project, User
+from omicron_server.decorators import crossdomain
 
 __author__ = 'Michal Kononenko'
 
@@ -27,6 +26,7 @@ class ProjectContainer(Resource):
     )
 
     @restful_pagination()
+    @crossdomain(origin='*')
     @auth.login_required
     def get(self, pag_args):
         """
@@ -86,6 +86,7 @@ class ProjectContainer(Resource):
         return response
 
     @database_session()
+    @crossdomain(origin='*')
     @auth.login_required
     def post(self, session):
         """
@@ -223,6 +224,7 @@ class Projects(Resource):
 
         session.delete(project)
 
+    @crossdomain(origin='*')
     @auth.login_required
     def get(self, project_name_or_id):
         """
@@ -262,6 +264,7 @@ class Projects(Resource):
 
         return response
 
+    @crossdomain(origin='*')
     @auth.login_required
     def delete(self, project_name_or_id):
         """

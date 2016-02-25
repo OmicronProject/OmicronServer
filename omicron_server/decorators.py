@@ -40,7 +40,9 @@ decorator that then decorates a particular function.
 .. _decorator: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 """
 from collections import namedtuple
-from flask import request
+from flask import request, make_response, current_app
+from datetime import timedelta
+from functools import update_wrapper
 
 __author__ = 'Michal Kononenko'
 
@@ -128,3 +130,65 @@ def restful_pagination(default_items_per_page=1000):
         _wrapped_function.__doc__ = f.__doc__
         return _wrapped_function
     return _wraps
+
+
+def crossdomain(origin=None, methods=None, headers=None,
+                max_age=21600, attach_to_all=True,
+                automatic_options=True):
+    """
+    Fills in access control headers for a given endpoint function, enabling
+    Cross-Origin Resource Sharing (CORS) in the endpoint.
+
+    Adapted from `Armin Ronacher's`_ `crossdomain`_ implementation. Thank you!
+
+
+    .. _Armin Ronacher: https://github.com/mitsuhiko
+    .. _crossdomain http://flask.pocoo.org/snippets/56/
+
+    :param str or list origin: A string URL or a list of URLs from which
+        crossdomain requests are to be allowed. To allow requests from *all*
+        domains, pass in the string ``'*'``
+    :param str or list methods: The HTTP methods to allow into the request
+    :param headers:
+    :param max_age:
+    :param attach_to_all:
+    :param automatic_options:
+    :return:
+    """
+    if methods is not None:
+        methods = ', '.join(sorted(x.upper() for x in methods))
+    if headers is not None and not isinstance(headers, str):
+        headers = ', '.join(x.upper() for x in headers)
+    if not isinstance(origin, str):
+        origin = ', '.join(origin)
+    if isinstance(max_age, timedelta):
+        max_age = max_age.total_seconds()
+
+    def get_methods():
+        if methods is not None:
+            return methods
+
+        options_resp = current_app.make_default_options_response()
+        return options_resp.headers['allow']
+
+    def decorator(f):
+        def wrapped_function(*args, **kwargs):
+            if automatic_options and request.method == 'OPTIONS':
+                resp = current_app.make_default_options_response()
+            else:
+                resp = make_response(f(*args, **kwargs))
+            if not attach_to_all and request.method != 'OPTIONS':
+                return resp
+
+            h = resp.headers
+
+            h['Access-Control-Allow-Origin'] = origin
+            h['Access-Control-Allow-Methods'] = get_methods()
+            h['Access-Control-Max-Age'] = str(max_age)
+            if headers is not None:
+                h['Access-Control-Allow-Headers'] = headers
+            return resp
+
+        f.provide_automatic_options = False
+        return update_wrapper(wrapped_function, f)
+    return decorator

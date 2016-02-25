@@ -10,10 +10,10 @@ from omicron_server.database import Administrator, User, ContextManagedSession
 from flask import Flask, g, jsonify, request, abort
 from flask.ext.cors import CORS
 from flask_restful import Api
-
 from omicron_server.config import default_config as conf
 from omicron_server.views import UserContainer, UserView, ProjectContainer
 from omicron_server.views import Projects
+from omicron_server.decorators import crossdomain
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -29,11 +29,11 @@ api.add_resource(ProjectContainer, '/projects')
 api.add_resource(Projects, 'projects/<project_name_or_id>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
-CORS(app)
 
 
 @app.route('/', methods=["GET", "OPTIONS"])
 @app.route('/index', methods=["GET", "OPTIONS"])
+@crossdomain(origin='*')
 def hello_world():
     """
     Base URL to confirm that the API actually works. Eventually, this endpoint
@@ -57,6 +57,7 @@ def hello_world():
 
 
 @app.route('/api/v1/token', methods=['POST'])
+@crossdomain(origin='*')
 @auth.login_required
 def create_token():
     """
@@ -103,6 +104,7 @@ def create_token():
 
 
 @app.route('/api/v1/token', methods=['DELETE'])
+@crossdomain(origin='*')
 @auth.login_required
 def revoke_token():
     """
