@@ -43,6 +43,7 @@ from collections import namedtuple
 from flask import request, make_response, current_app
 from datetime import timedelta
 from functools import update_wrapper
+from omicron_server.config import default_config as conf
 
 __author__ = 'Michal Kononenko'
 
@@ -132,7 +133,7 @@ def restful_pagination(default_items_per_page=1000):
     return _wraps
 
 
-def crossdomain(origin=None, methods=None, headers=None,
+def crossdomain(origin=None, methods=None, headers=conf.ALLOWED_HEADERS,
                 max_age=21600, attach_to_all=True,
                 automatic_options=True):
     """

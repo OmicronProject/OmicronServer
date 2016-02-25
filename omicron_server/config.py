@@ -51,6 +51,8 @@ class Config(object):
 
     LOGFILE = None
 
+    ALLOWED_HEADERS = {"Authorization", "X-Requested-With", "Content-Type"}
+
     def __init__(self, conf_dict=os.environ):
         """
         Instantiate config parameters from environment variables
