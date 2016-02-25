@@ -20,7 +20,7 @@ log.setLevel(logging.DEBUG)
 __author__ = 'Michal Kononenko'
 
 app = Flask(__name__)
-api = Api(app, prefix='/api/v1')
+api = Api(app, prefix='/api/v1', decorators=[crossdomain(origin='*')])
 
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username_or_id>')

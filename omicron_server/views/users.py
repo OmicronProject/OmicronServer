@@ -122,7 +122,6 @@ class UserContainer(SchemaDefinedResource):
 
         return search_string
 
-    @crossdomain(origin='*')
     @auth.login_required
     @database_session()
     @restful_pagination()
@@ -184,7 +183,6 @@ class UserContainer(SchemaDefinedResource):
         response.headers['Count'] = user_count
         return response
 
-    @crossdomain(origin='*')
     @database_session()
     def post(self, session):
         """
@@ -245,7 +243,6 @@ class UserView(Resource):
     """
     Maps the ``/users/<username>`` endpoint
     """
-    @crossdomain(origin='*')
     @auth.login_required
     @database_session()
     def get(self, session, username_or_id):
