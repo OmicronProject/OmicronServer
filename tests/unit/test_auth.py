@@ -166,6 +166,7 @@ class TestVerifyPassword(TestAuth):
     def test_verify_token(self):
         self.assertTrue(auth.verify_password(self.token_string))
         self.assertEqual(auth.g.user, self.user)
+        self.assertTrue(auth.g.verified_from_token)
 
     @mock.patch('sqlalchemy.orm.Query.first', return_value=None)
     def test_verify_token_no_token_found(self, mock_first):
