@@ -4,18 +4,17 @@ Contains views for the ``/users`` endpoint.
 import os
 from omicron_server.auth import auth
 from omicron_server.database import User, ContextManagedSession
-from omicron_server.decorators import restful_pagination, crossdomain
+from omicron_server.decorators import restful_pagination
 from flask import request, abort, jsonify
 from flask_restful import Resource
 from omicron_server.json_schema_parser import JsonSchemaValidator
 from omicron_server.config import default_config as conf
-from omicron_server.views import SchemaDefinedResource
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
-class UserContainer(SchemaDefinedResource):
+class UserContainer(Resource):
     """
     Maps the /users endpoint's ``GET`` and ``POST`` requests, allowing API
     consumers to create new users
@@ -85,9 +84,6 @@ class UserContainer(SchemaDefinedResource):
     post_schema_validator = JsonSchemaValidator(
         os.path.join(conf.JSON_SCHEMA_PATH, 'users', 'users_post.json')
     )
-
-    def __init__(self):
-        SchemaDefinedResource.__init__(self)
 
     @staticmethod
     def parse_search_query_params(request):
