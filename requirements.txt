@@ -15,6 +15,7 @@ freezegun==0.3.6
 funcsigs==0.4
 itsdangerous==0.24
 Jinja2==2.8
+jsl==0.2.2
 jsonschema==2.5.1
 livereload==2.4.1
 MarkupSafe==0.23
