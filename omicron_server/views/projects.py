@@ -1,14 +1,16 @@
+"""
+Contains endpoints for ``/api/v1/users
+"""
 import logging
 import os
-from omicron_server.auth import auth
-from omicron_server.decorators import restful_pagination
 from flask import jsonify
 from flask import request, abort
 from flask_restful import Resource
-from omicron_server.json_schema_parser import JsonSchemaValidator
-from omicron_server.config import default_config as conf
-from omicron_server.database import ContextManagedSession, Project, User
-from omicron_server.decorators import crossdomain
+from ..auth import auth
+from ..decorators import restful_pagination
+from ..json_schema_parser import JsonSchemaValidator
+from ..config import default_config as conf
+from ..database import ContextManagedSession, Project, User
 
 __author__ = 'Michal Kononenko'
 
