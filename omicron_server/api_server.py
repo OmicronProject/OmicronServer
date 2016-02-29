@@ -84,8 +84,14 @@ def create_token():
             "expiration_date": "2015-01-01T12:00:00"
         }
 
+    :statuscode 201: The token was created successfully
+    :statuscode 401: The token could not be created because the user tried to
+        authenticate with
+
     :return: A Flask response object with the token jsonified into ASCII
     """
+    if g.authenticated_from_token:
+        abort(401)
     try:
         token, expiration_date = g.user.generate_auth_token(
             expiration=int(request.args.get('expiration'))

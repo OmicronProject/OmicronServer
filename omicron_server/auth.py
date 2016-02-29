@@ -62,6 +62,7 @@ def verify_password(username_or_token, password=None):
     try:
         UUID(hex=username_or_token)
     except (TypeError, ValueError):
+        g.authenticated_from_token = False
         return _verify_user(username_or_token, password)
 
     with database_session() as session:
@@ -72,12 +73,15 @@ def verify_password(username_or_token, password=None):
         ).first()
 
         if token is None:
+            g.authenticated_from_token = False
             return _verify_user(username_or_token, password)
 
         if token.verify_token(username_or_token):
             g.user = token.owner
+            g.authenticated_from_token = True
             return True
         else:
+            g.authenticated_from_token = False
             return False
 
 
