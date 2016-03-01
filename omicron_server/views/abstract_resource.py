@@ -17,8 +17,6 @@ class AbstractResource(Resource):
         'get', 'post', 'put', 'patch', 'delete', 'options', 'head'
     ])
 
-    __metaclass__ = abc.ABCMeta
-
     def validate(self, dict_to_validate, source_dict):
         """
         Checks that the supplied dictionary matches the JSON Schema
@@ -47,7 +45,6 @@ class AbstractResource(Resource):
 
 
 class SchemaDefinedResource(AbstractResource):
-    __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         for method in self._http_method_list:
