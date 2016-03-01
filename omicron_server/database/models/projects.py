@@ -2,8 +2,7 @@
 Contains model classes related to managing projects on the Omicron server
 """
 from datetime import datetime
-from omicron_server.database.models import Base
-from omicron_server.database import schema
+from . import Base, schema
 
 __author__ = 'Michal Kononenko'
 

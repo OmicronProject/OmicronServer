@@ -96,6 +96,7 @@ class TestGetAuthToken(TestAPIServer):
         self.user.generate_auth_token = mock.MagicMock(
             return_value=(self.token, self.token_expiry_date)
         )
+        api_server.g.authenticated_from_token = False
 
     def test_create_auth_token(self, mock_verify):
         response = self.request_method(self.url, headers=self.headers)
@@ -126,6 +127,18 @@ class TestGetAuthToken(TestAPIServer):
                 self.user.generate_auth_token.call_args
         )
 
+        self.assertTrue(mock_verify.called)
+
+    def test_auth_token_prevent_token_renewal(self, mock_verify):
+        """
+        Tests that if a user requests a new token using an existing token, the
+        request returns a ``401 UNAUTHORIZED`` status code. In order to
+        request a token, the API consumer must sign in with their username and
+        password
+        """
+        api_server.g.authenticated_from_token = True
+        r = self.request_method(self.url, headers=self.headers)
+        self.assertEqual(r.status_code, 401)
         self.assertTrue(mock_verify.called)
 
 

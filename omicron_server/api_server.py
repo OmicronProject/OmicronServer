@@ -4,15 +4,14 @@ a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
 import logging
-
-from omicron_server.auth import auth
-from omicron_server.database import Administrator, User, ContextManagedSession
 from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
-from omicron_server.config import default_config as conf
-from omicron_server.views import UserContainer, UserView, ProjectContainer
-from omicron_server.views import Projects
-from omicron_server.decorators import crossdomain
+from .auth import auth
+from .config import default_config as conf
+from .database import Administrator, User, ContextManagedSession
+from .decorators import crossdomain
+from .views import UserContainer, UserView, ProjectContainer
+from .views import Projects
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -84,8 +83,14 @@ def create_token():
             "expiration_date": "2015-01-01T12:00:00"
         }
 
+    :statuscode 201: The token was created successfully
+    :statuscode 401: The token could not be created because the user tried to
+        authenticate with
+
     :return: A Flask response object with the token jsonified into ASCII
     """
+    if g.authenticated_from_token:
+        abort(401)
     try:
         token, expiration_date = g.user.generate_auth_token(
             expiration=int(request.args.get('expiration'))

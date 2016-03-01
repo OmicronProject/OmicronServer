@@ -6,9 +6,9 @@ purpose of the session is to allow transactional interaction with the database.
 The purpose of :class:`DatabaseManager` is to provide versioning support for
 the DB
 """
-from omicron_server.database.models.users import User, Token, Administrator
-from omicron_server.database.models.projects import Project
-from omicron_server.database.sessions import ContextManagedSession
-from omicron_server.database.versioning import DatabaseManager
+from .models.users import User, Token, Administrator
+from .models.projects import Project
+from .sessions import ContextManagedSession
+from .versioning import DatabaseManager
 
 __author__ = 'Michal Kononenko'
