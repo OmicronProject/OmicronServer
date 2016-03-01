@@ -43,7 +43,7 @@ from collections import namedtuple
 from flask import request, make_response, current_app
 from datetime import timedelta
 from functools import update_wrapper
-from omicron_server.config import default_config as conf
+from .config import default_config as conf
 
 __author__ = 'Michal Kononenko'
 
