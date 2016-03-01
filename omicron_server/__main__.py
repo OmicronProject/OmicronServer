@@ -3,11 +3,11 @@
 Script to run the server
 """
 import logging
-from .api_server import app
-from .config import default_config as conf
-from .database.models.users import Administrator
-from .database.sessions import ContextManagedSession
-from .database.schema import metadata
+from omicron_server.api_server import app
+from omicron_server.config import default_config as conf
+from omicron_server.database.models.users import Administrator
+from omicron_server.database.sessions import ContextManagedSession
+from omicron_server.database.schema import metadata
 
 __author__ = 'Michal Kononenko'
 
