@@ -5,12 +5,12 @@ import logging
 import os
 from flask import jsonify
 from flask import request, abort
-from flask_restful import Resource
 from ..auth import auth
 from ..decorators import restful_pagination
 from ..json_schema_parser import JsonSchemaValidator
 from ..config import default_config as conf
 from ..database import ContextManagedSession, Project, User
+from ..views import AbstractResource
 
 __author__ = 'Michal Kononenko'
 
@@ -19,7 +19,7 @@ log.setLevel(logging.DEBUG)
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
-class ProjectContainer(Resource):
+class ProjectContainer(AbstractResource):
     """
     Maps the /projects endpoint
     """
@@ -157,7 +157,7 @@ class ProjectContainer(Resource):
         return response
 
 
-class Projects(Resource):
+class Projects(AbstractResource):
     """
     Maps the "/projects/<project_id>" endpoint
     """
