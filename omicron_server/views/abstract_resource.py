@@ -41,7 +41,16 @@ class AbstractResource(Resource):
             return False, str(val_error)
 
     def options(self):
-        pass
+        """
+        Idempotent method that needs to exist simply because Flask maps it
+        to an ``OPTIONS`` request directed to this endpoint. The ``OPTIONS``
+        endpoint returns headers related to Cross-Origin Resource Sharing (
+        CORS), and will eventually return the JSON schema for the endpoint,
+        stating what methods are available, as well as an outline for what
+        data is returned for the endpoint. Since no actual data is returned,
+        the ``OPTIONS`` method does not currently require authentication
+        """
+        return jsonify({'message': "options_request_success"})
 
 
 class SchemaDefinedResource(AbstractResource):
@@ -87,3 +96,7 @@ class SchemaDefinedResource(AbstractResource):
         return AbstractResource.validate(
                 self, dict_to_validate, source_dict
         )
+
+    def options(self):
+        response = jsonify(self.schema)
+        return response

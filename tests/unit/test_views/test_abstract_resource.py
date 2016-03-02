@@ -2,11 +2,34 @@ import unittest
 import jsonschema
 import mock
 from omicron_server.views import AbstractResource, SchemaDefinedResource
+from omicron_server import app
 
 __author__ = 'Michal Kononenko'
 
 
-class Resource(SchemaDefinedResource):
+class ResourceWithoutSchema(AbstractResource):
+    def get(self):
+        return 'Gotten'
+
+
+class TestAbstractResource(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.view = ResourceWithoutSchema()
+
+
+class TestAbstractResourceOptions(TestAbstractResource):
+    def setUp(self):
+        self.context = app.test_request_context()
+
+    def test_options(self):
+        with self.context:
+            self.assertEqual(
+                self.view.options().status_code, 200
+            )
+
+
+class ResourceWithSchema(SchemaDefinedResource):
     schema = {
       "$schema": "http://json-schema.org/draft-04/schema#",
       "id": "http://jsonschema.net",
@@ -26,7 +49,8 @@ class Resource(SchemaDefinedResource):
 class TestAPIViewWithSchema(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.view = Resource()
+        cls.view = ResourceWithSchema()
+        cls.context = app.test_request_context()
 
 
 class TestAPIViewWithSchemaConstructor(TestAPIViewWithSchema):
@@ -139,3 +163,9 @@ class TestValidateSchema(TestAPIViewWithSchema):
             mock.call(self.valid_dict, self.valid_dict_schema),
             mock_validate.call_args
         )
+
+
+class TestSchemaDefinedResourceOptions(TestAPIViewWithSchema):
+    def test_options(self):
+        with self.context:
+            self.assertEqual(self.view.options().status_code, 200)
