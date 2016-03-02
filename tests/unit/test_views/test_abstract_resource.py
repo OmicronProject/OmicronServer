@@ -21,6 +21,7 @@ class TestAbstractResource(unittest.TestCase):
 class TestAbstractResourceOptions(TestAbstractResource):
     def setUp(self):
         self.context = app.test_request_context()
+        self.assertEqual(self.view.get(), 'Gotten')
 
     def test_options(self):
         with self.context:
