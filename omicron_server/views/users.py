@@ -2,14 +2,13 @@
 Contains views for the ``/users`` endpoint.
 """
 import os
-from omicron_server.auth import auth
-from omicron_server.database import User, ContextManagedSession
-from omicron_server.decorators import restful_pagination
 from flask import request, abort, jsonify
-from flask_restful import Resource
-from omicron_server.json_schema_parser import JsonSchemaValidator
-from omicron_server.config import default_config as conf
-from omicron_server.views import SchemaDefinedResource
+from ..auth import auth
+from ..config import default_config as conf
+from ..database import User, ContextManagedSession
+from ..decorators import restful_pagination
+from ..json_schema_parser import JsonSchemaValidator
+from ..views import AbstractResource, SchemaDefinedResource
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
@@ -87,7 +86,7 @@ class UserContainer(SchemaDefinedResource):
     )
 
     def __init__(self):
-        SchemaDefinedResource.__init__(self)
+        AbstractResource.__init__(self)
 
     @staticmethod
     def parse_search_query_params(request):
@@ -239,7 +238,7 @@ class UserContainer(SchemaDefinedResource):
         return response
 
 
-class UserView(Resource):
+class UserView(AbstractResource):
     """
     Maps the ``/users/<username>`` endpoint
     """

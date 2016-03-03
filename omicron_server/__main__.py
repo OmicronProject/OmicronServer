@@ -14,9 +14,9 @@ Options:
 """
 import logging
 from omicron_server.api_server import app
+from omicron_server.config import default_config as conf
 from omicron_server.database.models.users import Administrator
 from omicron_server.database.sessions import ContextManagedSession
-from omicron_server.config import default_config as conf
 from omicron_server.database.schema import metadata
 from docopt import docopt
 

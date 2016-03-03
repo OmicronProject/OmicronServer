@@ -4,16 +4,14 @@ a flask-restful API object, which will serve as the router to the objects in
 :mod:`api_views`.
 """
 import logging
-
-from omicron_server.auth import auth
-from omicron_server.database import Administrator, User, ContextManagedSession
 from flask import Flask, g, jsonify, request, abort
-from flask.ext.cors import CORS
 from flask_restful import Api
-
-from omicron_server.config import default_config as conf
-from omicron_server.views import UserContainer, UserView, ProjectContainer
-from omicron_server.views import Projects
+from .auth import auth
+from .config import default_config as conf
+from .database import Administrator, User, ContextManagedSession
+from .decorators import crossdomain
+from .views import UserContainer, UserView, ProjectContainer
+from .views import Projects
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -21,7 +19,7 @@ log.setLevel(logging.DEBUG)
 __author__ = 'Michal Kononenko'
 
 app = Flask(__name__)
-api = Api(app, prefix='/api/v1')
+api = Api(app, prefix='/api/v1', decorators=[crossdomain(origin='*')])
 
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username_or_id>')
@@ -29,11 +27,11 @@ api.add_resource(ProjectContainer, '/projects')
 api.add_resource(Projects, 'projects/<project_name_or_id>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
-CORS(app)
 
 
 @app.route('/', methods=["GET", "OPTIONS"])
 @app.route('/index', methods=["GET", "OPTIONS"])
+@crossdomain(origin='*')
 def hello_world():
     """
     Base URL to confirm that the API actually works. Eventually, this endpoint
@@ -56,7 +54,8 @@ def hello_world():
     return jsonify({'message': 'hello_world'})
 
 
-@app.route('/api/v1/token', methods=['POST'])
+@app.route('/api/v1/token', methods=['POST', 'OPTIONS'])
+@crossdomain(origin='*')
 @auth.login_required
 def create_token():
     """
@@ -84,8 +83,14 @@ def create_token():
             "expiration_date": "2015-01-01T12:00:00"
         }
 
+    :statuscode 201: The token was created successfully
+    :statuscode 401: The token could not be created because the user tried to
+        authenticate with
+
     :return: A Flask response object with the token jsonified into ASCII
     """
+    if g.authenticated_from_token:
+        abort(401)
     try:
         token, expiration_date = g.user.generate_auth_token(
             expiration=int(request.args.get('expiration'))
@@ -96,13 +101,14 @@ def create_token():
     response = jsonify(
             {'token': token,
              'expiration_date': expiration_date.isoformat()
-        }
+             }
     )
     response.status_code = 201
     return response
 
 
 @app.route('/api/v1/token', methods=['DELETE'])
+@crossdomain(origin='*')
 @auth.login_required
 def revoke_token():
     """

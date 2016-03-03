@@ -1,14 +1,36 @@
 import unittest
-
 import jsonschema
 import mock
-
-from omicron_server.views import SchemaDefinedResource
+from omicron_server.views import AbstractResource, SchemaDefinedResource
+from omicron_server import app
 
 __author__ = 'Michal Kononenko'
 
 
-class Resource(SchemaDefinedResource):
+class ResourceWithoutSchema(AbstractResource):
+    def get(self):
+        return 'Gotten'
+
+
+class TestAbstractResource(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.view = ResourceWithoutSchema()
+
+
+class TestAbstractResourceOptions(TestAbstractResource):
+    def setUp(self):
+        self.context = app.test_request_context()
+        self.assertEqual(self.view.get(), 'Gotten')
+
+    def test_options(self):
+        with self.context:
+            self.assertEqual(
+                self.view.options().status_code, 200
+            )
+
+
+class ResourceWithSchema(SchemaDefinedResource):
     schema = {
       "$schema": "http://json-schema.org/draft-04/schema#",
       "id": "http://jsonschema.net",
@@ -28,7 +50,8 @@ class Resource(SchemaDefinedResource):
 class TestAPIViewWithSchema(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.view = Resource()
+        cls.view = ResourceWithSchema()
+        cls.context = app.test_request_context()
 
 
 class TestAPIViewWithSchemaConstructor(TestAPIViewWithSchema):
@@ -44,21 +67,21 @@ class TestAPIViewWithSchemaConstructor(TestAPIViewWithSchema):
 class TestParseQueryString(TestAPIViewWithSchema):
 
     def test_parse_string_none_return_false(self):
-        self.assertFalse(self.view._parse_query_string(None))
+        self.assertFalse(self.view._should_show_schema(None))
 
     def test_parse_query_string_returns_true(self):
-        self.assertTrue(self.view._parse_query_string('true'))
-        self.assertTrue(self.view._parse_query_string('True'))
+        self.assertTrue(self.view._should_show_schema('true'))
+        self.assertTrue(self.view._should_show_schema('True'))
 
     def test_parse_query_string_false_return(self):
-        self.assertFalse(self.view._parse_query_string('false'))
-        self.assertFalse(self.view._parse_query_string('False'))
+        self.assertFalse(self.view._should_show_schema('false'))
+        self.assertFalse(self.view._should_show_schema('False'))
 
-    @mock.patch('omicron_server.views.schema_defined_resource.abort')
+    @mock.patch('omicron_server.views.abstract_resource.abort')
     def test_parse_query_string_404_abort(self, mock_abort):
         mock_abort_call = mock.call(404)
 
-        self.view._parse_query_string('Should return 404')
+        self.view._should_show_schema('Should return 404')
 
         self.assertEqual(mock_abort_call, mock_abort.call_args)
 
@@ -70,12 +93,12 @@ class TestShowSchema(TestAPIViewWithSchema):
         return True
 
     @mock.patch(
-            'omicron_server.views.SchemaDefinedResource._parse_query_string',
+            'omicron_server.views.SchemaDefinedResource._should_show_schema',
             return_value=True)
-    @mock.patch('omicron_server.views.schema_defined_resource.jsonify')
-    def test_show_schema_true(self, mock_jsonify, mock_q_string):
-        mock_request = mock.MagicMock()
-        func = self.view.show_schema(self._method_to_decorate, mock_request)
+    @mock.patch('omicron_server.views.abstract_resource.jsonify')
+    @mock.patch('omicron_server.views.abstract_resource.request')
+    def test_show_schema_true(self, mock_request, mock_jsonify, mock_q_string):
+        func = self.view.show_schema(self._method_to_decorate)
 
         self.assertTrue(func())
         self.assertEqual(
@@ -86,42 +109,18 @@ class TestShowSchema(TestAPIViewWithSchema):
         self.assertTrue(mock_request.args.get.called)
 
     @mock.patch(
-            'omicron_server.views.SchemaDefinedResource._parse_query_string',
+            'omicron_server.views.SchemaDefinedResource._should_show_schema',
             return_value=False)
-    @mock.patch('omicron_server.views.schema_defined_resource.jsonify')
-    def test_show_schema_false(self, mock_jsonify, mock_parse):
-        mock_request = mock.MagicMock()
-        func = self.view.show_schema(self._method_to_decorate, mock_request)
+    @mock.patch('omicron_server.views.abstract_resource.jsonify')
+    @mock.patch('omicron_server.views.abstract_resource.request')
+    def test_show_schema_false(self, mock_request, mock_jsonify, mock_parse):
+        func = self.view.show_schema(self._method_to_decorate)
 
         self.assertTrue(func())
 
         self.assertFalse(mock_jsonify.called)
 
         self.assertTrue(mock_parse.called)
-
-
-class TestIsDraft3(TestAPIViewWithSchema):
-
-    @mock.patch('omicron_server.views.schema_defined_resource.jsonschema.'
-                'FormatChecker.conforms', return_value=True)
-    def test_is_draft3(self, mock_conforms):
-        self.assertTrue(self.view.is_schema_draft3)
-        self.assertEqual(
-            mock.call(self.view.schema, 'draft3'),
-            mock_conforms.call_args
-        )
-
-
-class TestIsDraft4(TestAPIViewWithSchema):
-
-    @mock.patch('omicron_server.views.schema_defined_resource.jsonschema.'
-                'FormatChecker.conforms', return_value=True)
-    def test_is_draft4(self, mock_conforms):
-        self.assertTrue(self.view.is_schema_draft4)
-        self.assertEqual(
-            mock.call(self.view.schema, 'draft4'),
-            mock_conforms.call_args
-        )
 
 
 class TestValidateSchema(TestAPIViewWithSchema):
@@ -133,7 +132,7 @@ class TestValidateSchema(TestAPIViewWithSchema):
         }
 
     @mock.patch(
-            'omicron_server.views.schema_defined_resource.jsonschema.validate'
+            'omicron_server.views.abstract_resource.jsonschema.validate'
     )
     def test_validate_dict_true(self, mock_validate):
 
@@ -144,7 +143,7 @@ class TestValidateSchema(TestAPIViewWithSchema):
         )
 
     @mock.patch(
-            'omicron_server.views.schema_defined_resource.jsonschema.validate',
+            'omicron_server.views.abstract_resource.jsonschema.validate',
             side_effect=jsonschema.ValidationError('test error')
     )
     def test_validate_dict_false(self, mock_validate):
@@ -153,7 +152,7 @@ class TestValidateSchema(TestAPIViewWithSchema):
         self.assertTrue(mock_validate.called)
 
     @mock.patch(
-            'omicron_server.views.schema_defined_resource.jsonschema.validate'
+            'omicron_server.views.abstract_resource.jsonschema.validate'
     )
     def test_validate_dict_custom_schema(self, mock_validate):
 
@@ -165,3 +164,9 @@ class TestValidateSchema(TestAPIViewWithSchema):
             mock.call(self.valid_dict, self.valid_dict_schema),
             mock_validate.call_args
         )
+
+
+class TestSchemaDefinedResourceOptions(TestAPIViewWithSchema):
+    def test_options(self):
+        with self.context:
+            self.assertEqual(self.view.options().status_code, 200)

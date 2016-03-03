@@ -4,14 +4,14 @@ Contains all model classes relevant to management of users
 from datetime import datetime, timedelta
 from hashlib import sha256
 from uuid import uuid1, UUID
-from omicron_server.database.models import Base
-from omicron_server.database.models.projects import Project
-from omicron_server.database.sessions import ContextManagedSession
+from . import Base
+from .projects import Project
+from ..sessions import ContextManagedSession
 from passlib.apps import custom_app_context as pwd_context
 from sqlalchemy import desc
 from sqlalchemy.orm import relationship
-from omicron_server.config import default_config as conf
-from omicron_server.database import schema
+from ...config import default_config as conf
+from ...database import schema
 
 __author__ = 'Michal Kononenko'
 
