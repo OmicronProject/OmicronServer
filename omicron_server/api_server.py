@@ -193,9 +193,7 @@ def _handle_token_logout(req_to_parse, user_to_logout, session):
 
     if token_record.owner == g.user or isinstance(g.user, Administrator):
         token_record.revoke()
-
         response = jsonify({'message': 'token revoked successfully'})
-
     else:
         response = jsonify(
             {'error': 'attempted unauthorized token revocation'}
