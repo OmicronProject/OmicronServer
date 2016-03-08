@@ -8,7 +8,7 @@ from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
 from .auth import auth
 from .config import default_config as conf
-from .database import Administrator, User, ContextManagedSession
+from .database import Administrator, User, ContextManagedSession, Token
 from .decorators import crossdomain
 from .views import UserContainer, UserView, ProjectContainer
 from .views import Projects
@@ -114,8 +114,32 @@ def revoke_token():
     """
     Revoke the current token for the user that has just authenticated,
     or the user with username given by a query parameter, allowed only if the
-    user is an Administrator
+    user is an Administrator.
+
+    **Example Request**
+
+    .. sourcecode:: http
+
+        DELETE /api/v1/token HTTP/1.1
+        Content-Type: application/json
+        Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+
+        {
+            "token": "f7f55e52-89a6-40f7-b5ad-2fff0d1871b7"
+        }
+
+    **Example Response**
+
+    .. sourcecode:: http
+
+        HTTP/1.1 200 OK
+        Content-Type: application/json
+
+        {"message": "token deleted successfully"}
     """
+    if not g.authenticated_from_token:
+        _handle_token_logout(request, g.user)
+
     username_to_delete = request.args.get('username')
     if username_to_delete is None:
         username_to_delete = g.user.username
@@ -130,7 +154,7 @@ def revoke_token():
                 username=username_to_delete
             ).first()
             if user is None:
-                abort(404)
+                abort(403)
             user.current_token.first().revoke()
     else:
         with database_session() as session:
@@ -139,4 +163,43 @@ def revoke_token():
             ).first().current_token.first().revoke()
 
     response = jsonify({'token_status': 'deleted'})
+    return response
+
+
+@database_session()
+def _handle_token_logout(req_to_parse, user_to_logout, session):
+    request_data = req_to_parse.json
+    if request_data is None:
+        abort(400)
+
+    try:
+        token_to_revoke = request_data['token']
+    except KeyError:
+        response = jsonify(
+                {'error': "request body does not contain token"}
+        )
+        response.status_code = 400
+
+        return response
+
+    token_record = Token.from_database_session(token_to_revoke, session)
+
+    if token_record is None:
+        response = jsonify({
+            'error': "unable to find required token"
+        })
+        response.status_code = 400
+        return response
+
+    if token_record.owner == g.user or isinstance(g.user, Administrator):
+        token_record.revoke()
+
+        response = jsonify({'message': 'token revoked successfully'})
+
+    else:
+        response = jsonify(
+            {'error': 'attempted unauthorized token revocation'}
+        )
+        response.status_code = 403
+
     return response
