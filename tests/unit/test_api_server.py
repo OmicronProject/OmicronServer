@@ -198,3 +198,15 @@ class TestRevokeToken(TestAPIServer):
         self.assertEqual(response.status_code, 404)
         self.assertFalse(mock_cur_token.first().revoke.called)
         self.assertTrue(mock_auth.called)
+
+    @mock.patch('omicron_server.api_server.g')
+    @mock.patch('omicron_server.api_server._handle_token_logout')
+    def test_administrator_revoke_token(self, mock_handler, mock_g, mock_auth):
+        mock_g.authenticated_from_token = False
+
+        mock_g.user = self.admin
+
+        self.request_method(self.url, headers=self.headers)
+
+        self.assertTrue(mock_handler.called)
+        self.assertTrue(mock_auth.called)

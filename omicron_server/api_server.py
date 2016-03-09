@@ -138,7 +138,7 @@ def revoke_token():
         {"message": "token deleted successfully"}
     """
     if not g.authenticated_from_token:
-        _handle_token_logout(request, g.user)
+        return _handle_token_logout(request, g.user)
 
     username_to_delete = request.args.get('username')
     if username_to_delete is None:
@@ -154,7 +154,14 @@ def revoke_token():
                 username=username_to_delete
             ).first()
             if user is None:
-                abort(403)
+                response = jsonify(
+                    {'error': 'unable to find user with username %s' %
+                              username_to_delete
+                     }
+                )
+                response.status_code = 404
+                return response
+
             user.current_token.first().revoke()
     else:
         with database_session() as session:
@@ -191,7 +198,8 @@ def _handle_token_logout(req_to_parse, user_to_logout, session):
         response.status_code = 400
         return response
 
-    if token_record.owner == g.user or isinstance(g.user, Administrator):
+    if token_record.owner == user_to_logout or \
+            isinstance(user_to_logout, Administrator):
         token_record.revoke()
         response = jsonify({'message': 'token revoked successfully'})
     else:
