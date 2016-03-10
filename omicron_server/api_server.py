@@ -116,6 +116,12 @@ def revoke_token():
     or the user with username given by a query parameter, allowed only if the
     user is an Administrator.
 
+    .. note::
+        There is no way to delete authentication token records from the
+        database or the API. This is by design, as we want to use expired
+        auth tokens to track user logins. Tokens can only be invalidated.
+        To revoke a token and to invalidate it are synonyms.
+
     **Example Request**
 
     .. sourcecode:: http
@@ -135,7 +141,17 @@ def revoke_token():
         HTTP/1.1 200 OK
         Content-Type: application/json
 
-        {"message": "token deleted successfully"}
+        {"token_status": "deleted"}
+
+    :statuscode 200: The request was accepted and the token was successfully
+        invalidated
+    :statuscode 400: The request failed due to incorrect client-side request
+        formation. This could mean that the content passed into this
+        endpoint is not in JSON, or that the ``"token"`` entry was not
+        passed in the request. This is also thrown if the server cannot find
+        the required token given in the request body.
+    :statuscode 404: This is thrown if an administrator sends in a ``username``
+        query parameter, and the server cannot find a user with that username.
     """
     if not g.authenticated_from_token:
         return _handle_token_logout(request, g.user)
@@ -175,6 +191,24 @@ def revoke_token():
 
 @database_session()
 def _handle_token_logout(req_to_parse, user_to_logout, session):
+    """
+    Parse the logout request if a user authenticated with their ``Basic
+    username:password`` credentials instead of using their authentication
+    token.
+
+    :param Flask.request req_to_parse: The request that will be analyzed by
+        this method. This is usually ``request``, but is passed in as an
+        argument here for testing.
+    :param User user_to_logout: The SQLAlchemy model class for the user that
+        authenticated into this endpoint, and for whom the logout request is
+        being handled. This is normally ``g.user``, but is passed in as an
+        argument for testing purposes.
+    :param ContextManagedSession session: The database session that will be
+        used to carry out the logout. This is injected into the method in
+        the decorator.
+    :return: The required response to the request
+    :rtype: Response
+    """
     request_data = req_to_parse.json
     if request_data is None:
         response = jsonify(error="request body is not JSON")
