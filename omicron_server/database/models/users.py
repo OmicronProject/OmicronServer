@@ -46,6 +46,8 @@ class Token(Base):
     def hash_token(token_string):
         """
         Takes a token string and hashes it using SHA256.
+
+        :param str token_string: The token to hash
         """
         return sha256(token_string.encode('ascii')).hexdigest()
 
@@ -67,6 +69,28 @@ class Token(Base):
         date
         """
         self.expiration_date = datetime.utcnow()
+
+    @classmethod
+    def from_database_session(cls, token, session):
+        """
+        Accept a token string in plain text and the database session that
+        can be used to look up this token. Hash the given token string and
+        retrieve the token from the database. Return the token
+
+        :param Union[str, UUID] token: The token that needs to be found in
+            the database
+        :param Session session: The session that will be used to look up the
+            token
+        :return: The given token
+        """
+        if isinstance(token, UUID):
+            token = str(token)
+
+        token_record = session.query(cls).filter_by(
+                token_hash=cls.hash_token(token)
+        ).first()
+
+        return token_record
 
 
 class User(Base):
