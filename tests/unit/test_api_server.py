@@ -4,15 +4,15 @@ Contains unit tests for :mod:`api_server`
 import json
 import unittest
 from datetime import datetime
-
 import mock
 from omicron_server.database.models.users import User, Administrator
+from omicron_server.database import Token
 from omicron_server.database.sessions import ContextManagedSession
 from freezegun import freeze_time
 from sqlalchemy import create_engine
-
 from omicron_server import api_server
 from omicron_server.database.schema import metadata
+import uuid
 
 __author__ = 'Michal Kononenko'
 
@@ -210,3 +210,94 @@ class TestRevokeToken(TestAPIServer):
 
         self.assertTrue(mock_handler.called)
         self.assertTrue(mock_auth.called)
+
+
+class TestHandleTokenLogout(TestAPIServer):
+    """
+    Contains unit tests for
+    :meth:`omicron_server.api_server._handle_token_logout`s
+    """
+    def setUp(self):
+        self.context = api_server.app.test_request_context()
+
+        self.user_to_logout = User('foo', 'bar', 'foo@bar.com')
+        self.request = mock.MagicMock()
+
+        self.context.push()
+
+        self.token_string = str(uuid.uuid4())
+
+        self.auth_token = Token(self.token_string, owner=self.user_to_logout)
+        self.auth_token.revoke = mock.MagicMock()
+
+    def tearDown(self):
+        self.context.pop()
+
+    def test_request_json(self):
+        request = mock.MagicMock()
+        request.json = None
+
+        response = api_server._handle_token_logout(
+                request, self.user_to_logout
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    def test_body_has_no_token(self):
+        self.request.json = {
+            'no_token_key': "no token"
+        }
+
+        with self.assertRaises(KeyError):
+            self.request.json['token']
+
+        response = api_server._handle_token_logout(
+            self.request, self.user_to_logout
+        )
+
+        self.assertEqual(response.status_code, 400)
+
+    @mock.patch('omicron_server.api_server.Token.from_database_session',
+                return_value=None)
+    def test_unable_to_get_token(self, mock_token_constructor):
+        self.request.json = {
+            'token': self.token_string
+        }
+
+        response = api_server._handle_token_logout(
+            self.request, self.user_to_logout
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(mock_token_constructor.called)
+
+    @mock.patch('omicron_server.api_server.Token.from_database_session')
+    def test_token_revoke(self, mock_token_constructor):
+        mock_token_constructor.return_value=self.auth_token
+
+        self.request.json = {'token': self.token_string}
+
+        response = api_server._handle_token_logout(
+            self.request, self.user_to_logout
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(self.auth_token.revoke.called)
+
+    @mock.patch('omicron_server.api_server.Token.from_database_session')
+    def test_unauthorized_revoke(self, mock_token_constructor):
+        auth_token = Token(
+            self.token_string, owner=User('bad_name', 'bad_pass', 'bad_email')
+        )
+
+        self.assertNotEqual(auth_token.owner, self.user_to_logout)
+        self.assertFalse(isinstance(self.user_to_logout, Administrator))
+
+        mock_token_constructor.return_value = auth_token
+        self.request.json = {'token': self.token_string}
+
+        response = api_server._handle_token_logout(
+            self.request, self.user_to_logout
+        )
+
+        self.assertEqual(response.status_code, 403)

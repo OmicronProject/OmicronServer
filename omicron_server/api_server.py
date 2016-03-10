@@ -177,7 +177,9 @@ def revoke_token():
 def _handle_token_logout(req_to_parse, user_to_logout, session):
     request_data = req_to_parse.json
     if request_data is None:
-        abort(400)
+        response = jsonify(error="request body is not JSON")
+        response.status_code = 400
+        return response
 
     try:
         token_to_revoke = request_data['token']
@@ -186,7 +188,6 @@ def _handle_token_logout(req_to_parse, user_to_logout, session):
                 {'error': "request body does not contain token"}
         )
         response.status_code = 400
-
         return response
 
     token_record = Token.from_database_session(token_to_revoke, session)
