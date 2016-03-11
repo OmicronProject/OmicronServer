@@ -5,7 +5,7 @@ import unittest
 import mock
 import logging
 from omicron_server.config import Config
-
+from omicron_server import app
 from omicron_server import __main__
 from omicron_server.database import Administrator
 
@@ -25,6 +25,12 @@ class TestSetLogFile(unittest.TestCase):
 
         self.mock_conf = Config()
         self.mock_conf.LOGFILE = self.logfile_name
+
+        self.context = app.test_request_context()
+        self.context.push()
+
+    def tearDown(self):
+        self.context.pop()
 
     @mock.patch('logging.basicConfig')
     def test_logging(self, mock_basic_config):

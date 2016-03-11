@@ -229,6 +229,15 @@ class TestGenerateAuthToken(TestUser):
         )
         self.mock_token_return_value = uuid1()
 
+        self.context = omicron_server.app.test_request_context()
+
+        self.context.push()
+
+    def tearDown(self):
+        self.context.pop()
+
+        TestUser.tearDown(self)
+
     @mock.patch('sqlalchemy.orm.Session.add')
     @mock.patch('omicron_server.database.models.users.uuid1')
     @mock.patch('sqlalchemy.orm.Query.first')
@@ -259,6 +268,7 @@ class TestGenerateAuthToken(TestUser):
                     seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME
             )
         )
+
 
 class TestVerifyAuthToken(TestUser):
     def setUp(self):

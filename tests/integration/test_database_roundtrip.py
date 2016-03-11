@@ -3,7 +3,7 @@ Tests that the server can successfully write and read from the database
 in a "Round Trip"
 """
 from omicron_server.database.sessions import ContextManagedSession
-
+from omicron_server import app
 from omicron_server.config import default_config as conf
 from omicron_server.database.models.users import User
 from tests.integration import TestWithDatabase
@@ -23,6 +23,12 @@ class TestDatabaseRoundTrip(TestWithDatabase):
         self.object_to_write = User(self.username, self.password, self.email)
 
         self.session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
+        self.context = app.test_request_context()
+
+        self.context.push()
+
+    def tearDown(self):
+        self.context.pop()
 
     def test_write(self):
         """
