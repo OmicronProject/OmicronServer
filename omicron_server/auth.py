@@ -61,7 +61,8 @@ def verify_password(username_or_token, password=None):
         UUID(hex=username_or_token)
     except (TypeError, ValueError):
         g.authenticated_from_token = False
-        return _verify_user(username_or_token, password)
+        with database_session() as session:
+            return _verify_user(username_or_token, password, session)
 
     with database_session() as session:
         token = session.query(
@@ -72,7 +73,7 @@ def verify_password(username_or_token, password=None):
 
         if token is None:
             g.authenticated_from_token = False
-            return _verify_user(username_or_token, password)
+            return _verify_user(username_or_token, password, session)
 
         if token.verify_token(username_or_token):
             g.user = token.owner
@@ -83,20 +84,20 @@ def verify_password(username_or_token, password=None):
             return False
 
 
-def _verify_user(username, password):
+def _verify_user(username, password, session):
     """
     Check if the username matches the user. If it does, write the user
     to :meth:`Flask.g` and return ``True``, else return ``False``
     :param str username: The name of the user to validate
     :param str password: The password to validate
+    :param Session session: The database session to use for auth
     :return: ``True`` if the user authenticated and ``False`` if not
     """
-    with database_session() as session:
-        user = session.query(
-            User
-        ).filter_by(
-            username=username
-        ).first()
+    user = session.query(
+        User
+    ).filter_by(
+        username=username
+    ).first()
 
     if user is None:
         return False

@@ -118,7 +118,8 @@ class User(Base):
     owned_projects = relationship(Project, backref='owner',
                                   foreign_keys=schema.projects.c.owner_id)
 
-    tokens = relationship(Token, backref='owner', lazy='dynamic')
+    tokens = relationship(Token, backref='owner', lazy='dynamic',
+                          cascade="save-update, merge, delete, delete-orphan")
 
     def __init__(
             self, username, password, email,
@@ -203,10 +204,7 @@ class User(Base):
         token_string = str(uuid1())
 
         with session() as session:
-            user = session.query(self.__class__).filter_by(
-                id=self.id
-            ).first()
-            token = Token(token_string, expiration_date, owner=user)
+            token = Token(token_string, expiration_date, owner=self)
             session.add(token)
 
         return token_string, expiration_date

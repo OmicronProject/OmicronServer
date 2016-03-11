@@ -33,10 +33,22 @@ class TestAuth(unittest.TestCase):
         cls.password = 'toor'
         cls.email = 'scott@tiger.com'
 
+        cls.context.push()
+
         metadata.create_all(bind=conf.DATABASE_ENGINE)
 
+    def setUp(self):
         with database_session() as session:
-            session.add(User(cls.username, cls.password, cls.email))
+            session.add(User(self.username, self.password, self.email))
+
+    def tearDown(self):
+        with database_session() as session:
+            users = session.query(User).filter_by(
+                username=self.username
+            ).all()
+
+            for user in users:
+                session.delete(user)
 
     @classmethod
     def tearDownClass(cls):
@@ -44,6 +56,7 @@ class TestAuth(unittest.TestCase):
         Clean up a test suite by dropping all tables in the test database.
         """
         metadata.drop_all(bind=conf.DATABASE_ENGINE)
+        cls.context.pop()
 
 
 class TestVerifyPassword(TestAuth):
@@ -86,6 +99,7 @@ class TestVerifyToken(TestAuth):
         Starts up the server, and requests an authentication token using the
         correct login credentials.
         """
+        TestAuth.setUp(self)
         self.client = app.test_client()
         self.headers = {
             'content-type': 'application/json',
