@@ -51,6 +51,7 @@ def create_root_user(session):
 
 if __name__ == "__main__":
     metadata.create_all(bind=conf.DATABASE_ENGINE)
-    create_root_user()
+    with app.test_request_context():
+        create_root_user()
 
     app.run(host=conf.IP_ADDRESS, port=conf.PORT, debug=conf.DEBUG)

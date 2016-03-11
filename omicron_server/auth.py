@@ -75,7 +75,8 @@ def verify_password(username_or_token, password=None):
         ).first()
 
         if token is None:
-            log.info('Unable to get requested auth token for request')
+            log.info('Unable to get requested auth token for request %s',
+                     g.request_id)
             g.authenticated_from_token = False
             return _verify_user(username_or_token, password, session)
 

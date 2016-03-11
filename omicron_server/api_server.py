@@ -31,13 +31,13 @@ database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 @app.before_request
-def get_request_guid():
-    g.request_guid = str(uuid1())
+def get_request_id():
+    g.request_id = str(uuid1())
 
 
 @app.after_request
 def add_request_guid_to_header(response):
-    response.headers['Request-Id'] = g.request_guid
+    response.headers['Request-Id'] = g.request_id
     return response
 
 
@@ -108,7 +108,8 @@ def create_token():
             expiration=int(request.args.get('expiration'))
         )
     except TypeError:
-        log.debug('No expiration supplied, using default expiration time')
+        log.debug('No expiration supplied for request %s, using default '
+                  'expiration time', g.request_id)
         token, expiration_date = g.user.generate_auth_token()
     response = jsonify(
             {'token': token,
