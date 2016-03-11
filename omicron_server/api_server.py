@@ -6,6 +6,7 @@ a flask-restful API object, which will serve as the router to the objects in
 import logging
 from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
+from uuid import uuid1
 from .auth import auth
 from .config import default_config as conf
 from .database import Administrator, User, ContextManagedSession, Token
@@ -27,6 +28,17 @@ api.add_resource(ProjectContainer, '/projects')
 api.add_resource(Projects, 'projects/<project_name_or_id>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
+
+
+@app.before_request
+def get_request_guid():
+    g.request_guid = str(uuid1())
+
+
+@app.after_request
+def add_request_guid_to_header(response):
+    response.headers['Request-Id'] = g.request_guid
+    return response
 
 
 @app.route('/', methods=["GET", "OPTIONS"])
