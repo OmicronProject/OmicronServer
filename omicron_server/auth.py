@@ -10,6 +10,9 @@ from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
 from .config import default_config as conf
 from .database import User, Token, ContextManagedSession
+import logging
+
+log = logging.getLogger(__name__)
 
 __author__ = 'Michal Kononenko'
 auth = HTTPBasicAuth()
@@ -72,6 +75,8 @@ def verify_password(username_or_token, password=None):
         ).first()
 
         if token is None:
+            log.info('Unable to get requested auth token for request %s',
+                     g.request_id)
             g.authenticated_from_token = False
             return _verify_user(username_or_token, password, session)
 
@@ -100,6 +105,7 @@ def _verify_user(username, password, session):
     ).first()
 
     if user is None:
+        log.info('Unable to find user with username %s', username)
         return False
 
     if user.verify_password(password):

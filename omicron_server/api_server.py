@@ -6,6 +6,7 @@ a flask-restful API object, which will serve as the router to the objects in
 import logging
 from flask import Flask, g, jsonify, request, abort
 from flask_restful import Api
+from uuid import uuid1
 from .auth import auth
 from .config import default_config as conf
 from .database import Administrator, User, ContextManagedSession, Token
@@ -27,6 +28,17 @@ api.add_resource(ProjectContainer, '/projects')
 api.add_resource(Projects, 'projects/<project_name_or_id>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
+
+
+@app.before_request
+def get_request_id():
+    g.request_id = str(uuid1())
+
+
+@app.after_request
+def add_request_guid_to_header(response):
+    response.headers['Request-Id'] = g.request_id
+    return response
 
 
 @app.route('/', methods=["GET", "OPTIONS"])
@@ -96,7 +108,8 @@ def create_token():
             expiration=int(request.args.get('expiration'))
         )
     except TypeError:
-        log.debug('No expiration supplied, using default expiration time')
+        log.debug('No expiration supplied for request %s, using default '
+                  'expiration time', g.request_id)
         token, expiration_date = g.user.generate_auth_token()
     response = jsonify(
             {'token': token,

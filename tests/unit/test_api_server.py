@@ -1,8 +1,8 @@
 """
 Contains unit tests for :mod:`api_server`
 """
+from tests import TestCaseWithAppContext
 import json
-import unittest
 from datetime import datetime
 import mock
 from omicron_server.database.models.users import User, Administrator
@@ -13,17 +13,54 @@ from sqlalchemy import create_engine
 from omicron_server import api_server
 from omicron_server.database.schema import metadata
 import uuid
+from flask import jsonify
 
 __author__ = 'Michal Kononenko'
 
 test_engine = create_engine('sqlite:///')
 
 
-class TestHelloWorld(unittest.TestCase):
+class TestGetRequestGuid(TestCaseWithAppContext):
+    def setUp(self):
+        TestCaseWithAppContext.setUp(self)
+        self.request_id = uuid.uuid1()
+
+    @mock.patch('omicron_server.api_server.uuid1')
+    def test_get_id(self, mock_guid_maker):
+        mock_guid_maker.return_value = self.request_id
+        api_server.get_request_id()
+        self.assertEqual(
+            api_server.g.request_id,
+            str(self.request_id)
+        )
+
+
+class TestAddRequestGuidToHeader(TestCaseWithAppContext):
+    def setUp(self):
+        TestCaseWithAppContext.setUp(self)
+        self.response = jsonify({'message': 'test'})
+        self.request_id = str(uuid.uuid1())
+
+        api_server.g.request_id = self.request_id
+
+    def tearDown(self):
+        del api_server.g.request_id
+        TestCaseWithAppContext.tearDown(self)
+
+    def test_add(self):
+        response = api_server.add_request_guid_to_header(self.response)
+        self.assertEqual(
+            response.headers['Request-Id'],
+            self.request_id
+        )
+
+
+class TestHelloWorld(TestCaseWithAppContext):
     """
     Tests :meth:`api_server.hello_world`
     """
     def setUp(self):
+        TestCaseWithAppContext.setUp(self)
         api_server.database_session = ContextManagedSession(bind=test_engine)
         self.app = api_server.app
         self.client = self.app.test_client()
@@ -41,7 +78,7 @@ class TestHelloWorld(unittest.TestCase):
         self.assertEqual(r.status_code, 200)
 
 
-class TestAPIServer(unittest.TestCase):
+class TestAPIServer(TestCaseWithAppContext):
     """
     Base class for unit tests in :mod:`api_server`
     """
@@ -89,6 +126,7 @@ class TestGetAuthToken(TestAPIServer):
         assigning it as a return value to ``self.user``, which
         is assigned to ``g.user``.
         """
+        TestAPIServer.setUp(self)
         self.url = 'api/v1/token'
         self.token = 'mock_token'
         self.token_expiry_date = datetime.utcnow()
@@ -151,6 +189,7 @@ class TestRevokeToken(TestAPIServer):
     token = mock.MagicMock()
 
     def setUp(self):
+        TestAPIServer.setUp(self)
         self.url = 'api/v1/token'
         self.request_method = self.client.delete
         self.admin = Administrator(self.username, self.password, self.email)
@@ -218,20 +257,14 @@ class TestHandleTokenLogout(TestAPIServer):
     :meth:`omicron_server.api_server._handle_token_logout`s
     """
     def setUp(self):
-        self.context = api_server.app.test_request_context()
-
+        TestAPIServer.setUp(self)
         self.user_to_logout = User('foo', 'bar', 'foo@bar.com')
         self.request = mock.MagicMock()
-
-        self.context.push()
 
         self.token_string = str(uuid.uuid4())
 
         self.auth_token = Token(self.token_string, owner=self.user_to_logout)
         self.auth_token.revoke = mock.MagicMock()
-
-    def tearDown(self):
-        self.context.pop()
 
     def test_request_json(self):
         request = mock.MagicMock()
