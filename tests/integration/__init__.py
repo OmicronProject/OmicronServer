@@ -1,15 +1,14 @@
 """
 Contains integration tests for the Omicron Server
 """
-import unittest
-
+from tests import TestCaseWithAppContext
 from omicron_server.config import default_config as conf
 from omicron_server.database import schema
 
 __author__ = 'Michal Kononenko'
 
 
-class TestWithDatabase(unittest.TestCase):
+class TestCaseWithDatabase(TestCaseWithAppContext):
 
     @classmethod
     def setUpClass(cls):

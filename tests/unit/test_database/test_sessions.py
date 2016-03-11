@@ -1,17 +1,15 @@
 """
 Contains unit tests for :mod:`database.sessions`
 """
-import unittest
-
 import mock
 from sqlalchemy import create_engine
-
+from tests import TestCaseWithAppContext
 from omicron_server.database import ContextManagedSession
 
 __author__ = 'Michal Kononenko'
 
 
-class TestContextManagedSession(unittest.TestCase):
+class TestContextManagedSession(TestCaseWithAppContext):
     """
     Base test case for :class:`database.sessions.ContextManagedSession`
     """
@@ -20,6 +18,7 @@ class TestContextManagedSession(unittest.TestCase):
         Create an engine for a SQLlite in-memory DB, and create a
         :class:`ContextManagedSession` to test on
         """
+        TestCaseWithAppContext.setUp(self)
         self.engine = create_engine('sqlite:///')
         self.base_session = ContextManagedSession(bind=self.engine)
 

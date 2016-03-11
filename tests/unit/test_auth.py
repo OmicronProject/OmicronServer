@@ -3,7 +3,7 @@ Contains unit tests for :mod:`auth`
 """
 import unittest
 from uuid import uuid1
-
+from omicron_server import app
 import omicron_server.auth as auth
 import mock
 from omicron_server.database.models.users import User, Token
@@ -27,6 +27,13 @@ class TestAuth(unittest.TestCase):
         cls.email = 'scott@tiger.com'
         metadata.create_all(bind=cls.engine)
 
+    def setUp(self):
+        self.context = app.test_request_context()
+        self.context.push()
+
+    def tearDown(self):
+        self.context.pop()
+
     @classmethod
     def tearDownClass(cls):
         metadata.drop_all(bind=cls.engine)
@@ -37,6 +44,7 @@ class TestAuth(unittest.TestCase):
 class TestVerifyUser(TestAuth):
 
     def setUp(self):
+        TestAuth.setUp(self)
 
         self.user = User(self.username, self.password, self.email)
 
@@ -56,6 +64,8 @@ class TestVerifyUser(TestAuth):
             ).first()
             if user is not None:
                 session.delete(user)
+
+        TestAuth.tearDown(self)
 
     def test_auth_token_correct(self):
 
@@ -162,6 +172,7 @@ class TestVerifyPassword(TestAuth):
 
             if token is not None:
                 session.delete(token)
+        TestAuth.tearDown(self)
 
     def test_verify_token(self):
         self.assertTrue(auth.verify_password(self.token_string))
