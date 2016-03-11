@@ -113,7 +113,7 @@ def restful_pagination(default_items_per_page=1000):
                 except ValueError:
                     items_per_page = default_items_per_page
 
-            offset = (page - 1) * items_per_page - 1
+            offset = (page - 1) * items_per_page
 
             pag_args = PaginationArgs(
                 page, items_per_page, offset
