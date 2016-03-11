@@ -40,7 +40,7 @@ decorator that then decorates a particular function.
 .. _decorator: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 """
 from collections import namedtuple
-from flask import request, make_response, current_app
+from flask import request, make_response, current_app, jsonify
 from datetime import timedelta
 from functools import update_wrapper
 from .config import default_config as conf
@@ -104,6 +104,16 @@ def restful_pagination(default_items_per_page=1000):
                 except ValueError:
                     page = 1
 
+            if page < 0:
+                response = jsonify(
+                        {
+                            'error': 'attempted to return data for a '
+                                     'negative page %d' % page
+                        }
+                )
+                response.status_code = 400
+                return response
+
             items_per_page = request.args.get('items_per_page')
             if items_per_page is None:
                 items_per_page = default_items_per_page
@@ -113,7 +123,17 @@ def restful_pagination(default_items_per_page=1000):
                 except ValueError:
                     items_per_page = default_items_per_page
 
-            offset = (page - 1) * items_per_page - 1
+            if items_per_page < 0:
+                response = jsonify(
+                    {'error':
+                        '%d is not a valid number of entries per page' %
+                        items_per_page
+                     }
+                )
+                response.status_code = 400
+                return response
+
+            offset = (page - 1) * items_per_page
 
             pag_args = PaginationArgs(
                 page, items_per_page, offset

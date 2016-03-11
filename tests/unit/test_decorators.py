@@ -16,7 +16,8 @@ def _get_pagination_arguments(pag_args):
 
     return jsonify(
         {'page': pag_args.page,
-         'items_per_page': pag_args.items_per_page
+         'items_per_page': pag_args.items_per_page,
+         'offset': pag_args.offset
          }
     )
 
@@ -96,6 +97,35 @@ class TestRestfulPagination(unittest.TestCase):
         response_dict = json.loads(r.data.decode('utf-8'))
 
         self.assertEqual(response_dict['items_per_page'], 1000)
+
+    def test_items_per_page_default_offset(self):
+        """
+        Tests that `issue #124`_ is resolved, and that the default offset value
+        is 0 for any records. This will return the first set of records.
+
+        .. _issue #124: https://goo.gl/hBqXNs
+        """
+        r = self.request_method(self.url, headers=self.headers)
+        self.assertEqual(r.status_code, 200)
+
+        response_dict = json.loads(r.data.decode('utf-8'))
+        self.assertEqual(response_dict['offset'], 0)
+
+    def test_negative_items_per_page_error_handling(self):
+        items_per_page = -10
+        test_url = '%s?items_per_page=%d' % (
+            self.url, items_per_page
+        )
+
+        r = self.request_method(test_url, headers=self.headers)
+        self.assertEqual(r.status_code, 400)
+
+    def test_negative_page(self):
+        page = -10
+        test_url = '%s?page=%d' % (self.url, page)
+
+        r = self.request_method(test_url, headers=self.headers)
+        self.assertEqual(r.status_code, 400)
 
     def test_function_name_preservation(self):
         """
