@@ -3,6 +3,7 @@ Contains classes related to session management with the DB.
 """
 from sqlalchemy.orm import Session
 import logging
+from flask import g
 __author__ = 'Michal Kononenko'
 
 log = logging.getLogger(__name__)
@@ -124,7 +125,7 @@ class ContextManagedSession(Session):
         _wrapped_function.__doc__ = f.__doc__
         return _wrapped_function
 
-    def __enter__(self):
+    def __enter__(self, global_object=g):
         """
         Magic method that opens a new context for the session, returning a
         deep copy of the session to use in the new context.
@@ -132,7 +133,13 @@ class ContextManagedSession(Session):
         :return: A deep copy of ``self``
         :rtype: :class:`ContextManagedSession`
         """
-        return self.copy()
+        try:
+            session = global_object.session
+        except AttributeError:
+            global_object.session = self.copy()
+            session = global_object.session
+
+        return session
 
     def __exit__(self, exc_type, exc_val, _):
         """
@@ -189,3 +196,6 @@ class ContextManagedSession(Session):
         """
         return '%s(bind=%s, expire_on_commit=%s)' % \
                (self.__class__.__name__, self.bind, self.expire_on_commit)
+
+    def __del__(self):
+        self.close()

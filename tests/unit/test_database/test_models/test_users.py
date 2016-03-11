@@ -1,4 +1,4 @@
-import unittest
+from tests import TestCaseWithAppContext
 from datetime import datetime, timedelta
 from hashlib import sha256
 from uuid import uuid1
@@ -12,11 +12,12 @@ import omicron_server
 __author__ = 'Michal Kononenko'
 
 
-class TestToken(unittest.TestCase):
+class TestToken(TestCaseWithAppContext):
     engine = create_engine('sqlite://')
     time_to_freeze = datetime.utcnow()
 
     def setUp(self):
+        TestCaseWithAppContext.setUp(self)
         self.token_string = str(uuid1())
         self.expiration_date = self.time_to_freeze + timedelta(seconds=1800)
 
@@ -82,7 +83,7 @@ class TestTokenConstructor(TestToken):
 class TestHashToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.token = omicron_server.database.models.users.Token(self.token_string)
+        self.token = omicron_server.database.Token(self.token_string)
 
     @mock.patch('omicron_server.database.models.users.sha256')
     def test_hash_token(self, mock_sha256):
@@ -126,10 +127,46 @@ class TestVerifyToken(TestToken):
         self.assertEqual(self.token.expiration_date, self.time_to_freeze)
 
 
-class TestUser(unittest.TestCase):
+class TestFromDatabaseSession(TestToken):
+    """
+    Tests :meth:`Token.from_database_session`
+    """
+    def setUp(self):
+        TestToken.setUp(self)
+        self.session = omicron_server.database.ContextManagedSession(
+                bind=conf.DATABASE_ENGINE
+        )
+        self.token = uuid1()
+        self.token_record = omicron_server.database.Token(
+            str(self.token), expiration_date=self.expiration_date
+        )
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_constructor_uuid(self, mock_first):
+        mock_first.return_value = self.token_record
+
+        token = omicron_server.database.Token.from_database_session(
+            self.token, self.session
+        )
+
+        self.assertEqual(token, self.token_record)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_constructor_string(self, mock_first):
+        mock_first.return_value = self.token_record
+
+        token = omicron_server.database.Token.from_database_session(
+            self.token_string, self.session
+        )
+
+        self.assertEqual(token, self.token_record)
+
+
+class TestUser(TestCaseWithAppContext):
     engine = create_engine('sqlite://')
 
     def setUp(self):
+        TestCaseWithAppContext.setUp(self)
         self.username = 'scott'
         self.password = 'tiger'
         self.email = 'scott@tiger.com'
@@ -141,6 +178,7 @@ class TestUser(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         metadata.drop_all(bind=cls.engine)
+        TestCaseWithAppContext.tearDownClass()
 
 
 class TestUserConstructor(TestUser):
@@ -229,29 +267,27 @@ class TestGenerateAuthToken(TestUser):
         )
         self.mock_token_return_value = uuid1()
 
+    def tearDown(self):
+        TestUser.tearDown(self)
+
     @mock.patch('sqlalchemy.orm.Session.add')
     @mock.patch('omicron_server.database.models.users.uuid1')
-    @mock.patch('sqlalchemy.orm.Query.first')
-    def test_generate_auth_token(self, mock_first, mock_guid, mock_add):
+    def test_generate_auth_token(self, mock_guid, mock_add):
         mock_guid.return_value = self.mock_token_return_value
-        mock_first.return_value = self.user
 
         token = self.user.generate_auth_token()[0]
         self.assertEqual(str(self.mock_token_return_value), token)
 
         self.assertTrue(mock_guid.called)
         self.assertTrue(mock_add.called)
-        self.assertTrue(mock_first.called)
 
     @mock.patch('sqlalchemy.orm.Session.add')
     @mock.patch('omicron_server.database.models.users.uuid1')
-    @mock.patch('sqlalchemy.orm.Query.first')
     @freeze_time('2012-01-01')
     def test_generate_auth_token_default_date(
-            self, mock_first, mock_guid, mock_add
+            self, mock_guid, mock_add
     ):
         mock_guid.return_value = self.mock_token_return_value
-        mock_first.return_value = self.user
         _, expiration_date = self.user.generate_auth_token()
         self.assertEqual(
             expiration_date,
@@ -259,6 +295,7 @@ class TestGenerateAuthToken(TestUser):
                     seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME
             )
         )
+
 
 class TestVerifyAuthToken(TestUser):
     def setUp(self):

@@ -3,20 +3,20 @@ Tests that the server can successfully write and read from the database
 in a "Round Trip"
 """
 from omicron_server.database.sessions import ContextManagedSession
-
 from omicron_server.config import default_config as conf
 from omicron_server.database.models.users import User
-from tests.integration import TestWithDatabase
+from tests.integration import TestCaseWithDatabase
 
 __author__ = 'Michal Kononenko'
 
 
-class TestDatabaseRoundTrip(TestWithDatabase):
+class TestDatabaseRoundTrip(TestCaseWithDatabase):
     """
     Tests that SQLAlchemy is successfully able to connect to the database,
     store an object in the DB, and retrieve it successfully.
     """
     def setUp(self):
+        TestCaseWithDatabase.setUp(self)
         self.username = 'scott'
         self.password = 'tiger'
         self.email = 'scott@tiger.com'

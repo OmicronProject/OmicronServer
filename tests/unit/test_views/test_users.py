@@ -5,13 +5,11 @@ import json
 import logging
 import unittest
 from base64 import b64encode
-
 import mock
 from omicron_server.database.models.users import User
 from omicron_server.database.schema import metadata
 from omicron_server.database.sessions import ContextManagedSession
 from sqlalchemy import create_engine
-
 from omicron_server.views import users
 from omicron_server.api_server import app
 

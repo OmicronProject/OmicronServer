@@ -1,11 +1,11 @@
 """
 Contains unit tests for :mod:`run_server`
 """
-import unittest
+from tests import TestCaseWithAppContext
 import mock
 import logging
 from omicron_server.config import Config
-
+from omicron_server import app
 from omicron_server import __main__
 from omicron_server.database import Administrator
 
@@ -15,12 +15,13 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
-class TestSetLogFile(unittest.TestCase):
+class TestSetLogFile(TestCaseWithAppContext):
     """
     Tests that if a logfile path is provided, that the master
     application log will log data to the filename given
     """
     def setUp(self):
+        TestCaseWithAppContext.setUp(self)
         self.logfile_name = 'logfile'
 
         self.mock_conf = Config()
@@ -43,11 +44,12 @@ class TestSetLogFile(unittest.TestCase):
         self.assertFalse(mock_config.called)
 
 
-class TestRunServer(unittest.TestCase):
+class TestRunServer(TestCaseWithAppContext):
     """
     Contains unit tests for the script
     """
     def setUp(self):
+        TestCaseWithAppContext.setUp(self)
         self.command_to_run = 'python ../../__main__.py'
         self.user = Administrator('root', 'root', 'scott@deler.com')
 
