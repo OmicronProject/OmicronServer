@@ -111,6 +111,22 @@ class TestRestfulPagination(unittest.TestCase):
         response_dict = json.loads(r.data.decode('utf-8'))
         self.assertEqual(response_dict['offset'], 0)
 
+    def test_negative_items_per_page_error_handling(self):
+        items_per_page = -10
+        test_url = '%s?items_per_page=%d' % (
+            self.url, items_per_page
+        )
+
+        r = self.request_method(test_url, headers=self.headers)
+        self.assertEqual(r.status_code, 400)
+
+    def test_negative_page(self):
+        page = -10
+        test_url = '%s?page=%d' % (self.url, page)
+
+        r = self.request_method(test_url, headers=self.headers)
+        self.assertEqual(r.status_code, 400)
+
     def test_function_name_preservation(self):
         """
         Result of a bug that occurred with the decorator, in that the wrapped
