@@ -1,3 +1,4 @@
+from tests import TestCaseWithAppContext
 import unittest
 import jsonschema
 import mock
@@ -12,15 +13,16 @@ class ResourceWithoutSchema(AbstractResource):
         return 'Gotten'
 
 
-class TestAbstractResource(unittest.TestCase):
+class TestAbstractResource(TestCaseWithAppContext):
     @classmethod
     def setUpClass(cls):
+        TestCaseWithAppContext.setUpClass()
         cls.view = ResourceWithoutSchema()
 
 
 class TestAbstractResourceOptions(TestAbstractResource):
     def setUp(self):
-        self.context = app.test_request_context()
+        TestAbstractResource.setUp(self)
         self.assertEqual(self.view.get(), 'Gotten')
 
     def test_options(self):
@@ -47,7 +49,7 @@ class ResourceWithSchema(SchemaDefinedResource):
     }
 
 
-class TestAPIViewWithSchema(unittest.TestCase):
+class TestAPIViewWithSchema(TestCaseWithAppContext):
     @classmethod
     def setUpClass(cls):
         cls.view = ResourceWithSchema()
@@ -56,6 +58,7 @@ class TestAPIViewWithSchema(unittest.TestCase):
 
 class TestAPIViewWithSchemaConstructor(TestAPIViewWithSchema):
     def setUp(self):
+        TestCaseWithAppContext.setUp(self)
         self.view.show_schema = mock.MagicMock()
         self.view.get = mock.MagicMock()
 
@@ -125,6 +128,7 @@ class TestShowSchema(TestAPIViewWithSchema):
 
 class TestValidateSchema(TestAPIViewWithSchema):
     def setUp(self):
+        TestAPIViewWithSchema.setUp(self)
         self.valid_dict = {'entry': 'this is a string'}
         self.valid_dict_schema = {
             'entry':

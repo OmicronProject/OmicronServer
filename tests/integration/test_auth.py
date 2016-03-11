@@ -3,20 +3,19 @@ Contains integration tests for :mod:`auth`, performing authentication
 without stubbing out any functionality.
 """
 import json
-import unittest
 from base64 import b64encode
 from uuid import uuid4
 import omicron_server.auth as auth
-from omicron_server import app
 from omicron_server.database import User, ContextManagedSession
 from omicron_server.config import default_config as conf
-from omicron_server.database.schema import metadata
+from tests.integration import TestCaseWithDatabase
+from omicron_server import app
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
-class TestAuth(unittest.TestCase):
+class TestAuth(TestCaseWithDatabase):
     """
     Base class for testing :mod:`auth`
     """
@@ -26,18 +25,13 @@ class TestAuth(unittest.TestCase):
         Set up the test database, and put the server into a request context
         requiring authentication.
         """
-        cls.context = app.test_request_context(
-            'api/v1/users'
-        )
+        TestCaseWithDatabase.setUpClass()
         cls.username = 'root'
         cls.password = 'toor'
         cls.email = 'scott@tiger.com'
 
-        cls.context.push()
-
-        metadata.create_all(bind=conf.DATABASE_ENGINE)
-
     def setUp(self):
+        TestCaseWithDatabase.setUp(self)
         with database_session() as session:
             session.add(User(self.username, self.password, self.email))
 
@@ -49,14 +43,7 @@ class TestAuth(unittest.TestCase):
 
             for user in users:
                 session.delete(user)
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Clean up a test suite by dropping all tables in the test database.
-        """
-        metadata.drop_all(bind=conf.DATABASE_ENGINE)
-        cls.context.pop()
+        TestCaseWithDatabase.tearDown(self)
 
 
 class TestVerifyPassword(TestAuth):
