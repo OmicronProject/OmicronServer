@@ -83,7 +83,7 @@ class TestTokenConstructor(TestToken):
 class TestHashToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.token = omicron_server.database.models.users.Token(self.token_string)
+        self.token = omicron_server.database.Token(self.token_string)
 
     @mock.patch('omicron_server.database.models.users.sha256')
     def test_hash_token(self, mock_sha256):
@@ -125,6 +125,41 @@ class TestVerifyToken(TestToken):
     def test_revoke_token(self):
         self.token.revoke()
         self.assertEqual(self.token.expiration_date, self.time_to_freeze)
+
+
+class TestFromDatabaseSession(TestToken):
+    """
+    Tests :meth:`Token.from_database_session`
+    """
+    def setUp(self):
+        TestToken.setUp(self)
+        self.session = omicron_server.database.ContextManagedSession(
+                bind=conf.DATABASE_ENGINE
+        )
+        self.token = uuid1()
+        self.token_record = omicron_server.database.Token(
+            str(self.token), expiration_date=self.expiration_date
+        )
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_constructor_uuid(self, mock_first):
+        mock_first.return_value = self.token_record
+
+        token = omicron_server.database.Token.from_database_session(
+            self.token, self.session
+        )
+
+        self.assertEqual(token, self.token_record)
+
+    @mock.patch('sqlalchemy.orm.Query.first')
+    def test_constructor_string(self, mock_first):
+        mock_first.return_value = self.token_record
+
+        token = omicron_server.database.Token.from_database_session(
+            self.token_string, self.session
+        )
+
+        self.assertEqual(token, self.token_record)
 
 
 class TestUser(TestCaseWithAppContext):

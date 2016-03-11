@@ -1,7 +1,6 @@
 """
 Contains unit tests for :mod:`database.sessions`
 """
-import unittest
 import mock
 from sqlalchemy import create_engine
 from tests import TestCaseWithAppContext
