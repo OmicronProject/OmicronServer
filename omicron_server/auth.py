@@ -82,6 +82,7 @@ def verify_password(username_or_token, password=None):
 
         if token.verify_token(username_or_token):
             g.user = token.owner
+            g.token_string = username_or_token
             g.authenticated_from_token = True
             return True
         else:
