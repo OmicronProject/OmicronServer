@@ -14,6 +14,7 @@ from ...config import default_config as conf
 from ...database import schema
 
 __author__ = 'Michal Kononenko'
+database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 class Token(Base):
@@ -171,7 +172,7 @@ class User(Base):
 
     def generate_auth_token(
             self, expiration=conf.DEFAULT_TOKEN_EXPIRATION_TIME,
-            session=ContextManagedSession(bind=conf.DATABASE_ENGINE)
+            session=database_session
     ):
         """
         Generates a token for the user. The user's token is a `UUID 1`_,
