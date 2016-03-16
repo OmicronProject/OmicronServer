@@ -31,12 +31,16 @@ database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
 @app.before_request
-def get_request_id():
+@database_session()
+def setup_request(session):
     g.request_id = str(uuid1())
+    g.session = session
 
 
 @app.after_request
-def add_request_guid_to_header(response):
+def teardown_request(response):
+    g.session.close()
+
     response.headers['Request-Id'] = g.request_id
     return response
 
@@ -69,7 +73,8 @@ def hello_world():
 @app.route('/api/v1/token', methods=['POST', 'OPTIONS'])
 @crossdomain(origin='*')
 @auth.login_required
-def create_token():
+@database_session()
+def create_token(session):
     """
     Generate a user's auth token from the user in Flask's :attr:`Flask.g`
     object, which acts as an object repository unique to each request. Expects
@@ -105,12 +110,13 @@ def create_token():
         abort(401)
     try:
         token, expiration_date = g.user.generate_auth_token(
-            expiration=int(request.args.get('expiration'))
+            expiration=int(request.args.get('expiration')),
+            session=session
         )
     except TypeError:
         log.debug('No expiration supplied for request %s, using default '
                   'expiration time', g.request_id)
-        token, expiration_date = g.user.generate_auth_token()
+        token, expiration_date = g.user.generate_auth_token(session=session)
     response = jsonify(
             {'token': token,
              'expiration_date': expiration_date.isoformat()

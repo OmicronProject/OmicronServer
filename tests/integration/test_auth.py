@@ -33,16 +33,16 @@ class TestAuth(TestCaseWithDatabase):
     def setUp(self):
         TestCaseWithDatabase.setUp(self)
         with database_session() as session:
-            session.add(User(self.username, self.password, self.email))
-
-    def tearDown(self):
-        with database_session() as session:
             users = session.query(User).filter_by(
                 username=self.username
             ).all()
-
             for user in users:
                 session.delete(user)
+
+        with database_session() as session:
+            session.add(User(self.username, self.password, self.email))
+
+    def tearDown(self):
         TestCaseWithDatabase.tearDown(self)
 
 

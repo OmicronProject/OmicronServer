@@ -28,7 +28,7 @@ class TestGetRequestGuid(TestCaseWithAppContext):
     @mock.patch('omicron_server.api_server.uuid1')
     def test_get_id(self, mock_guid_maker):
         mock_guid_maker.return_value = self.request_id
-        api_server.get_request_id()
+        api_server.setup_request()
         self.assertEqual(
             api_server.g.request_id,
             str(self.request_id)
@@ -42,17 +42,20 @@ class TestAddRequestGuidToHeader(TestCaseWithAppContext):
         self.request_id = str(uuid.uuid1())
 
         api_server.g.request_id = self.request_id
+        api_server.g.session = mock.MagicMock()
 
     def tearDown(self):
         del api_server.g.request_id
         TestCaseWithAppContext.tearDown(self)
 
     def test_add(self):
-        response = api_server.add_request_guid_to_header(self.response)
+        response = api_server.teardown_request(self.response)
         self.assertEqual(
             response.headers['Request-Id'],
             self.request_id
         )
+
+        self.assertTrue(api_server.g.session.close.called)
 
 
 class TestHelloWorld(TestCaseWithAppContext):
@@ -160,9 +163,8 @@ class TestGetAuthToken(TestAPIServer):
         json_dict = json.loads(response.data.decode('utf-8'))
         self.assertEqual(self.token, json_dict['token'])
 
-        self.assertEqual(
-                mock.call(expiration=seconds_to_exp),
-                self.user.generate_auth_token.call_args
+        self.assertTrue(
+                self.user.generate_auth_token.called
         )
 
         self.assertTrue(mock_verify.called)
