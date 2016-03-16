@@ -10,6 +10,7 @@ from omicron_server.database import User, ContextManagedSession
 from omicron_server.config import default_config as conf
 from tests.integration import TestCaseWithDatabase
 from omicron_server import app
+from copy import deepcopy
 
 __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
@@ -119,3 +120,39 @@ class TestVerifyToken(TestAuth):
         with self.context:
             self.assertFalse(auth.verify_password(bad_token))
             self.assertTrue(auth.verify_password(self.token))
+
+
+class TestAuthTokenVerification(TestAuth):
+    def setUp(self):
+        TestAuth.setUp(self)
+        self.client = app.test_client()
+        self.headers = {
+            'content-type': 'application/json',
+            'Authorization': 'Basic %s' % b64encode(
+                ('%s:%s' % (self.username, self.password)).encode('ascii')
+            ).decode('ascii')
+        }
+
+        r = self.client.post('api/v1/token', headers=self.headers)
+
+        self.assertEqual(r.status_code, 201)
+
+        self.token = json.loads(r.data.decode('ascii'))['token']
+
+        self.token_auth_headers = deepcopy(self.headers)
+
+        self.token_auth_headers['Authorization'] = 'Basic %s' % b64encode(
+                ('%s:' % self.token).encode('ascii')
+        ).decode('ascii')
+
+        self.assertNotEqual(self.token_auth_headers, self.headers)
+
+    def test_end_to_end_token_auth(self):
+
+        request_with_username = self.client.get(
+                'api/v1/users', headers=self.headers)
+        self.assertEqual(request_with_username.status_code, 200)
+
+        request_with_token = self.client.get(
+                'api/v1/users', headers=self.token_auth_headers)
+        self.assertEqual(request_with_token.status_code, 200)
