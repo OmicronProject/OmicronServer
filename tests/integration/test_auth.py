@@ -150,9 +150,9 @@ class TestAuthTokenVerification(TestAuth):
     def test_end_to_end_token_auth(self):
 
         request_with_username = self.client.get(
-                'api/v1/users', headers=self.headers)
+                '/users', headers=self.headers)
         self.assertEqual(request_with_username.status_code, 200)
 
         request_with_token = self.client.get(
-                'api/v1/users', headers=self.token_auth_headers)
+                '/users', headers=self.token_auth_headers)
         self.assertEqual(request_with_token.status_code, 200)

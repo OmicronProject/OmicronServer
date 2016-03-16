@@ -34,7 +34,7 @@ class TestGet(TestProjectView):
 
     def setUp(self):
         self.request_method = self.client.get
-        self.url = 'api/v1/projects'
+        self.url = '/projects'
 
     @mock.patch('sqlalchemy.orm.Query.all')
     @mock.patch('sqlalchemy.orm.Query.count')
@@ -59,7 +59,7 @@ class TestGet(TestProjectView):
 class TestCreateProject(TestProjectView):
     def setUp(self):
         self.request_method = self.client.post
-        self.url = 'api/v1/projects'
+        self.url = '/projects'
 
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.add')

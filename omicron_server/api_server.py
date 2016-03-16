@@ -20,12 +20,12 @@ log.setLevel(logging.DEBUG)
 __author__ = 'Michal Kononenko'
 
 app = Flask(__name__)
-api = Api(app, prefix='/api/v1', decorators=[crossdomain(origin='*')])
+api = Api(app, decorators=[crossdomain(origin='*')])
 
 api.add_resource(UserContainer, '/users')
 api.add_resource(UserView, '/users/<username_or_id>')
 api.add_resource(ProjectContainer, '/projects')
-api.add_resource(Projects, 'projects/<project_name_or_id>')
+api.add_resource(Projects, '/projects/<project_name_or_id>')
 
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
@@ -60,14 +60,33 @@ def hello_world():
         GET / HTTP/1.1
         Content-Type: application/json
 
-        Hello World!
+        {
+            'meta': {
+                'source_repository': 'https://github.com/MichalKononenko \
+                /OmicronServer'
+            }
+        }
 
     .. _OmicronClient: https://github.com/MichalKononenko/OmicronClient
 
     :return: Hello, world!
     :rtype: str
     """
-    return jsonify({'message': 'hello_world'})
+    return jsonify(
+        {
+            'meta': {
+                'source_repository':
+                    'https://github.com/MichalKononenko/OmicronServer',
+                'issue_tracking':
+                    'https://waffle.io/MichalKononenko/OmicronServer',
+                'documentation':
+                    'https://omicron-server.readthedocs.org/en/latest/',
+                'dependency_management':
+                    'https://requires.io/github/MichalKononenko/OmicronServer'
+                    '/requirements/?branch=master'
+            }
+        }
+    )
 
 
 @app.route('/api/v1/token', methods=['POST', 'OPTIONS'])
