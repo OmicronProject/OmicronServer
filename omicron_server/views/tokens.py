@@ -75,29 +75,22 @@ class Tokens(AbstractResource):
         response.status_code = 403
         return response
 
-    @staticmethod
-    def parse_request(req_to_parse):
-        if not request.json:
-            raise RequestParseError(
-                    'Unable to parse request %s' % req_to_parse
-            )
-
     @contextmanager
     def get_token_string(self, req_to_parse):
         if g.authenticated_from_token:
-            yield g.token_string
-
-        if request.json is None:
-            return self.make_400_error_response(
-                'Unable to parse JSON'
-            )
-
-        try:
-            token_string = req_to_parse.json['token']
-        except KeyError:
-            return self.make_400_error_response(
-                'the "token" key was not found in the JSON'
-            )
+            token_string = g.token_string
+        else:
+            if req_to_parse.json is None:
+                yield
+                return self.make_400_error_response(
+                    'Unable to parse JSON'
+                )
+            try:
+                token_string = req_to_parse.json['token']
+            except KeyError:
+                return self.make_400_error_response(
+                    'The "token" key was not found in the supplied JSON'
+                )
 
         yield token_string
 
