@@ -1,7 +1,7 @@
 """
 Contains unit tests for :mod:`omicron_server.views.tokens`
 """
-from tests import TestCaseWithAppContext, TestCaseWithDatabase
+from tests import TestCaseWithDatabase
 import mock
 from omicron_server.auth import _verify_user
 from omicron_server.views import tokens
@@ -16,7 +16,7 @@ __author__ = 'Michal Kononenko'
 
 class TestTokens(TestCaseWithDatabase):
     def setUp(self):
-        TestCaseWithAppContext.setUp(self)
+        TestCaseWithDatabase.setUp(self)
         self.endpoint = tokens.Tokens()
         self.token_string = str(uuid1())
 

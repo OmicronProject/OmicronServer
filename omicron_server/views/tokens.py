@@ -1,5 +1,5 @@
 """
-Contains endpoints for working with authentication tokens
+Contains endpoints for working with authentication tokens.
 """
 from ..views import AbstractResource
 from ..config import default_config as conf
@@ -12,12 +12,12 @@ __author__ = 'Michal Kononenko'
 database_session = ContextManagedSession(bind=conf.DATABASE_ENGINE)
 
 
-class RequestParseError(Exception):
-    pass
-
-
 class Tokens(AbstractResource):
-
+    """
+    Maps the ``/tokens`` endpoint. Users can ``POST`` to this endpoint to
+    create authentication tokens, or they can send a ``DELETE`` request to
+    delete their tokens.
+    """
     class TokenProcessingError(Exception):
         pass
 
@@ -59,7 +59,9 @@ class Tokens(AbstractResource):
                 'Unable to find the requested token'
             )
 
-        token.revoke()
+        with session() as session:
+            token.revoke(session)
+
         response = jsonify({'token_status': 'deleted'})
 
         return response

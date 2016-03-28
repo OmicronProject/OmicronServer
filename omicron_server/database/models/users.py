@@ -64,12 +64,17 @@ class Token(Base):
 
         return self.hash_token(token) == self.token_hash
 
-    def revoke(self):
+    def revoke(self, session=database_session):
         """
         Expire the token by setting the expiration date equal to the current
-        date
+        date. Write the changes to the session.
+
+        :param ContextManagedSession session: The database session
+            that is to be used for token revocation
         """
-        self.expiration_date = datetime.utcnow()
+        with session() as session:
+            self.expiration_date = datetime.utcnow()
+            session.add(self)
 
     @classmethod
     def from_database_session(cls, token, session):

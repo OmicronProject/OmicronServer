@@ -50,6 +50,7 @@ class TestAuth(TestCaseWithDatabase):
             for user in users:
                 session.delete(user)
 
+
 class TestVerifyPassword(TestAuth):
     """
     Tests the :meth:`auth.verify_password` callback
@@ -159,3 +160,66 @@ class TestAuthTokenVerification(TestAuth):
         request_with_token = self.client.get(
                 '/users', headers=self.token_auth_headers)
         self.assertEqual(request_with_token.status_code, 200)
+
+
+class TestExpiredToken(TestAuth):
+    def setUp(self):
+        TestAuth.setUp(self)
+        self.client = app.test_client()
+        self.headers = {
+            'content-type': 'application/json',
+            'Authorization': self._encode_credentials(
+                    self.username, self.password
+            )
+        }
+
+        self.token_endpoint = '/tokens'
+        self.authorized_endpoint = '/users'
+
+        self.token = self._get_auth_token(self.token_endpoint, self.headers)
+
+        self.token_headers = {
+            'content-type': 'application/json',
+            'Authorization': self._encode_credentials(self.token)
+        }
+
+    def test_token_revocation(self):
+        """
+        Tests the patch for bug #131. Checks that the user cannot sign in with
+        an expired token.
+        """
+        response = self._make_authorized_request(
+                self.authorized_endpoint, self.token_headers
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self._delete_token(self.token_endpoint, self.token_headers)
+        self.assertEqual(response.status_code, 200)
+
+        response = self._make_authorized_request(
+                self.authorized_endpoint, self.token_headers
+        )
+        self.assertEqual(response.status_code, 401)
+
+    @staticmethod
+    def _encode_credentials(username_or_token='', password=''):
+        auth_header = 'Basic %s' % b64encode(
+                ('%s:%s' % (username_or_token, password)).encode('ascii')
+        ).decode('ascii')
+
+        return auth_header
+
+    def _get_auth_token(self, token_url, headers):
+        r = self.client.post(token_url, headers=headers)
+        self.assertEqual(r.status_code, 201)
+
+        token = json.loads(r.data.decode('ascii'))['token']
+        return token
+
+    def _make_authorized_request(self, url, headers):
+        r = self.client.get(url, headers=headers)
+        return r
+
+    def _delete_token(self, url, headers):
+        r = self.client.delete(url, headers=headers)
+        return r
