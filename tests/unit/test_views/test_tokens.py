@@ -31,7 +31,9 @@ class TestTokens(TestCaseWithDatabase):
 @mock.patch('omicron_server.views.tokens.g')
 @mock.patch('omicron_server.auth._verify_user', return_value=True)
 @mock.patch('omicron_server.views.tokens.database_session')
-@mock.patch('omicron_server.views.tokens.Tokens._authed_from_token_error')
+@mock.patch(
+        'omicron_server.views.tokens.Tokens._authenticated_from_token_error'
+)
 @mock.patch('omicron_server.views.tokens.Tokens._successful_response')
 class TestPost(TestTokens):
 
@@ -129,6 +131,7 @@ class TestDelete(TestTokens):
         self.token = mock.MagicMock()
 
         self.endpoint.make_400_error_response = mock.MagicMock()
+        self.error_message = 'This is an error'
 
     @contextmanager
     def prepare_tests(self, mock_first, mock_g, mock_auth):
@@ -139,7 +142,6 @@ class TestDelete(TestTokens):
 
         yield
 
-        self.assertTrue(mock_first.called)
         self.assertTrue(mock_auth.called)
 
     def test_delete_administrator(self, mock_first, mock_g, mock_auth):
@@ -171,6 +173,20 @@ class TestDelete(TestTokens):
         self.assertEqual(response, mock_response.return_value)
         self.assertTrue(mock_response.called)
 
+    def test_delete_token_processing_error(
+            self, mock_first, mock_g, mock_auth
+    ):
+        with self.prepare_tests(mock_first, mock_g, mock_auth):
+            self.endpoint.get_token_string = mock.MagicMock(
+                side_effect=self.endpoint.TokenProcessingError(
+                        self.error_message
+                )
+            )
+
+            self.endpoint.delete()
+            self.assertTrue(self.endpoint.get_token_string.called)
+            self.assertTrue(self.endpoint.make_400_error_response.called)
+
 
 class TestSuccessfulResponse(TestTokens):
     def setUp(self):
@@ -189,7 +205,7 @@ class TestSuccessfulResponse(TestTokens):
 class TestAuthedFromTokenError(TestTokens):
     def test_error(self):
         self.assertEqual(
-                self.endpoint._authed_from_token_error.status_code,
+                self.endpoint._authenticated_from_token_error.status_code,
                 403
         )
 
@@ -204,12 +220,45 @@ class TestGetTokenString(TestTokens):
         mock_g.authenticated_from_token = True
         mock_g.token_string = self.token_string
 
-        with self.endpoint.get_token_string(mock.MagicMock) as token:
-            self.assertEqual(token, self.token_string)
+        token = self.endpoint.get_token_string(self.request)
+        self.assertEqual(token, self.token_string)
 
     def test_request_not_json(self, mock_g):
         mock_g.authenticated_from_token = False
         self.request.json = None
 
-        with self.endpoint.get_token_string(self.request) as token:
-            self.assertEqual(token, self.token_string)
+        with self.assertRaises(self.endpoint.TokenProcessingError):
+            self.endpoint.get_token_string(self.request)
+
+    def test_key_not_found_in_json(self, mock_g):
+        mock_g.authenticated_from_token = False
+        self.request.json = {'bad key': 'bad value'}
+
+        with self.assertRaises(self.endpoint.TokenProcessingError):
+            self.endpoint.get_token_string(self.request)
+
+    def test_happy_path(self, mock_g):
+        mock_g.authenticated_from_token = False
+        self.request.json = {'token': self.token_string}
+
+        self.assertEqual(
+            self.token_string,
+            self.endpoint.get_token_string(self.request)
+        )
+
+
+class TestMake400Response(TestTokens):
+    def setUp(self):
+        TestTokens.setUp(self)
+        self.message = 'This is an error message'
+
+    @mock.patch('omicron_server.views.tokens.jsonify')
+    def test_make_response(self, mock_jsonify):
+        response = self.endpoint.make_400_error_response(self.message)
+
+        self.assertEqual(
+            mock.call({'error': self.message}),
+            mock_jsonify.call_args
+        )
+
+        self.assertEqual(response.status_code, 400)

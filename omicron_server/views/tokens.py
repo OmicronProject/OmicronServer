@@ -6,7 +6,6 @@ from ..config import default_config as conf
 from ..database import ContextManagedSession, Token, Administrator
 from ..auth import auth
 from flask import g, jsonify, request
-from contextlib import contextmanager
 
 __author__ = 'Michal Kononenko'
 
@@ -19,11 +18,14 @@ class RequestParseError(Exception):
 
 class Tokens(AbstractResource):
 
+    class TokenProcessingError(Exception):
+        pass
+
     @database_session()
     @auth.login_required
     def post(self, session):
         if g.authenticated_from_token:
-            return self._authed_from_token_error
+            return self._authenticated_from_token_error
 
         try:
             expiration_time = int(request.args.get('expiration'))
@@ -39,10 +41,13 @@ class Tokens(AbstractResource):
     @database_session()
     @auth.login_required
     def delete(self, session):
-        with self.get_token_string(request) as token_string:
-            token_query = session.query(Token).filter_by(
-                token_hash=Token.hash_token(token_string)
-            )
+        try:
+            token_string = self.get_token_string(request)
+        except self.TokenProcessingError as error:
+            return self.make_400_error_response(error)
+        token_query = session.query(Token).filter_by(
+            token_hash=Token.hash_token(token_string)
+        )
 
         if isinstance(g.user, Administrator):
             token = token_query.first()
@@ -69,30 +74,28 @@ class Tokens(AbstractResource):
         return response
 
     @property
-    def _authed_from_token_error(self):
+    def _authenticated_from_token_error(self):
         response = jsonify({'error': 'attempted to create new token with '
                                      'existing token'})
         response.status_code = 403
         return response
 
-    @contextmanager
     def get_token_string(self, req_to_parse):
         if g.authenticated_from_token:
             token_string = g.token_string
         else:
             if req_to_parse.json is None:
-                yield
-                return self.make_400_error_response(
+                raise self.TokenProcessingError(
                     'Unable to parse JSON'
                 )
             try:
                 token_string = req_to_parse.json['token']
             except KeyError:
-                return self.make_400_error_response(
+                raise self.TokenProcessingError(
                     'The "token" key was not found in the supplied JSON'
                 )
 
-        yield token_string
+        return token_string
 
     @staticmethod
     def make_400_error_response(message):
