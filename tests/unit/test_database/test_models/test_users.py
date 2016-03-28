@@ -122,9 +122,11 @@ class TestVerifyToken(TestToken):
         self.assertTrue(mock_hash.called)
 
     @freeze_time(TestToken.time_to_freeze)
-    def test_revoke_token(self):
+    @mock.patch('sqlalchemy.orm.Session.add')
+    def test_revoke_token(self, mock_add):
         self.token.revoke()
         self.assertEqual(self.token.expiration_date, self.time_to_freeze)
+        self.assertEqual(mock.call(self.token), mock_add.call_args)
 
 
 class TestFromDatabaseSession(TestToken):

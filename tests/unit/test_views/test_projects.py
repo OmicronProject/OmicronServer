@@ -34,7 +34,7 @@ class TestGet(TestProjectView):
 
     def setUp(self):
         self.request_method = self.client.get
-        self.url = 'api/v1/projects'
+        self.url = '/projects'
 
     @mock.patch('sqlalchemy.orm.Query.all')
     @mock.patch('sqlalchemy.orm.Query.count')
@@ -54,12 +54,12 @@ class TestGet(TestProjectView):
         self.assertTrue(mock_auth.called)
 
 
-@mock.patch('omicron_server.api_server.auth.verify_password_callback',
+@mock.patch('omicron_server.views.tokens.auth.verify_password_callback',
             return_value=True)
 class TestCreateProject(TestProjectView):
     def setUp(self):
         self.request_method = self.client.post
-        self.url = 'api/v1/projects'
+        self.url = '/projects'
 
     @mock.patch('sqlalchemy.orm.Query.first')
     @mock.patch('sqlalchemy.orm.Session.add')

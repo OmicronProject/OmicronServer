@@ -33,18 +33,22 @@ class TestAuth(TestCaseWithDatabase):
 
     def setUp(self):
         TestCaseWithDatabase.setUp(self)
-        with database_session() as session:
-            users = session.query(User).filter_by(
-                username=self.username
-            ).all()
-            for user in users:
-                session.delete(user)
+        self._clear_test_user(database_session)
 
         with database_session() as session:
             session.add(User(self.username, self.password, self.email))
 
     def tearDown(self):
+        self._clear_test_user(database_session)
         TestCaseWithDatabase.tearDown(self)
+
+    def _clear_test_user(self, db_session):
+        with db_session() as session:
+            users = session.query(User).filter_by(
+                username=self.username
+            ).all()
+            for user in users:
+                session.delete(user)
 
 
 class TestVerifyPassword(TestAuth):
@@ -95,7 +99,7 @@ class TestVerifyToken(TestAuth):
                 ('%s:%s' % (self.username, self.password)).encode('ascii')
             ).decode('ascii')
         }
-        r = self.client.post('api/v1/token', headers=self.headers)
+        r = self.client.post('/tokens', headers=self.headers)
 
         self.assertEqual(r.status_code, 201)
 
@@ -133,7 +137,7 @@ class TestAuthTokenVerification(TestAuth):
             ).decode('ascii')
         }
 
-        r = self.client.post('api/v1/token', headers=self.headers)
+        r = self.client.post('/tokens', headers=self.headers)
 
         self.assertEqual(r.status_code, 201)
 
@@ -150,9 +154,72 @@ class TestAuthTokenVerification(TestAuth):
     def test_end_to_end_token_auth(self):
 
         request_with_username = self.client.get(
-                'api/v1/users', headers=self.headers)
+                '/users', headers=self.headers)
         self.assertEqual(request_with_username.status_code, 200)
 
         request_with_token = self.client.get(
-                'api/v1/users', headers=self.token_auth_headers)
+                '/users', headers=self.token_auth_headers)
         self.assertEqual(request_with_token.status_code, 200)
+
+
+class TestExpiredToken(TestAuth):
+    def setUp(self):
+        TestAuth.setUp(self)
+        self.client = app.test_client()
+        self.headers = {
+            'content-type': 'application/json',
+            'Authorization': self._encode_credentials(
+                    self.username, self.password
+            )
+        }
+
+        self.token_endpoint = '/tokens'
+        self.authorized_endpoint = '/users'
+
+        self.token = self._get_auth_token(self.token_endpoint, self.headers)
+
+        self.token_headers = {
+            'content-type': 'application/json',
+            'Authorization': self._encode_credentials(self.token)
+        }
+
+    def test_token_revocation(self):
+        """
+        Tests the patch for bug #131. Checks that the user cannot sign in with
+        an expired token.
+        """
+        response = self._make_authorized_request(
+                self.authorized_endpoint, self.token_headers
+        )
+        self.assertEqual(response.status_code, 200)
+
+        response = self._delete_token(self.token_endpoint, self.token_headers)
+        self.assertEqual(response.status_code, 200)
+
+        response = self._make_authorized_request(
+                self.authorized_endpoint, self.token_headers
+        )
+        self.assertEqual(response.status_code, 401)
+
+    @staticmethod
+    def _encode_credentials(username_or_token='', password=''):
+        auth_header = 'Basic %s' % b64encode(
+                ('%s:%s' % (username_or_token, password)).encode('ascii')
+        ).decode('ascii')
+
+        return auth_header
+
+    def _get_auth_token(self, token_url, headers):
+        r = self.client.post(token_url, headers=headers)
+        self.assertEqual(r.status_code, 201)
+
+        token = json.loads(r.data.decode('ascii'))['token']
+        return token
+
+    def _make_authorized_request(self, url, headers):
+        r = self.client.get(url, headers=headers)
+        return r
+
+    def _delete_token(self, url, headers):
+        r = self.client.delete(url, headers=headers)
+        return r

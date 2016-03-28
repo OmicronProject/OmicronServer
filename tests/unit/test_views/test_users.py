@@ -132,7 +132,7 @@ class TestUserContainerGet(TestUserContainer):
     def setUp(self):
         TestUserContainer.setUp(self)
         self.request_method = self.client.get
-        self.url = 'api/v1/users'
+        self.url = '/users'
         self.user = User(self.username, self.password, self.email)
         self.user.verify_password = mock.MagicMock(return_value=True)
 
@@ -151,8 +151,9 @@ class TestUserContainerGet(TestUserContainer):
 @mock.patch('sqlalchemy.orm.Session.add')
 class TestCreateUser(TestUserContainer):
     def setUp(self):
+        TestUserContainer.setUp(self)
         self.request_method = self.client.post
-        self.url = 'api/v1/users'
+        self.url = '/users'
 
     def test_post(self, mock_add):
         data_to_post = {
@@ -197,7 +198,7 @@ class TestGet(TestUserView):
     def setUp(self):
         TestUserView.setUp(self)
         self.request_method = self.client.get
-        self.url = 'api/v1/users/%s' % self.username
+        self.url = '/users/%s' % self.username
         self.headers['Authorization'] = 'Basic %s' % \
             b64encode(('%s:%s' % (self.username, self.password)).
                       encode('ascii')).decode('ascii')
@@ -218,7 +219,7 @@ class TestGet(TestUserView):
         mock_first.return_value = self.user
         mock_all.return_value = []
         mock_count.return_value = 0
-        url = 'api/v1/users/1'
+        url = '/users/1'
 
         r = self.request_method(url, headers=self.headers)
         self.assertEqual(r.status_code, 200)
