@@ -54,7 +54,7 @@ class TestGet(TestProjectView):
         self.assertTrue(mock_auth.called)
 
 
-@mock.patch('omicron_server.api_server.auth.verify_password_callback',
+@mock.patch('omicron_server.views.tokens.auth.verify_password_callback',
             return_value=True)
 class TestCreateProject(TestProjectView):
     def setUp(self):

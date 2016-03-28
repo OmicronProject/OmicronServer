@@ -33,19 +33,22 @@ class TestAuth(TestCaseWithDatabase):
 
     def setUp(self):
         TestCaseWithDatabase.setUp(self)
-        with database_session() as session:
-            users = session.query(User).filter_by(
-                username=self.username
-            ).all()
-            for user in users:
-                session.delete(user)
+        self._clear_test_user(database_session)
 
         with database_session() as session:
             session.add(User(self.username, self.password, self.email))
 
     def tearDown(self):
+        self._clear_test_user(database_session)
         TestCaseWithDatabase.tearDown(self)
 
+    def _clear_test_user(self, db_session):
+        with db_session() as session:
+            users = session.query(User).filter_by(
+                username=self.username
+            ).all()
+            for user in users:
+                session.delete(user)
 
 class TestVerifyPassword(TestAuth):
     """
@@ -95,7 +98,7 @@ class TestVerifyToken(TestAuth):
                 ('%s:%s' % (self.username, self.password)).encode('ascii')
             ).decode('ascii')
         }
-        r = self.client.post('api/v1/token', headers=self.headers)
+        r = self.client.post('/tokens', headers=self.headers)
 
         self.assertEqual(r.status_code, 201)
 
@@ -133,7 +136,7 @@ class TestAuthTokenVerification(TestAuth):
             ).decode('ascii')
         }
 
-        r = self.client.post('api/v1/token', headers=self.headers)
+        r = self.client.post('/tokens', headers=self.headers)
 
         self.assertEqual(r.status_code, 201)
 

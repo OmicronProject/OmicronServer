@@ -32,7 +32,7 @@ class TestTokens(TestCaseWithDatabase):
 @mock.patch('omicron_server.auth._verify_user', return_value=True)
 @mock.patch('omicron_server.views.tokens.database_session')
 @mock.patch(
-        'omicron_server.views.tokens.Tokens._authenticated_from_token_error'
+        'omicron_server.views.tokens.Tokens._authenticated_from_token_response'
 )
 @mock.patch('omicron_server.views.tokens.Tokens._successful_response')
 class TestPost(TestTokens):
@@ -205,7 +205,7 @@ class TestSuccessfulResponse(TestTokens):
 class TestAuthedFromTokenError(TestTokens):
     def test_error(self):
         self.assertEqual(
-                self.endpoint._authenticated_from_token_error.status_code,
+                self.endpoint._authenticated_from_token_response.status_code,
                 403
         )
 

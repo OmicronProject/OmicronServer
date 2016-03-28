@@ -25,7 +25,7 @@ class Tokens(AbstractResource):
     @auth.login_required
     def post(self, session):
         if g.authenticated_from_token:
-            return self._authenticated_from_token_error
+            return self._authenticated_from_token_response
 
         try:
             expiration_time = int(request.args.get('expiration'))
@@ -74,7 +74,7 @@ class Tokens(AbstractResource):
         return response
 
     @property
-    def _authenticated_from_token_error(self):
+    def _authenticated_from_token_response(self):
         response = jsonify({'error': 'attempted to create new token with '
                                      'existing token'})
         response.status_code = 403
