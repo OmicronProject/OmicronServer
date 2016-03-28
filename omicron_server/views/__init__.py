@@ -7,4 +7,5 @@ from .abstract_resource import AbstractResource, SchemaDefinedResource
 from .projects import Projects, ProjectContainer
 from .users import UserContainer, UserView
 from .tokens import Tokens
+
 __author__ = 'Michal Kononenko'
