@@ -134,7 +134,7 @@ class TestDelete(TestTokens):
         self.error_message = 'This is an error'
 
     @contextmanager
-    def prepare_tests(self, mock_first, mock_g, mock_auth):
+    def _prepare_tests(self, mock_first, mock_g, mock_auth):
         mock_auth.return_value = True
         mock_g.authenticated_from_token = True
         mock_g.token_string = self.token_string
@@ -145,14 +145,14 @@ class TestDelete(TestTokens):
         self.assertTrue(mock_auth.called)
 
     def test_delete_administrator(self, mock_first, mock_g, mock_auth):
-        with self.prepare_tests(mock_first, mock_g, mock_auth):
+        with self._prepare_tests(mock_first, mock_g, mock_auth):
             mock_g.user = self.admin
             response = self.endpoint.delete()
 
         self.assertEqual(response.status_code, 200)
 
     def test_delete_user(self, mock_first, mock_g, mock_auth):
-        with self.prepare_tests(mock_first, mock_g, mock_auth):
+        with self._prepare_tests(mock_first, mock_g, mock_auth):
             mock_g.user = self.user
             response = self.endpoint.delete()
 
@@ -176,7 +176,7 @@ class TestDelete(TestTokens):
     def test_delete_token_processing_error(
             self, mock_first, mock_g, mock_auth
     ):
-        with self.prepare_tests(mock_first, mock_g, mock_auth):
+        with self._prepare_tests(mock_first, mock_g, mock_auth):
             self.endpoint.get_token_string = mock.MagicMock(
                 side_effect=self.endpoint.TokenProcessingError(
                         self.error_message
