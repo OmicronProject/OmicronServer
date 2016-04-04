@@ -3,15 +3,16 @@ Contains unit tests for :mod:`auth`
 """
 import unittest
 from uuid import uuid1
-from omicron_server import app
-import omicron_server.auth as auth
+
 import mock
-from omicron_server.database.models.users import User, Token
-from omicron_server.database.sessions import ContextManagedSession
 from sqlalchemy import create_engine
 
+import omicron_server.auth as auth
+from omicron_server import app
 from omicron_server.config import default_config as conf
 from omicron_server.database.schema import metadata
+from omicron_server.database.sessions import ContextManagedSession
+from omicron_server.models import User, Token
 
 __author__ = 'Michal Kononenko'
 
@@ -184,7 +185,7 @@ class TestVerifyPassword(TestAuth):
         self.assertFalse(auth.verify_password(self.token_string))
         self.assertTrue(mock_first.called)
 
-    @mock.patch('omicron_server.database.Token.verify_token',
+    @mock.patch('omicron_server.models.Token.verify_token',
                 return_value=False)
     def test_verify_token_bad_token(self, mock_check_token):
         self.assertFalse(auth.verify_password(self.token_string))

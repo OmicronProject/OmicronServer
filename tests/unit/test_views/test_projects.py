@@ -4,10 +4,8 @@ Contains unit tests for :mod:`views.projects`
 import json
 import unittest
 from datetime import datetime
-
 import mock
-from omicron_server.database import Project, User
-
+from omicron_server.models import Project, User
 from omicron_server.api_server import app
 from omicron_server.views import Projects
 

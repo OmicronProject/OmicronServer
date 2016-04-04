@@ -6,7 +6,8 @@ import json
 from base64 import b64encode
 from uuid import uuid4
 import omicron_server.auth as auth
-from omicron_server.database import User, ContextManagedSession
+from omicron_server.database import ContextManagedSession
+from omicron_server.models import User
 from omicron_server.config import default_config as conf
 from tests.integration import TestCaseWithDatabase
 from omicron_server import app

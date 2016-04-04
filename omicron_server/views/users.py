@@ -5,7 +5,8 @@ import os
 from flask import request, abort, jsonify
 from ..auth import auth
 from ..config import default_config as conf
-from ..database import User, ContextManagedSession
+from ..models import User
+from ..database import ContextManagedSession
 from ..decorators import restful_pagination
 from ..json_schema_parser import JsonSchemaValidator
 from ..views import AbstractResource, SchemaDefinedResource

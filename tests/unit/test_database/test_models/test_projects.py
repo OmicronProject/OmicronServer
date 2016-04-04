@@ -1,7 +1,7 @@
 from tests import TestCaseWithAppContext
 from datetime import datetime
 
-from omicron_server.database import Project
+from omicron_server.models import Project
 
 __author__ = 'Michal Kononenko'
 

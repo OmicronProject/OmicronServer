@@ -6,8 +6,6 @@ purpose of the session is to allow transactional interaction with the database.
 The purpose of :class:`DatabaseManager` is to provide versioning support for
 the DB
 """
-from .models.users import User, Token, Administrator
-from .models.projects import Project
 from .sessions import ContextManagedSession
 from .versioning import DatabaseManager
 

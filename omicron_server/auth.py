@@ -9,7 +9,8 @@ from uuid import UUID
 from flask import g
 from flask.ext.httpauth import HTTPBasicAuth
 from .config import default_config as conf
-from .database import User, Token, ContextManagedSession
+from .models import User, Token
+from .database import ContextManagedSession
 import logging
 
 log = logging.getLogger(__name__)

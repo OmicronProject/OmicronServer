@@ -9,7 +9,8 @@ from ..auth import auth
 from ..decorators import restful_pagination
 from ..json_schema_parser import JsonSchemaValidator
 from ..config import default_config as conf
-from ..database import ContextManagedSession, Project, User
+from ..database import ContextManagedSession
+from ..models import Project, User
 from ..views import AbstractResource
 
 __author__ = 'Michal Kononenko'
