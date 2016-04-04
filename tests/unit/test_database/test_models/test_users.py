@@ -29,14 +29,14 @@ class TestTokenConstructor(TestToken):
         self.token_string = 'foobarbaz123456'
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('omicron_server.database.models.users.Token.hash_token')
+    @mock.patch('omicron_server.models.users.Token.hash_token')
     def test_constructor_with_expiration_date(self, mock_hash_token):
 
-        token = omicron_server.database.models.users.Token(
+        token = omicron_server.models.users.Token(
                 self.token_string, self.expiration_date
         )
         self.assertIsInstance(
-                token, omicron_server.database.models.users.Token
+                token, omicron_server.models.users.Token
         )
 
         self.assertEqual(self.expiration_date, token.expiration_date)
@@ -47,10 +47,10 @@ class TestTokenConstructor(TestToken):
         )
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('omicron_server.database.models.users.Token.hash_token')
+    @mock.patch('omicron_server.models.users.Token.hash_token')
     def test_constructor_no_expiration_date(self, mock_hash):
 
-        token = omicron_server.database.models.users.Token(self.token_string)
+        token = omicron_server.models.users.Token(self.token_string)
         expiration_date = self.time_to_freeze + timedelta(
                 seconds=conf.DEFAULT_TOKEN_EXPIRATION_TIME
         )
@@ -59,7 +59,7 @@ class TestTokenConstructor(TestToken):
         self.assertTrue(mock_hash.called)
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('omicron_server.database.models.users.Token.hash_token')
+    @mock.patch('omicron_server.models.users.Token.hash_token')
     @mock.patch('uuid.UUID.__str__', return_value=str(uuid1()))
     def test_construtor_uuid_token(self, mock_uuid_str, mock_hash):
         """
@@ -73,9 +73,9 @@ class TestTokenConstructor(TestToken):
             decorator
         """
 
-        token = omicron_server.database.models.users.Token(uuid1())
+        token = omicron_server.models.users.Token(uuid1())
 
-        self.assertIsInstance(token, omicron_server.database.models.users.Token)
+        self.assertIsInstance(token, omicron_server.models.users.Token)
         self.assertTrue(mock_uuid_str.called)
         self.assertTrue(mock_hash.called)
 
@@ -83,9 +83,9 @@ class TestTokenConstructor(TestToken):
 class TestHashToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.token = omicron_server.database.Token(self.token_string)
+        self.token = omicron_server.models.Token(self.token_string)
 
-    @mock.patch('omicron_server.database.models.users.sha256')
+    @mock.patch('omicron_server.models.users.sha256')
     def test_hash_token(self, mock_sha256):
         mock_sha256.return_value = sha256('foobarbaz123456'.encode('ascii'))
         self.token.hash_token(self.token_string)
@@ -100,10 +100,10 @@ class TestHashToken(TestToken):
 class TestVerifyToken(TestToken):
     def setUp(self):
         TestToken.setUp(self)
-        self.token = omicron_server.database.models.users.Token(self.token_string)
+        self.token = omicron_server.models.users.Token(self.token_string)
 
     @freeze_time(TestToken.time_to_freeze)
-    @mock.patch('omicron_server.database.models.users.Token.hash_token')
+    @mock.patch('omicron_server.models.users.Token.hash_token')
     def test_verify_token(self, mock_hash):
         mock_hash.return_value = self.token.token_hash
 
@@ -139,7 +139,7 @@ class TestFromDatabaseSession(TestToken):
                 bind=conf.DATABASE_ENGINE
         )
         self.token = uuid1()
-        self.token_record = omicron_server.database.Token(
+        self.token_record = omicron_server.models.Token(
             str(self.token), expiration_date=self.expiration_date
         )
 
@@ -147,7 +147,7 @@ class TestFromDatabaseSession(TestToken):
     def test_constructor_uuid(self, mock_first):
         mock_first.return_value = self.token_record
 
-        token = omicron_server.database.Token.from_database_session(
+        token = omicron_server.models.Token.from_database_session(
             self.token, self.session
         )
 
@@ -157,7 +157,7 @@ class TestFromDatabaseSession(TestToken):
     def test_constructor_string(self, mock_first):
         mock_first.return_value = self.token_record
 
-        token = omicron_server.database.Token.from_database_session(
+        token = omicron_server.models.Token.from_database_session(
             self.token_string, self.session
         )
 
@@ -185,13 +185,13 @@ class TestUser(TestCaseWithAppContext):
 
 class TestUserConstructor(TestUser):
 
-    @mock.patch('omicron_server.database.models.users.User.hash_password')
+    @mock.patch('omicron_server.models.users.User.hash_password')
     def test_constructor(self, mock_hash_function):
 
         mock_hash_function.return_value = 'hashed_password'
 
-        user = omicron_server.database.models.users.User(self.username, self.password, self.email)
-        self.assertIsInstance(user, omicron_server.database.models.users.User)
+        user = omicron_server.models.users.User(self.username, self.password, self.email)
+        self.assertIsInstance(user, omicron_server.models.users.User)
         self.assertEqual(user.username, self.username)
         self.assertEqual(user.email_address, self.email)
         self.assertEqual(user.password_hash, mock_hash_function.return_value)
@@ -204,9 +204,9 @@ class TestFromSession(TestUser):
 
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password,
-                                                              self.email)
-
+        self.user = omicron_server.models.users.User(
+                self.username, self.password, self.email
+        )
         self.bad_user = [self.user, 'another list']
 
         self.assertFalse(isinstance(self.bad_user, self.user.__class__))
@@ -232,12 +232,14 @@ class TestFromSession(TestUser):
 class TestHashPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
+        self.user = omicron_server.models.users.User(self.username,
+                                                     self.password, self.email)
 
-    @mock.patch('omicron_server.database.models.users.pwd_context.encrypt')
+    @mock.patch('omicron_server.models.users.pwd_context.encrypt')
     def test_hash_password(self, mock_encrypt):
         self.assertEqual(
-            mock_encrypt.return_value, omicron_server.database.models.users.User.hash_password(self.password)
+            mock_encrypt.return_value,
+                omicron_server.models.users.User.hash_password(self.password)
         )
 
         mock_encrypt_call = mock.call(self.password)
@@ -249,7 +251,7 @@ class TestHashPassword(TestUser):
 class TestVerifyPassword(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
+        self.user = omicron_server.models.users.User(self.username, self.password, self.email)
         self.bad_password = 'invalid'
 
         self.assertNotEqual(self.password, self.bad_password)
@@ -264,7 +266,7 @@ class TestVerifyPassword(TestUser):
 class TestGenerateAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(
+        self.user = omicron_server.models.users.User(
                 self.username, self.password, self.email
         )
         self.mock_token_return_value = uuid1()
@@ -273,7 +275,7 @@ class TestGenerateAuthToken(TestUser):
         TestUser.tearDown(self)
 
     @mock.patch('sqlalchemy.orm.Session.add')
-    @mock.patch('omicron_server.database.models.users.uuid1')
+    @mock.patch('omicron_server.models.users.uuid1')
     def test_generate_auth_token(self, mock_guid, mock_add):
         mock_guid.return_value = self.mock_token_return_value
 
@@ -284,7 +286,7 @@ class TestGenerateAuthToken(TestUser):
         self.assertTrue(mock_add.called)
 
     @mock.patch('sqlalchemy.orm.Session.add')
-    @mock.patch('omicron_server.database.models.users.uuid1')
+    @mock.patch('omicron_server.models.users.uuid1')
     @freeze_time('2012-01-01')
     def test_generate_auth_token_default_date(
             self, mock_guid, mock_add
@@ -302,10 +304,10 @@ class TestGenerateAuthToken(TestUser):
 class TestVerifyAuthToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
+        self.user = omicron_server.models.users.User(self.username, self.password, self.email)
         self.mock_token ='foobarbaz123456'
 
-    @mock.patch('omicron_server.database.models.users.User.current_token')
+    @mock.patch('omicron_server.models.users.User.current_token')
     def test_verify_token(self, mock_token):
         self.user.verify_auth_token(self.mock_token)
         self.assertEqual(
@@ -318,8 +320,8 @@ class TestCurrentToken(TestUser):
     def setUp(self):
         TestUser.setUp(self)
         self.token_string = 'foobarbaz123456'
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
-        self.mock_token = omicron_server.database.models.users.Token(self.token_string)
+        self.user = omicron_server.models.users.User(self.username, self.password, self.email)
+        self.mock_token = omicron_server.models.users.Token(self.token_string)
 
     @mock.patch('sqlalchemy.orm.Query.order_by')
     def test_current_token(self, mock_order):
@@ -330,7 +332,7 @@ class TestCurrentToken(TestUser):
 class TestGet(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
+        self.user = omicron_server.models.users.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
             'email': self.email,
@@ -344,7 +346,7 @@ class TestGet(TestUser):
 class TestGetFull(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
+        self.user = omicron_server.models.users.User(self.username, self.password, self.email)
         self.expected_result = {
             'username': self.username,
             'email': self.email,
@@ -359,7 +361,7 @@ class TestGetFull(TestUser):
 class TestUserRepr(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(self.username, self.password, self.email)
+        self.user = omicron_server.models.users.User(self.username, self.password, self.email)
         self.expected_result = '%s(%s, %s, %s)' % (
             self.user.__class__.__name__, self.username,
             self.user.password_hash, self.email
@@ -372,14 +374,14 @@ class TestUserRepr(TestUser):
 class TestEqandNe(TestUser):
     def setUp(self):
         TestUser.setUp(self)
-        self.user = omicron_server.database.models.users.User(
+        self.user = omicron_server.models.users.User(
             self.username, self.password, self.email
         )
-        self.other_user = omicron_server.database.models.users.User(
+        self.other_user = omicron_server.models.users.User(
             'foo', 'bar', 'foo@bar.com'
         )
 
-        self.identical_user = omicron_server.database.models.users.User(
+        self.identical_user = omicron_server.models.users.User(
             self.username, self.password, self.email
         )
 

@@ -3,7 +3,8 @@ Contains endpoints for working with authentication tokens.
 """
 from ..views import AbstractResource
 from ..config import default_config as conf
-from ..database import ContextManagedSession, Token, Administrator
+from ..database import ContextManagedSession
+from ..models import Token, Administrator
 from ..auth import auth
 from flask import g, jsonify, request
 

@@ -5,7 +5,8 @@ from tests import TestCaseWithDatabase
 import mock
 from omicron_server.auth import _verify_user
 from omicron_server.views import tokens
-from omicron_server.database import User, Administrator, ContextManagedSession
+from omicron_server.database import ContextManagedSession
+from omicron_server.models import  User, Administrator
 from uuid import uuid1
 from omicron_server.config import default_config as conf
 from contextlib import contextmanager

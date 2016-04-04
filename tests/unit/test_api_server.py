@@ -1,19 +1,15 @@
 """
 Contains unit tests for :mod:`api_server`
 """
-from tests import TestCaseWithAppContext
-import json
-from datetime import datetime
-import mock
-from omicron_server.database.models.users import User, Administrator
-from omicron_server.database import Token
-from omicron_server.database.sessions import ContextManagedSession
-from freezegun import freeze_time
-from sqlalchemy import create_engine
-from omicron_server import api_server
-from omicron_server.database.schema import metadata
 import uuid
+
+import mock
 from flask import jsonify
+from sqlalchemy import create_engine
+
+from omicron_server import api_server
+from omicron_server.database.sessions import ContextManagedSession
+from tests import TestCaseWithAppContext
 
 __author__ = 'Michal Kononenko'
 

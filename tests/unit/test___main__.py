@@ -5,9 +5,8 @@ from tests import TestCaseWithAppContext
 import mock
 import logging
 from omicron_server.config import Config
-from omicron_server import app
 from omicron_server import __main__
-from omicron_server.database import Administrator
+from omicron_server.models import Administrator
 
 __author__ = 'Michal Kononenko'
 
