@@ -17,7 +17,7 @@ setup(
         'omicron_server.command_line_interface',
         'omicron_server.views',
         'omicron_server.database',
-        'omicron_server.database.models'
+        'omicron_server.models'
     ],
     include_package_data=True,
     package_data={'omicron_server': [
