@@ -7,8 +7,9 @@ Welcome to OmicronServer
 Badges
 ------
 
-.. image:: https://travis-ci.org/MichalKononenko/OmicronServer.svg?branch=master
-    :target: https://travis-ci.org/MichalKononenko/OmicronServer
+.. image:: https://travis-ci.org/OmicronProject/OmicronServer.svg?branch=master
+  :target: https://travis-ci.org/OmicronProject/OmicronServer
+  :alt: Build Status
 
 .. image:: https://coveralls.io/repos/MichalKononenko/OmicronServer/badge.svg?branch=master&service=github
   :target: https://coveralls.io/github/MichalKononenko/OmicronServer?branch=master
